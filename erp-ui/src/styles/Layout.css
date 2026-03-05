@@ -1,0 +1,286 @@
+/* Layout.css – version avec topbar et footer */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #f5f7fc;
+}
+
+/* ===== Topbar ===== */
+.topbar {
+  height: 70px;
+  background: white;
+  border-bottom: 1px solid #eef2f6;
+  display: flex;
+  align-items: center;
+  padding: 0 2rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+  z-index: 20;
+  flex-shrink: 0;
+}
+
+.topbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.topbar-logo img {
+  height: 40px;
+  width: auto;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.05));
+}
+
+.company-name {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #0a2b4e;
+  letter-spacing: -0.02em;
+}
+
+/* ===== Conteneur principal (sidebar + contenu) ===== */
+.main-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden; /* pour que le défilement soit géré individuellement */
+}
+
+/* ===== Sidebar (dégradé bleu) ===== */
+.sidebar {
+  width: 280px;
+  background: linear-gradient(180deg, #0a2b4e 0%, #1a4b7a 100%);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+  position: relative;
+  overflow: hidden;
+  z-index: 10;
+}
+
+/* Décoration de fond (branche d'olivier) */
+.sidebar::after {
+  content: '🌿';
+  font-size: 8rem;
+  opacity: 0.03;
+  position: absolute;
+  bottom: -20px;
+  right: -20px;
+  transform: rotate(15deg);
+  pointer-events: none;
+  animation: float 8s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: rotate(15deg) translateY(0); }
+  50% { transform: rotate(15deg) translateY(-15px); }
+}
+
+/* Navigation */
+.sidebar-nav {
+  flex: 1;
+  padding: 2rem 1rem 1rem; /* ajusté car on a supprimé le header */
+}
+
+.sidebar-nav ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.sidebar-nav li {
+  width: 100%;
+}
+
+.sidebar-nav a {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  border-radius: 0.75rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.sidebar-nav a:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  transform: translateX(4px);
+}
+
+.sidebar-nav a.active {
+  background: #2c5a8c;
+  color: white;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.menu-icon {
+  font-size: 1.2rem;
+  min-width: 1.5rem;
+  text-align: center;
+}
+
+.menu-label {
+  font-size: 0.95rem;
+}
+
+/* Pied de sidebar (utilisateur) */
+.sidebar-footer {
+  padding: 1.5rem 1.5rem 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.user-email {
+  font-size: 0.9rem;
+  opacity: 0.9;
+  word-break: break-all;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.5rem 0.75rem;
+  border-radius: 2rem;
+  text-align: center;
+}
+
+.logout-button {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 0.6rem 1rem;
+  border-radius: 2rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(5px);
+}
+
+.logout-button:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.02);
+}
+
+.logout-button:active {
+  transform: scale(0.98);
+}
+
+/* ===== Contenu principal ===== */
+.main-content {
+  flex: 1;
+  padding: 2rem 2.5rem;
+  overflow-y: auto;
+  background: #f5f7fc;
+  border-radius: 2rem 0 0 2rem;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+/* ===== Footer global ===== */
+.app-footer {
+  background: white;
+  border-top: 1px solid #eef2f6;
+  padding: 1rem 2rem;
+  text-align: center;
+  color: #5f6b7a;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.app-footer p {
+  margin: 0;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 900px) {
+  .sidebar {
+    width: 240px;
+  }
+  .main-content {
+    padding: 1.5rem;
+    border-radius: 1.5rem 0 0 1.5rem;
+  }
+  .topbar {
+    padding: 0 1.5rem;
+  }
+  .company-name {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 700px) {
+  .topbar {
+    height: 60px;
+    padding: 0 1rem;
+  }
+  .topbar-logo img {
+    height: 32px;
+  }
+  .company-name {
+    display: none; /* on cache le nom sur mobile */
+  }
+
+  .main-container {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 0.5rem;
+  }
+  .sidebar-nav {
+    padding: 0.5rem;
+  }
+  .sidebar-nav ul {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .sidebar-nav li {
+    width: auto;
+  }
+  .sidebar-nav a {
+    padding: 0.5rem 0.8rem;
+  }
+  .menu-label {
+    font-size: 0.8rem;
+  }
+  .sidebar-footer {
+    width: 100%;
+    text-align: center;
+    padding: 0.5rem;
+  }
+  .user-info {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+  }
+  .user-email {
+    margin-bottom: 0;
+  }
+  .main-content {
+    border-radius: 0;
+    padding: 1rem;
+  }
+  .app-footer {
+    padding: 0.75rem 1rem;
+    font-size: 0.8rem;
+  }
+}

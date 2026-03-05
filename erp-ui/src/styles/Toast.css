@@ -1,0 +1,44 @@
+/* src/components/Toast.css */
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  min-width: 250px;
+  padding: 1rem 1.5rem;
+  border-radius: 1rem;          /* cohérent avec les cards */
+  background: white;
+  color: #1e293b;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-left: 4px solid transparent;
+  z-index: 9999;
+  animation: slideIn 0.3s ease forwards;
+}
+
+.toast-success {
+  border-left-color: #10b981;   /* vert */
+  background: #f0fdf9;
+}
+
+.toast-error {
+  border-left-color: #ef4444;   /* rouge */
+  background: #fef2f2;
+}
+
+.toast-info {
+  border-left-color: #1a4b7a;   /* bleu principal */
+  background: #eff6ff;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

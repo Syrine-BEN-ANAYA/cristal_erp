@@ -1,0 +1,129 @@
+/* UserPage.css – Modern minimalist design consistent with ERP theme */
+
+.user-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f0f4f8 0%, #e6ecf5 100%);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  padding: 1rem;
+}
+
+.user-card {
+  background: white;
+  border-radius: 2rem;
+  padding: 3rem 2.5rem;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08), 0 6px 12px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  transition: transform 0.2s ease;
+}
+
+.user-card:hover {
+  transform: translateY(-4px);
+}
+
+.user-title {
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #1a2b3c;
+  margin-bottom: 0.5rem;
+  position: relative;
+  display: inline-block;
+}
+
+.user-title::after {
+  content: '';
+  position: absolute;
+  bottom: -0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px;
+  height: 3px;
+  background: #1a4b7a;
+  border-radius: 2px;
+}
+
+.user-welcome {
+  margin: 2.5rem 0;
+  padding: 1.5rem;
+  background: #f9fcff;
+  border-radius: 1.5rem;
+  border: 1px solid #e1e8f0;
+}
+
+.user-welcome p {
+  color: #4a5a6e;
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.user-email {
+  display: inline-block;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #1a4b7a;
+  background: #e6f0fa;
+  padding: 0.5rem 1.5rem;
+  border-radius: 3rem;
+  word-break: break-word;
+  max-width: 100%;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.user-logout-button {
+  background: #1a4b7a;
+  color: white;
+  border: none;
+  padding: 0.9rem 2rem;
+  border-radius: 3rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+  box-shadow: 0 4px 6px rgba(26, 75, 122, 0.2);
+  min-width: 200px;
+}
+
+.user-logout-button:hover {
+  background: #0f3a5e;
+  box-shadow: 0 6px 12px rgba(26, 75, 122, 0.25);
+}
+
+.user-logout-button:active {
+  transform: scale(0.97);
+}
+
+/* Optional subtle icon – can be added via pseudo-element if desired */
+.user-card::before {
+  content: '🌿';
+  font-size: 3rem;
+  opacity: 0.1;
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  pointer-events: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .user-card {
+    padding: 2rem 1.5rem;
+  }
+
+  .user-title {
+    font-size: 2rem;
+  }
+
+  .user-email {
+    font-size: 1.1rem;
+    padding: 0.4rem 1rem;
+  }
+
+  .user-logout-button {
+    min-width: 160px;
+    padding: 0.8rem 1.5rem;
+  }
+}
