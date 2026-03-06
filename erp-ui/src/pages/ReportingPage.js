@@ -349,7 +349,7 @@ export default function ReportingPage({ token }) {
     const lowStock = [];
     inventory.forEach(item => {
       const alert = alerts.find(a => a.productId === item.productId);
-      if (alert && item.totalQuantity < alert.threshold) {
+      if (alert && item.totalQuantity <= alert.threshold) {
         lowStock.push({
           ...item,
           threshold: alert.threshold,

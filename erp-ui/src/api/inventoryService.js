@@ -1,46 +1,51 @@
-import axios from "axios";
+// src/api/inventoryService.js
+import axios from 'axios';
 
-const API_URL = "http://localhost:3002/inventory";
+const API_BASE = process.env.REACT_APP_CORE_SERVICE_URL || 'http://localhost:3002/inventory';
 
-// --- Helper pour config avec token ---
-const getConfig = (token) => ({
-  headers: { Authorization: `Bearer ${token}` },
+// --- Fonction pour récupérer le token depuis localStorage ---
+const getAuthToken = () => localStorage.getItem('token');
+
+// --- Instance axios avec JWT ---
+const axiosInstance = axios.create({
+  baseURL: API_BASE,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
-// ---------------- GET ALL INVENTORY ----------------
-export const getAllInventory = async (token) => {
-  const res = await axios.get(API_URL, getConfig(token));
-  return res.data;
+axiosInstance.interceptors.request.use(config => {
+  const token = getAuthToken();
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+// --- Ajouter du stock ---
+export const stockIn = async (productId, quantity) => {
+  const response = await axiosInstance.post('/in', { productId, quantity });
+  return response.data;
 };
 
-// ---------------- CHECK STOCK OF A PRODUCT ----------------
-export const checkStock = async (productId, token) => {
-  const res = await axios.get(`${API_URL}/${productId}`, getConfig(token));
-  return res.data;
+// --- Retirer du stock ---
+export const stockOut = async (productId, quantity) => {
+  const response = await axiosInstance.post('/out', { productId, quantity });
+  return response.data;
 };
 
-// ---------------- STOCK IN ----------------
-export const stockIn = async (productId, quantity, token) => {
-  const res = await axios.post(
-    `${API_URL}/in`,
-    { productId, quantity },
-    getConfig(token)
-  );
-  return res.data;
+// --- Vérifier le stock d’un produit ---
+export const checkStock = async (productId) => {
+  const response = await axiosInstance.get(`/${productId}`);
+  return response.data;
 };
 
-// ---------------- STOCK OUT ----------------
-export const stockOut = async (productId, quantity, token) => {
-  const res = await axios.post(
-    `${API_URL}/out`,
-    { productId, quantity },
-    getConfig(token)
-  );
-  return res.data;
+// --- Lister tout le stock ---
+export const getAllInventory = async () => {
+  const response = await axiosInstance.get('/');
+  return response.data;
 };
 
-// ---------------- REBUILD INVENTORY ----------------
-export const rebuildInventory = async (token) => {
-  const res = await axios.post(`${API_URL}/rebuild`, {}, getConfig(token));
-  return res.data;
+// --- Rebuild inventory ---
+export const rebuildInventory = async () => {
+  const response = await axiosInstance.post('/rebuild');
+  return response.data;
 };

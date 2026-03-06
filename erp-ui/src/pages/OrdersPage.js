@@ -251,7 +251,7 @@ export default function OrdersPage({ token }) {
                     <option value="">Select product</option>
                     {products.map(p => (
                       <option key={p._id} value={p._id}>
-                        {p.name} (Stock: {p.quantity ?? 0})
+                        {p.name}
                       </option>
                     ))}
                   </select>

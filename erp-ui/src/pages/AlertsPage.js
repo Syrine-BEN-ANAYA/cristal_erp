@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getAlerts, setAlert, deleteAlert } from '../api/alertsService';
 import { getProducts } from '../api/productsService';
-import { getAllInventory } from '../api/inventoryService';
+import { getAllInventory } from "../api/inventoryService";
 import { FiBell, FiEdit2, FiPlus, FiX, FiTrash2 } from 'react-icons/fi';
 import '../styles/AlertsPage.css';
 

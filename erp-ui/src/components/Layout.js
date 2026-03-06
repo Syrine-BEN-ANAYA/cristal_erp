@@ -2,10 +2,11 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FiHome, FiPackage, FiShoppingCart, FiTag, FiUsers, FiTruck, FiBell } from 'react-icons/fi';
 import '../styles/Layout.css';
-import logo from '../assets/logo.png'; // Assurez-vous que le chemin est correct
+import logo from '../assets/logo.png';
 
 const Layout = ({ children, user, onLogout }) => {
   const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
 
   const menuItems = [
     { path: '/user/reporting', label: 'Reporting', icon: FiHome },
@@ -20,54 +21,52 @@ const Layout = ({ children, user, onLogout }) => {
 
   return (
     <div className="layout">
-      {/* Topbar */}
+      {/* Topbar with logo and user info */}
       <header className="topbar">
         <div className="topbar-logo">
           <img src={logo} alt="Al Rubai United Al Cristal" />
           <span className="company-name">AL RUBAI UNITED AL CRISTAL</span>
         </div>
+        <div className="topbar-user">
+          <span className="user-email">{user?.email}</span>
+          <button onClick={onLogout} className="logout-button">Log out</button>
+        </div>
       </header>
 
-      {/* Conteneur principal (sidebar + contenu) */}
-      <div className="main-container">
-        {/* Sidebar */}
-        <aside className="sidebar">
-          <nav className="sidebar-nav">
-            <ul>
-              {menuItems.map(item => {
-                const Icon = item.icon;
-                return (
-                  <li key={item.path}>
-                    <Link
-                      to={item.path}
-                      className={location.pathname === item.path ? 'active' : ''}
-                    >
-                      <span className="menu-icon"><Icon /></span>
-                      <span className="menu-label">{item.label}</span>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
-          {/* Footer de la sidebar (utilisateur) */}
-          <div className="sidebar-footer">
-            <div className="user-info">
-              <span className="user-email">{user?.email}</span>
-              <button onClick={onLogout} className="logout-button">Log out</button>
-            </div>
-          </div>
-        </aside>
+      {/* Main container (sidebar + content) */}
+      <div className={`main-container ${isAdminRoute ? 'no-sidebar' : ''}`}>
+        {!isAdminRoute && (
+          <aside className="sidebar">
+            <nav className="sidebar-nav">
+              <ul>
+                {menuItems.map(item => {
+                  const Icon = item.icon;
+                  return (
+                    <li key={item.path}>
+                      <Link
+                        to={item.path}
+                        className={location.pathname === item.path ? 'active' : ''}
+                      >
+                        <span className="menu-icon"><Icon /></span>
+                        <span className="menu-label">{item.label}</span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
+          </aside>
+        )}
 
-        {/* Contenu principal */}
+        {/* Main content */}
         <main className="main-content">
           {children}
         </main>
       </div>
 
-      {/* Footer global de l'application */}
+      {/* Global footer */}
       <footer className="app-footer">
-        <p>© 2026 AL RUBAI UNITED AL CRISTAL. Tous droits réservés.</p>
+        <p>© 2026 AL RUBAI UNITED AL CRISTAL. All rights reserved.</p>
       </footer>
     </div>
   );

@@ -1,4 +1,4 @@
-/* Layout.css – version avec topbar et footer */
+/* Layout.css – version avec topbar unifiée et sidebar conditionnelle */
 
 * {
   margin: 0;
@@ -21,6 +21,7 @@
   border-bottom: 1px solid #eef2f6;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 0 2rem;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
   z-index: 20;
@@ -46,7 +47,45 @@
   letter-spacing: -0.02em;
 }
 
-/* ===== Conteneur principal (sidebar + contenu) ===== */
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.user-email {
+  font-size: 0.95rem;
+  color: #2d3e50;
+  background: #f0f4fa;
+  padding: 0.4rem 1rem;
+  border-radius: 2rem;
+  font-weight: 500;
+}
+
+.logout-button {
+  background: #1a4b7a;
+  border: none;
+  color: white;
+  padding: 0.5rem 1.5rem;
+  border-radius: 2rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 10px rgba(26, 75, 122, 0.2);
+}
+
+.logout-button:hover {
+  background: #0f3a5e;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 15px rgba(26, 75, 122, 0.3);
+}
+
+.logout-button:active {
+  transform: translateY(0);
+}
+
+/* ===== Conteneur principal ===== */
 .main-container {
   display: flex;
   flex: 1;
@@ -64,6 +103,8 @@
   position: relative;
   overflow: hidden;
   z-index: 10;
+
+  padding-top: 70px; /* <-- décale le contenu sous la topbar */
 }
 
 /* Décoration de fond (branche d'olivier) */
@@ -87,7 +128,7 @@
 /* Navigation */
 .sidebar-nav {
   flex: 1;
-  padding: 2rem 1rem 1rem; /* ajusté car on a supprimé le header */
+  padding: 2rem 1rem;
 }
 
 .sidebar-nav ul {
@@ -135,51 +176,6 @@
   font-size: 0.95rem;
 }
 
-/* Pied de sidebar (utilisateur) */
-.sidebar-footer {
-  padding: 1.5rem 1.5rem 2rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.user-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.user-email {
-  font-size: 0.9rem;
-  opacity: 0.9;
-  word-break: break-all;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 0.5rem 0.75rem;
-  border-radius: 2rem;
-  text-align: center;
-}
-
-.logout-button {
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: white;
-  padding: 0.6rem 1rem;
-  border-radius: 2rem;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  backdrop-filter: blur(5px);
-}
-
-.logout-button:hover {
-  background: rgba(255, 255, 255, 0.25);
-  border-color: rgba(255, 255, 255, 0.5);
-  transform: scale(1.02);
-}
-
-.logout-button:active {
-  transform: scale(0.98);
-}
-
 /* ===== Contenu principal ===== */
 .main-content {
   flex: 1;
@@ -188,6 +184,11 @@
   background: #f5f7fc;
   border-radius: 2rem 0 0 2rem;
   box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+/* Quand la sidebar est masquée (admin), le contenu prend toute la largeur */
+.main-container.no-sidebar .main-content {
+  border-radius: 0;
 }
 
 /* ===== Footer global ===== */
@@ -231,7 +232,14 @@
     height: 32px;
   }
   .company-name {
-    display: none; /* on cache le nom sur mobile */
+    display: none; /* cache le nom sur mobile */
+  }
+  .user-email {
+    display: none; /* cache l'email sur mobile */
+  }
+  .logout-button {
+    padding: 0.4rem 1rem;
+    font-size: 0.85rem;
   }
 
   .main-container {
@@ -260,20 +268,6 @@
   }
   .menu-label {
     font-size: 0.8rem;
-  }
-  .sidebar-footer {
-    width: 100%;
-    text-align: center;
-    padding: 0.5rem;
-  }
-  .user-info {
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    gap: 1rem;
-  }
-  .user-email {
-    margin-bottom: 0;
   }
   .main-content {
     border-radius: 0;

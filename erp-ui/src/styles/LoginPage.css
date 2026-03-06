@@ -1,5 +1,4 @@
-/* LoginPage.css – Modern minimalist design with blue & white */
-
+/* ===== Variables et reset ===== */
 * {
   margin: 0;
   padding: 0;
@@ -20,7 +19,7 @@
   margin: 0 auto;
 }
 
-/* Left side - Branding */
+/* ===== Left side - Branding ===== */
 .login-brand {
   display: flex;
   align-items: center;
@@ -43,45 +42,69 @@
 }
 
 .brand-content {
-  max-width: 400px;
+  max-width: 450px;
   text-align: center;
   z-index: 1;
 }
 
+/* Titre anglais */
 .brand-title {
-  font-size: 2.8rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
+  font-size: 2.5rem;
+  font-weight: 300;
+  letter-spacing: 1px;
+  line-height: 1.2;
   margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  white-space: nowrap; /* ← Ajout crucial */
 }
 
-.brand-subtitle {
+.brand-separator {
+  font-weight: 200;
+  color: #d4af37; /* touche dorée pour évoquer l'huile d'olive */
+  margin: 0 0.3rem;
+}
+
+/* Titre arabe */
+.brand-title-ar {
   font-size: 2.2rem;
+  font-family: 'Amiri', 'Traditional Arabic', serif;
+  color: #d4e6f1; /* bleu très pâle pour contraster élégamment */
+  margin: 0.25rem 0 1rem;
+  line-height: 1.4;
   font-weight: 400;
-  opacity: 0.9;
-  margin-bottom: 1.5rem;
-  border-bottom: 2px solid rgba(255,255,255,0.3);
-  padding-bottom: 1rem;
 }
 
+/* Divider fin */
+.brand-divider {
+  width: 80px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+  margin: 1rem auto;
+}
+
+/* Descriptif bilingue */
 .brand-description {
-  font-size: 1.1rem;
-  opacity: 0.8;
+  font-size: 1rem;
+  color: rgba(255,255,255,0.8);
+  text-transform: uppercase;
+  letter-spacing: 2px;
   margin-bottom: 2rem;
+  word-spacing: 4px;
 }
 
+/* Branches d'olivier */
 .brand-decoration {
   display: flex;
   justify-content: center;
   gap: 1.5rem;
-  margin-top: 2rem;
+  margin-top: 1.5rem;
 }
 
 .olive-branch {
-  font-size: 3rem;
+  font-size: 2.5rem;
   animation: float 4s ease-in-out infinite;
   display: inline-block;
+  opacity: 0.9;
 }
 
 .olive-branch:nth-child(2) {
@@ -90,10 +113,10 @@
 
 @keyframes float {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  50% { transform: translateY(-8px); }
 }
 
-/* Right side - Login form */
+/* ===== Right side - Login form ===== */
 .login-form-container {
   display: flex;
   align-items: center;
@@ -258,14 +281,14 @@
   text-decoration: underline;
 }
 
-/* Responsive adjustments */
+/* ===== Responsive ===== */
 @media (max-width: 900px) {
   .login-grid {
     grid-template-columns: 1fr;
   }
 
   .login-brand {
-    display: none; /* Hide branding on smaller screens for simplicity */
+    display: none; /* On cache la partie branding sur mobile pour simplifier */
   }
 
   .login-form-container {
