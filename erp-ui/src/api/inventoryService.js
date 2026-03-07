@@ -1,14 +1,15 @@
 // src/api/inventoryService.js
 import axios from 'axios';
 
-const API_BASE = process.env.REACT_APP_CORE_SERVICE_URL || 'http://localhost:3002/inventory';
+// URL de l'API Gateway pour l’inventaire
+const API_GATEWAY_URL = process.env.REACT_APP_API_GATEWAY_URL || 'http://localhost:3004/inventory';
 
 // --- Fonction pour récupérer le token depuis localStorage ---
 const getAuthToken = () => localStorage.getItem('token');
 
 // --- Instance axios avec JWT ---
 const axiosInstance = axios.create({
-  baseURL: API_BASE,
+  baseURL: API_GATEWAY_URL,
   headers: {
     'Content-Type': 'application/json',
   },

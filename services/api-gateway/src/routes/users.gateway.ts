@@ -14,31 +14,14 @@ import {
 import axios, { AxiosError } from 'axios';
 import type { Request } from 'express';
 
-// Typage DTOs et réponses
-interface CreateUserDto {
-  username: string;
-  email: string;
-  password: string;
-  role: string;
-}
-
-interface UpdateUserDto {
-  username?: string;
-  email?: string;
-  role?: string;
-}
-
-interface ChangePasswordDto {
-  password: string;
-}
-
+// 🔹 Type minimal pour un utilisateur
 interface User {
-  id: string;
+  _id: string;
   username: string;
   email: string;
-  role: string;
-  mustChangePassword?: boolean;
-  tempPassword?: string;
+  role: 'SUPER_ADMIN' | 'ADMIN' | 'MANAGER' | 'USER';
+  mustChangePassword: boolean;
+  tempPassword?: string; // si création USER/Manager
 }
 
 @Controller('users')
@@ -51,14 +34,15 @@ export class UsersGateway {
   }
 
   // ---------------------------
-  // GET /users
+  // GET ALL USERS
   // ---------------------------
   @Get()
-  async findAll(@Req() req: Request): Promise<User[]> {
+  async getAllUsers(@Req() req: Request): Promise<User[]> {
     try {
       const res = await axios.get<User[]>(`${this.AUTH_SERVICE_URL}/users`, {
         headers: { Authorization: req.headers.authorization || '' },
       });
+
       return res.data;
     } catch (error) {
       const err = error as AxiosError;
@@ -70,14 +54,18 @@ export class UsersGateway {
   }
 
   // ---------------------------
-  // GET /users/:id
+  // GET USER BY ID
   // ---------------------------
   @Get(':id')
-  async findOne(@Param('id') id: string, @Req() req: Request): Promise<User> {
+  async getUser(@Param('id') id: string, @Req() req: Request): Promise<User> {
     try {
-      const res = await axios.get<User>(`${this.AUTH_SERVICE_URL}/users/${id}`, {
-        headers: { Authorization: req.headers.authorization || '' },
-      });
+      const res = await axios.get<User>(
+        `${this.AUTH_SERVICE_URL}/users/${id}`,
+        {
+          headers: { Authorization: req.headers.authorization || '' },
+        },
+      );
+
       return res.data;
     } catch (error) {
       const err = error as AxiosError;
@@ -89,14 +77,22 @@ export class UsersGateway {
   }
 
   // ---------------------------
-  // POST /users
+  // CREATE USER
   // ---------------------------
   @Post()
-  async create(@Body() body: CreateUserDto, @Req() req: Request): Promise<User> {
+  async createUser(
+    @Body() body: Partial<User>,
+    @Req() req: Request,
+  ): Promise<User> {
     try {
-      const res = await axios.post<User>(`${this.AUTH_SERVICE_URL}/users`, body, {
-        headers: { Authorization: req.headers.authorization || '' },
-      });
+      const res = await axios.post<User>(
+        `${this.AUTH_SERVICE_URL}/users`,
+        body,
+        {
+          headers: { Authorization: req.headers.authorization || '' },
+        },
+      );
+
       return res.data;
     } catch (error) {
       const err = error as AxiosError;
@@ -108,20 +104,23 @@ export class UsersGateway {
   }
 
   // ---------------------------
-  // PUT /users/:id
+  // UPDATE USER
   // ---------------------------
   @Put(':id')
-  async update(
+  async updateUser(
     @Param('id') id: string,
-    @Body() body: UpdateUserDto,
+    @Body() body: Partial<User>,
     @Req() req: Request,
   ): Promise<User> {
     try {
       const res = await axios.put<User>(
         `${this.AUTH_SERVICE_URL}/users/${id}`,
         body,
-        { headers: { Authorization: req.headers.authorization || '' } },
+        {
+          headers: { Authorization: req.headers.authorization || '' },
+        },
       );
+
       return res.data;
     } catch (error) {
       const err = error as AxiosError;
@@ -133,14 +132,21 @@ export class UsersGateway {
   }
 
   // ---------------------------
-  // DELETE /users/:id
+  // DELETE USER
   // ---------------------------
   @Delete(':id')
-  async remove(@Param('id') id: string, @Req() req: Request): Promise<User> {
+  async deleteUser(
+    @Param('id') id: string,
+    @Req() req: Request,
+  ): Promise<{ message: string }> {
     try {
-      const res = await axios.delete<User>(`${this.AUTH_SERVICE_URL}/users/${id}`, {
-        headers: { Authorization: req.headers.authorization || '' },
-      });
+      const res = await axios.delete<{ message: string }>(
+        `${this.AUTH_SERVICE_URL}/users/${id}`,
+        {
+          headers: { Authorization: req.headers.authorization || '' },
+        },
+      );
+
       return res.data;
     } catch (error) {
       const err = error as AxiosError;
@@ -150,18 +156,15 @@ export class UsersGateway {
       );
     }
   }
-
-  // ---------------------------
-  // PUT /users/change-password/:id
-  // ---------------------------
   @Put('change-password/:id')
   async changePassword(
     @Param('id') id: string,
-    @Body() body: ChangePasswordDto,
+    @Body() body: { newPassword: string },
     @Req() req: Request,
-  ): Promise<User> {
+  ): Promise<{ message: string }> {
+    // <-- typer explicitement le retour
     try {
-      const res = await axios.put<User>(
+      const res = await axios.put<{ message: string }>(
         `${this.AUTH_SERVICE_URL}/users/change-password/${id}`,
         body,
         { headers: { Authorization: req.headers.authorization || '' } },
