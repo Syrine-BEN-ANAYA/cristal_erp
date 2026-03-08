@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+
+  api-gateway:
+    build: ./services/api-gateway
+    ports:
+      - "3004:3004"
+    depends_on:
+      - auth-service
+      - core-service
+      - contact-service
+
+  auth-service:
+    build: ./services/auth-service
+    ports:
+      - "3001:3001"
+
+  core-service:
+    build: ./services/core-service
+    ports:
+      - "3002:3002"
+
+  contact-service:
+    build: ./services/contact-service
+    ports:
+      - "3003:3003"
+
+  frontend:
+    build: ./erp-ui
+    ports:
+      - "3005:3005"

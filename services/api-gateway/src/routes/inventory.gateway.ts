@@ -9,7 +9,8 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
+import { AxiosError } from 'axios';
 import type { Request } from 'express';
 
 // DTOs et types

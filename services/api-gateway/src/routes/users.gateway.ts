@@ -156,26 +156,4 @@ export class UsersGateway {
       );
     }
   }
-  @Put('change-password/:id')
-  async changePassword(
-    @Param('id') id: string,
-    @Body() body: { newPassword: string },
-    @Req() req: Request,
-  ): Promise<{ message: string }> {
-    // <-- typer explicitement le retour
-    try {
-      const res = await axios.put<{ message: string }>(
-        `${this.AUTH_SERVICE_URL}/users/change-password/${id}`,
-        body,
-        { headers: { Authorization: req.headers.authorization || '' } },
-      );
-      return res.data;
-    } catch (error) {
-      const err = error as AxiosError;
-      throw new HttpException(
-        err.response?.data || 'Erreur changement mot de passe',
-        err.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
 }

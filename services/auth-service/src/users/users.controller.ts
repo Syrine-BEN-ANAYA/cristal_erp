@@ -10,6 +10,7 @@ import {
   HttpException,
   HttpStatus,
   Logger,
+  
 } from '@nestjs/common';
 import axios, { AxiosError } from 'axios';
 import type { Request } from 'express';
@@ -42,7 +43,7 @@ interface User {
 }
 
 @Controller('users')
-export class UsersGateway {
+export class UsersController {
   private AUTH_SERVICE_URL =
     process.env.AUTH_SERVICE_URL || 'http://localhost:3001';
 
