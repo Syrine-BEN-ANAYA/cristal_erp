@@ -32,7 +32,6 @@ interface Purchase {
   id: string;
   supplierId: string;
   items: { productId: string; quantity: number }[];
-  status: string; // ex: 'pending', 'received', 'cancelled'
   createdAt?: string;
   updatedAt?: string;
 }
@@ -50,7 +49,10 @@ export class PurchasesGateway {
   private getAuthHeader(req: Request) {
     const auth = req.headers.authorization;
     if (!auth) {
-      throw new HttpException('Authorization header missing', HttpStatus.UNAUTHORIZED);
+      throw new HttpException(
+        'Authorization header missing',
+        HttpStatus.UNAUTHORIZED,
+      );
     }
     return { Authorization: auth };
   }
@@ -68,12 +70,15 @@ export class PurchasesGateway {
   // POST /purchases
   // ---------------------------
   @Post()
-  async create(@Body() body: CreatePurchaseDto, @Req() req: Request): Promise<Purchase> {
+  async create(
+    @Body() body: CreatePurchaseDto,
+    @Req() req: Request,
+  ): Promise<Purchase> {
     try {
       const res = await axios.post<Purchase>(
         `${this.PURCHASE_SERVICE_URL}/purchases`,
         body,
-        { headers: this.getAuthHeader(req) }
+        { headers: this.getAuthHeader(req) },
       );
       return res.data;
     } catch (error) {
@@ -89,7 +94,7 @@ export class PurchasesGateway {
     try {
       const res = await axios.get<Purchase[]>(
         `${this.PURCHASE_SERVICE_URL}/purchases`,
-        { headers: this.getAuthHeader(req) }
+        { headers: this.getAuthHeader(req) },
       );
       return res.data;
     } catch (error) {
@@ -98,14 +103,35 @@ export class PurchasesGateway {
   }
 
   // ---------------------------
+  // GET /purchases/total
+  // ---------------------------
+  @Get('total')
+  async getTotalPurchaseAmount(
+    @Req() req: Request,
+  ): Promise<{ totalPurchaseAmount: number }> {
+    try {
+      const res = await axios.get<{ totalPurchaseAmount: number }>(
+        `${this.PURCHASE_SERVICE_URL}/purchases/total`,
+        { headers: this.getAuthHeader(req) },
+      );
+      return res.data;
+    } catch (error) {
+      this.handleAxiosError(error, 'Erreur récupération total achats');
+    }
+  }
+
+  // ---------------------------
   // GET /purchases/:id
   // ---------------------------
   @Get(':id')
-  async findOne(@Param('id') id: string, @Req() req: Request): Promise<Purchase> {
+  async findOne(
+    @Param('id') id: string,
+    @Req() req: Request,
+  ): Promise<Purchase> {
     try {
       const res = await axios.get<Purchase>(
         `${this.PURCHASE_SERVICE_URL}/purchases/${id}`,
-        { headers: this.getAuthHeader(req) }
+        { headers: this.getAuthHeader(req) },
       );
       return res.data;
     } catch (error) {
@@ -126,7 +152,7 @@ export class PurchasesGateway {
       const res = await axios.put<Purchase>(
         `${this.PURCHASE_SERVICE_URL}/purchases/${id}`,
         body,
-        { headers: this.getAuthHeader(req) }
+        { headers: this.getAuthHeader(req) },
       );
       return res.data;
     } catch (error) {
@@ -138,11 +164,14 @@ export class PurchasesGateway {
   // DELETE /purchases/:id
   // ---------------------------
   @Delete(':id')
-  async remove(@Param('id') id: string, @Req() req: Request): Promise<Purchase> {
+  async remove(
+    @Param('id') id: string,
+    @Req() req: Request,
+  ): Promise<Purchase> {
     try {
       const res = await axios.delete<Purchase>(
         `${this.PURCHASE_SERVICE_URL}/purchases/${id}`,
-        { headers: this.getAuthHeader(req) }
+        { headers: this.getAuthHeader(req) },
       );
       return res.data;
     } catch (error) {
@@ -162,7 +191,7 @@ export class PurchasesGateway {
     try {
       const res = await axios.delete<{ deleted: number }>(
         `${this.PURCHASE_SERVICE_URL}/purchases?month=${month}`,
-        { headers: this.getAuthHeader(req) }
+        { headers: this.getAuthHeader(req) },
       );
       return res.data;
     } catch (error) {

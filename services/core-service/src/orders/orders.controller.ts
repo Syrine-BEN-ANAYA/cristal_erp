@@ -16,7 +16,11 @@ export class OrderController {
   async findAll() {
     return this.orderService.findAll();
   }
-
+ @Get('total')
+async getTotalOrderAmount() {
+  const total = await this.orderService.getTotalOrderAmount();
+  return { totalOrderAmount: total };
+}
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return this.orderService.findOne(id);
@@ -27,4 +31,7 @@ export class OrderController {
   async remove(@Param('id') id: string) {
     await this.orderService.remove(id);
   }
+
+  
+  
 }

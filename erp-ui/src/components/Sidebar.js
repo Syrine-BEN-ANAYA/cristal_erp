@@ -9,6 +9,9 @@ export default function Sidebar() {
         <h2 className="brand-title">AL CRISTAL</h2>
         <p className="brand-sub">Inventory Manager</p>
       </div>
+             <NavLink to="/reporting" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+          Reporting
+        </NavLink>
       <nav className="sidebar-nav">
         <NavLink to="/purchases" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Purchases
@@ -16,6 +19,7 @@ export default function Sidebar() {
         <NavLink to="/orders" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Orders
         </NavLink>
+     
              <NavLink to="/products" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Products
         </NavLink>

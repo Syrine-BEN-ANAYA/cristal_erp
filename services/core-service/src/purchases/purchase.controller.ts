@@ -2,9 +2,7 @@ import { Controller, Get, Post, Body, Put, Param, Delete, UseGuards, Req, HttpCo
 import { PurchaseService } from './purchase.service';
 import { CreatePurchaseDto } from './dto/create-purchase.dto';
 import { UpdatePurchaseDto } from './dto/update-purchase.dto';
-// import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-// import { RolesGuard } from '../auth/guards/roles.guard';
-// import { Roles } from '../auth/decorators/roles.decorator';
+
 
 @Controller('purchases')
 // @UseGuards(JwtAuthGuard, RolesGuard)
@@ -23,13 +21,18 @@ export class PurchaseController {
   async findAll() {
     return this.purchaseService.findAll();
   }
+  @Get('total')
+async getTotalPurchaseAmount() {
+  const total = await this.purchaseService.getTotalPurchaseAmount();
+  return { totalPurchaseAmount: total };
+}
 
   @Get(':id')
   // @Roles('ADMIN', 'MANAGER', 'USER')
   async findOne(@Param('id') id: string) {
     return this.purchaseService.findOne(id);
   }
-  
+
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   // @Roles('ADMIN')

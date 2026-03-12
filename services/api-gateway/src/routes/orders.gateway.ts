@@ -2,7 +2,6 @@ import {
   Controller,
   Get,
   Post,
-  Put,
   Delete,
   Body,
   Param,
@@ -17,18 +16,15 @@ import type { Request } from 'express';
 
 interface CreateOrderDto {
   customerId: string;
-  products: { productId: string; quantity: number }[];
-}
-
-interface UpdateOrderDto {
-  products?: { productId: string; quantity: number }[];
+  items: { productId: string; quantity: number }[];
 }
 
 interface Order {
   id: string;
   customerId: string;
-  products: { productId: string; quantity: number }[];
-  status: string;
+  items: { productId: string; quantity: number }[];
+  status?: string;
+  createdAt?: string;
 }
 
 @Controller('orders')
@@ -38,6 +34,27 @@ export class OrdersGateway {
 
   constructor() {
     Logger.log('OrdersGateway chargé correctement', 'API-GATEWAY');
+  }
+
+  // Helper pour récupérer le header Authorization
+  private getAuthHeader(req: Request) {
+    const auth = req.headers.authorization;
+    if (!auth) {
+      throw new HttpException(
+        'Authorization header missing',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+    return { Authorization: auth };
+  }
+
+  // Helper pour gérer les erreurs Axios
+  private handleAxiosError(error: unknown, fallbackMessage: string): never {
+    const err = error as AxiosError;
+    throw new HttpException(
+      err.response?.data || fallbackMessage,
+      err.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+    );
   }
 
   @Post()
@@ -78,6 +95,21 @@ export class OrdersGateway {
     }
   }
 
+  @Get('total')
+  async getTotalOrderAmount(
+    @Req() req: Request,
+  ): Promise<{ totalOrderAmount: number }> {
+    try {
+      const res = await axios.get<{ totalOrderAmount: number }>(
+        `${this.ORDERS_SERVICE_URL}/orders/total`,
+        { headers: this.getAuthHeader(req) },
+      );
+      return res.data;
+    } catch (error) {
+      this.handleAxiosError(error, 'Erreur récupération total commandes');
+    }
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string, @Req() req: Request): Promise<Order> {
     try {
@@ -95,32 +127,13 @@ export class OrdersGateway {
     }
   }
 
-  @Put(':id')
-  async update(
-    @Param('id') id: string,
-    @Body() body: UpdateOrderDto,
-    @Req() req: Request,
-  ): Promise<Order> {
-    try {
-      const res = await axios.put<Order>(
-        `${this.ORDERS_SERVICE_URL}/orders/${id}`,
-        body,
-        { headers: { Authorization: req.headers.authorization || '' } },
-      );
-      return res.data;
-    } catch (error) {
-      const err = error as AxiosError;
-      throw new HttpException(
-        err.response?.data || 'Erreur mise à jour commande',
-        err.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
-
   @Delete(':id')
-  async remove(@Param('id') id: string, @Req() req: Request): Promise<Order> {
+  async remove(
+    @Param('id') id: string,
+    @Req() req: Request,
+  ): Promise<{ message: string }> {
     try {
-      const res = await axios.delete<Order>(
+      const res = await axios.delete<{ message: string }>(
         `${this.ORDERS_SERVICE_URL}/orders/${id}`,
         { headers: { Authorization: req.headers.authorization || '' } },
       );

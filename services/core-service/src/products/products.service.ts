@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { ClientSession, Model } from 'mongoose';
 import { Product, ProductDocument } from './schemas/product.schema';
@@ -12,7 +12,6 @@ export class ProductService {
   ) {}
 
   async create(createProductDto: CreateProductDto, requester: any): Promise<Product> {
-    // Initialiser le stock avec la quantité initiale si non fourni
     const stock = createProductDto.stock ?? createProductDto.initialQuantity ?? 0;
     const createdProduct = new this.productModel({
       ...createProductDto,
@@ -28,7 +27,7 @@ export class ProductService {
   async findOne(id: string, requester: any): Promise<Product> {
     const product = await this.productModel.findById(id).exec();
     if (!product) {
-      throw new NotFoundException(`Produit avec l'id ${id} non trouvé`);
+      throw new NotFoundException(`Product with id ${id} not found`);
     }
     return product;
   }
@@ -40,7 +39,7 @@ export class ProductService {
       { new: true, runValidators: true }
     ).exec();
     if (!product) {
-      throw new NotFoundException(`Produit avec l'id ${id} non trouvé`);
+      throw new NotFoundException(`Product with id ${id} not found`);
     }
     return product;
   }
@@ -48,41 +47,44 @@ export class ProductService {
   async remove(id: string, requester: any): Promise<{ message: string }> {
     const result = await this.productModel.findByIdAndDelete(id).exec();
     if (!result) {
-      throw new NotFoundException(`Produit avec l'id ${id} non trouvé`);
+      throw new NotFoundException(`Product with id ${id} not found`);
     }
-    return { message: 'Produit supprimé avec succès' };
-  }
-// products.service.ts
-async addStock(productId: string, quantity: number) {
-  const result = await this.productModel.updateOne(
-    { _id: productId },
-    { $inc: { stock: quantity } } // augmente le stock
-  );
-
-  if (result.modifiedCount === 0) {
-    throw new NotFoundException(`Product with id ${productId} not found`);
-  }
-}
-
-async removeStock(productId: string, quantity: number) {
-
-  const product = await this.productModel.findById(productId);
-
-  if (!product) {
-    throw new Error("Product not found");
+    return { message: 'Product deleted successfully' };
   }
 
-  if (product.stock < quantity) {
-    throw new Error("Insufficient stock");
+  // Internal methods – no requester needed
+  async addStock(productId: string, quantity: number): Promise<void> {
+    const result = await this.productModel.updateOne(
+      { _id: productId },
+      { $inc: { stock: quantity } }
+    );
+
+    if (result.modifiedCount === 0) {
+      throw new NotFoundException(`Product with id ${productId} not found`);
+    }
   }
 
-  await this.productModel.updateOne(
-    { _id: productId },
-    { $inc: { stock: -quantity } }
-  );
+  async removeStock(productId: string, quantity: number): Promise<void> {
+    const product = await this.productModel.findById(productId);
+    if (!product) {
+      throw new NotFoundException(`Product with id ${productId} not found`);
+    }
 
-}
- async decrementStockAtomic(productId: string, quantity: number, session?: ClientSession) {
+    if (product.stock < quantity) {
+      throw new BadRequestException(`Insufficient stock for product ${productId}`);
+    }
+
+    await this.productModel.updateOne(
+      { _id: productId },
+      { $inc: { stock: -quantity } }
+    );
+  }
+
+  async decrementStockAtomic(
+    productId: string,
+    quantity: number,
+    session?: ClientSession,
+  ): Promise<boolean> {
     const result = await this.productModel.updateOne(
       { _id: productId, stock: { $gte: quantity } },
       { $inc: { stock: -quantity } },
@@ -91,4 +93,9 @@ async removeStock(productId: string, quantity: number) {
     return result.modifiedCount > 0;
   }
 
+  async getLowStockProducts(): Promise<Product[]> {
+    return this.productModel.find({
+      $expr: { $lt: ["$stock", "$threshold"] }
+    }).exec();
+  }
 }

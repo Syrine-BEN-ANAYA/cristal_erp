@@ -47,6 +47,12 @@ export class PurchaseService {
       .exec();
   }
 
+async getTotalPurchaseAmount(): Promise<number> {
+  const result = await this.purchaseModel.aggregate([
+    { $group: { _id: null, totalSum: { $sum: "$totalAmount" } } }
+  ]);
+  return result.length > 0 ? result[0].totalSum : 0;
+}
   async findOne(id: string): Promise<Purchase> {
 
     const purchase = await this.purchaseModel

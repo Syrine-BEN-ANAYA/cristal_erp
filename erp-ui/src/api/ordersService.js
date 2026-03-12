@@ -8,7 +8,11 @@ const API_GATEWAY_URL = process.env.REACT_APP_API_GATEWAY_URL || "http://localho
 const getConfig = (token) => ({
   headers: { Authorization: `Bearer ${token}` },
 });
-
+// src/api/ordersService.js
+export const getTotalOrderAmount = async (token) => {
+  const res = await axios.get(`${API_GATEWAY_URL}/total`, getConfig(token));
+  return res.data; // { totalOrderAmount: number }
+};
 // ---------------- CREATE ORDER ----------------
 export const createOrder = async (orderData, token) => {
   const res = await axios.post(API_GATEWAY_URL, orderData, getConfig(token));

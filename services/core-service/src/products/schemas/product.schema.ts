@@ -17,8 +17,8 @@ export class Product {
   @Prop({ required: true, default: 0 })
   stock: number;
 
-  @Prop({ required: true, default: 0 })
-  threshold: number; // Seuil d'alerte
+@Prop({ default: 10 })
+threshold: number;
 
   @Prop({ type: Types.ObjectId, ref: 'Supplier' })
   supplierId: Types.ObjectId;

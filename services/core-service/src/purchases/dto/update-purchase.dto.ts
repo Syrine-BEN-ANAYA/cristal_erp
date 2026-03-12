@@ -1,3 +1,4 @@
+// dto/update-purchase.dto.ts
 import { PartialType } from '@nestjs/mapped-types';
 import { CreatePurchaseDto } from './create-purchase.dto';
 

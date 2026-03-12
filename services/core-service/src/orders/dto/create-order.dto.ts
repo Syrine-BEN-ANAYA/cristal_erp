@@ -1,3 +1,4 @@
+// create-order.dto.ts
 import { IsMongoId, IsArray, ValidateNested, ArrayMinSize, IsNumber, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -8,6 +9,10 @@ export class OrderItemDto {
   @IsNumber()
   @Min(1)
   quantity: number;
+
+  @IsNumber()
+  @Min(0)
+  price: number; // 👈 Ajout du prix
 }
 
 export class CreateOrderDto {

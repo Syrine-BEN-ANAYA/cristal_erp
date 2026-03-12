@@ -1,0 +1,352 @@
+/* PurchasesPage.css - Modern blue & white theme */
+
+.purchases-page {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  color: #1e2b4f;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+}
+
+.page-header h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #1e2b4f;
+  margin: 0 0 0.25rem 0;
+}
+
+.page-header p {
+  font-size: 1rem;
+  color: #5f6b7a;
+  margin: 0;
+}
+
+/* Form Card */
+.form-card {
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 1.8rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  margin-bottom: 2.5rem;
+  border: 1px solid #eef2f6;
+}
+
+.form-card h3 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #1e2b4f;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.input-group label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #2c3e50;
+  margin-bottom: 0.4rem;
+}
+
+.input-group select,
+.input-group input {
+  padding: 0.7rem 1rem;
+  font-size: 0.95rem;
+  border: 1px solid #e1e5ea;
+  border-radius: 10px;
+  background-color: #fafbfc;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+  font-family: inherit;
+}
+
+.input-group select:focus,
+.input-group input:focus {
+  border-color: #2a6df4;
+  box-shadow: 0 0 0 3px rgba(42, 109, 244, 0.1);
+}
+
+/* Items section (multiple products) */
+.items-section {
+  margin: 1.5rem 0;
+}
+
+.items-section label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.item-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.item-row select {
+  flex: 2;
+  padding: 0.7rem 1rem;
+  font-size: 0.95rem;
+  border: 1px solid #e1e5ea;
+  border-radius: 10px;
+  background-color: #fafbfc;
+}
+
+.item-row input[type="number"] {
+  flex: 1;
+  padding: 0.7rem 1rem;
+  font-size: 0.95rem;
+  border: 1px solid #e1e5ea;
+  border-radius: 10px;
+  background-color: #fafbfc;
+  min-width: 80px;
+}
+
+.remove-btn {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  color: #b91c1c;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 30px;
+  transition: background-color 0.2s;
+  font-size: 1.1rem;
+}
+
+.remove-btn:hover {
+  background-color: #fee2e2;
+}
+
+.add-item-btn {
+  background: transparent;
+  border: 1px dashed #2a6df4;
+  color: #2a6df4;
+  padding: 0.6rem 1.2rem;
+  border-radius: 30px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.add-item-btn:hover {
+  background-color: #e6f0ff;
+}
+
+.total-preview {
+  margin-top: 0.5rem;
+  font-weight: 600;
+  color: #1e2b4f;
+  text-align: right;
+}
+
+/* Form actions */
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.form-actions button {
+  padding: 0.7rem 1.8rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 40px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-actions button:first-child {
+  background-color: #2a6df4;
+  color: white;
+  box-shadow: 0 4px 10px rgba(42, 109, 244, 0.2);
+}
+
+.form-actions button:first-child:hover {
+  background-color: #1a56d6;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 15px rgba(42, 109, 244, 0.25);
+}
+
+.form-actions button:last-child {
+  background-color: transparent;
+  border: 1px solid #2a6df4;
+  color: #2a6df4;
+}
+
+.form-actions button:last-child:hover {
+  background-color: #e6f0ff;
+}
+
+/* Table */
+.table-container {
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+  border: 1px solid #eef2f6;
+  overflow-x: auto;
+  padding: 1.5rem;
+}
+
+.table-container h3 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #1e2b4f;
+  margin-top: 0;
+  margin-bottom: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.table-container table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  min-width: 800px;
+}
+
+.table-container th {
+  text-align: left;
+  padding: 1rem 1rem;
+  background-color: #f8fafd;
+  color: #1e2b4f;
+  font-weight: 600;
+  border-bottom: 2px solid #e1e5ea;
+}
+
+.table-container td {
+  padding: 1rem;
+  border-bottom: 1px solid #eef2f6;
+  color: #2c3e50;
+}
+
+.table-container tr:last-child td {
+  border-bottom: none;
+}
+
+.table-container tr:hover td {
+  background-color: #f9fcff;
+}
+
+.products-cell {
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.5;
+  max-width: 300px;
+}
+
+/* Actions icons */
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  color: #5f6b7a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 30px;
+  transition: background-color 0.2s, color 0.2s;
+  font-size: 1.1rem;
+}
+
+.icon-btn:hover {
+  background-color: #f0f4f8;
+  color: #2a6df4;
+}
+
+.icon-btn.delete-btn:hover {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.empty-message {
+  text-align: center;
+  padding: 2rem;
+  color: #5f6b7a;
+  font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .purchases-page {
+    padding: 1.5rem;
+  }
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .item-row {
+    flex-wrap: wrap;
+  }
+  .item-row select,
+  .item-row input {
+    flex: 1 1 100%;
+  }
+  .form-actions {
+    flex-direction: column;
+  }
+  .form-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+.item-row-header {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #2c3e50;
+  padding: 0 0.5rem;
+}
+
+.item-row-header span {
+  flex: 2; /* correspond à la largeur du select */
+}
+
+.item-row-header span:nth-child(2),
+.item-row-header span:nth-child(3) {
+  flex: 1; /* correspond aux champs quantity et price */
+}
+
+.item-row-header span:last-child {
+  flex: 0 0 2rem; /* espace pour le bouton */
+}

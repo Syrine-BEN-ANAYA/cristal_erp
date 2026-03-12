@@ -1,4 +1,4 @@
-import { IsMongoId, IsArray, ValidateNested, ArrayMinSize, IsNumber, Min } from 'class-validator';
+import { IsMongoId, IsArray, ValidateNested, ArrayMinSize, IsNumber, Min, IsDate, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class PurchaseItemDto {
@@ -18,6 +18,7 @@ export class CreatePurchaseDto {
   @IsMongoId()
   supplierId: string;
 
+  
   @IsArray()
   @ArrayMinSize(1)
   @ValidateNested({ each: true })

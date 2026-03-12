@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 import { Order, OrderDocument } from './schemas/order.schema';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
@@ -15,16 +15,24 @@ export class OrderService {
   ) {}
 
   async createOrder(dto: CreateOrderDto) {
-
-    const order = await this.orderModel.create(dto);
-
+    // 1. Calculer le totalAmount
+    let totalAmount = 0;
     for (const item of dto.items) {
+      // Récupérer le produit pour obtenir son prix
+      // Note: si votre productService.findOne attend deux arguments, passez null ou un objet système
+      const product = await this.productService.findOne(item.productId, null);
+      totalAmount += product.price * item.quantity;
+    }
 
-      await this.productService.removeStock(
-        item.productId.toString(),
-        item.quantity
-      );
+    // 2. Créer la commande avec le total
+    const order = await this.orderModel.create({
+      ...dto,
+      totalAmount,
+    });
 
+    // 3. Mettre à jour les stocks (décrémenter)
+    for (const item of dto.items) {
+      await this.productService.removeStock(item.productId.toString(), item.quantity);
     }
 
     return order;
@@ -38,33 +46,33 @@ export class OrderService {
   }
 
   async findOne(id: string): Promise<Order> {
-
     const order = await this.orderModel.findById(id)
       .populate('customerId')
       .populate('items.productId')
       .exec();
-
     if (!order) {
       throw new NotFoundException(`Order with id ${id} not found`);
     }
-
     return order;
   }
 
-async remove(id: string): Promise<void> {
-  const order = await this.orderModel.findById(id);
-  if (!order) throw new NotFoundException(`Order not found`);
+  
+  async remove(id: string): Promise<void> {
+    const order = await this.orderModel.findById(id);
+    if (!order) throw new NotFoundException(`Order not found`);
 
-  // Restituer le stock
-  for (const item of order.items) {
-    await this.productService.addStock(item.productId.toString(), item.quantity);
+    // Restituer le stock avant suppression
+    for (const item of order.items) {
+      await this.productService.addStock(item.productId.toString(), item.quantity);
+    }
+
+    await this.orderModel.findByIdAndDelete(id);
   }
 
-  // Supprimer l'order
-  await this.orderModel.findByIdAndDelete(id);
-
-  // Ne rien renvoyer → HTTP 204
-}
-
-
+  async getTotalOrderAmount(): Promise<number> {
+    const result = await this.orderModel.aggregate([
+      { $group: { _id: null, totalSum: { $sum: "$totalAmount" } } }
+    ]);
+    return result.length > 0 ? result[0].totalSum : 0;
+  }
 }

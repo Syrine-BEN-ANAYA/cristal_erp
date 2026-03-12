@@ -11,6 +11,7 @@ import SuppliersPage from "./pages/SuppliersPage";
 import AdminPage from "./pages/AdminPage";
 import { getMe } from "./api/authService";
 import PurchasesPage from "./pages/PurchasesPage";
+import ReportingPage from "./pages/ReportingPage";
 
 
 function App() {
@@ -77,18 +78,21 @@ function App() {
   const defaultRoute =
     user.role === "ADMIN" || user.role === "SUPER_ADMIN"
       ? "/admin"
-      : "/user/orders";
+      : "/user/reporting";
 
   return (
   <Layout user={user} onLogout={handleLogout}>
     <Routes key={user.role}>
 
       {/* pages user */}
+      <Route path="/user/reporting" element={<ReportingPage token={token} />} />
       <Route path="/user/products" element={<ProductsPage token={token} />} />
       <Route path="/user/orders" element={<OrdersPage token={token} />} />
       <Route path="/user/customers" element={<CustomersPage token={token} />} />
       <Route path="/user/suppliers" element={<SuppliersPage token={token} />} />
-            <Route path="/user/purchases" element={<PurchasesPage token={token} />} />
+      <Route path="/user/purchases" element={<PurchasesPage token={token} />} />
+      <Route path="/user/reporting" element={<ReportingPage token={token} />} />
+
 
 
       {/* page admin */}

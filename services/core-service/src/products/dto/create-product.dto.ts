@@ -25,6 +25,6 @@ export class CreateProductDto {
   supplierId?: Types.ObjectId;
 
   @IsNumber()
-  @Min(0)
+  @Min(10)
   threshold: number;
 }
