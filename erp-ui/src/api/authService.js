@@ -2,7 +2,7 @@
 import axios from "axios";
 
 // ← on pointe désormais vers l’API Gateway
-const API_GATEWAY_URL = "http://localhost:3004";
+const API_GATEWAY_URL = "http://localhost:3104";
 
 const getConfig = (token) => ({
   headers: { Authorization: `Bearer ${token}` },

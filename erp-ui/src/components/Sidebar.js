@@ -10,17 +10,14 @@ export default function Sidebar() {
         <p className="brand-sub">Inventory Manager</p>
       </div>
       <nav className="sidebar-nav">
-        <NavLink to="/reporting" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-          Reporting
-        </NavLink>
-        <NavLink to="/inventory" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-          Inventory
+        <NavLink to="/purchases" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+          Purchases
         </NavLink>
         <NavLink to="/orders" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Orders
         </NavLink>
-        <NavLink to="/categories" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-          Categories
+             <NavLink to="/products" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+          Products
         </NavLink>
         <NavLink to="/customers" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Customers

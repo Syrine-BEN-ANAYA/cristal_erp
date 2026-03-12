@@ -49,7 +49,7 @@ interface RegisterResponse {
 @Controller('auth')
 export class AuthGateway {
   private AUTH_SERVICE_URL =
-    process.env.AUTH_SERVICE_URL || 'http://localhost:3001';
+    process.env.AUTH_SERVICE_URL || 'http://localhost:3101';
 
   constructor() {
     Logger.log('AuthGateway chargé correctement', 'API-GATEWAY');

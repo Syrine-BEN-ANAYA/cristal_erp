@@ -1,40 +1,56 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
-import { ProductsService } from './products.service';
-import { JwtLocalGuard } from '../common/guards/jwt-local.guard';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Put,
+  Param,
+  Delete,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { ProductService } from './products.service';
+// import { RolesGuard } from '../auth/guards/roles.guard';
+// import { Roles } from '../auth/decorators/roles.decorator';
 
 @Controller('products')
-export class ProductsController {
-  constructor(private readonly service: ProductsService) {}
+// @UseGuards(JwtAuthGuard, RolesGuard) // décommentez si vous avez l'authentification
+export class ProductController {
+  constructor(private readonly productService: ProductService) {}
 
   @Post()
-  @UseGuards(JwtLocalGuard)
-  create(@Body() dto: CreateProductDto) {
-    return this.service.create(dto);
+  // @Roles('ADMIN', 'MANAGER')
+  async create(@Body() createProductDto: CreateProductDto, @Req() req) {
+    return this.productService.create(createProductDto, req.user);
   }
 
   @Get()
-  @UseGuards(JwtLocalGuard)
-  findAll() {
-    return this.service.findAll();
+  // @Roles('ADMIN', 'MANAGER', 'USER')
+  async findAll(@Req() req) {
+    return this.productService.findAll(req.user);
   }
 
   @Get(':id')
-  @UseGuards(JwtLocalGuard)
-  findOne(@Param('id') id: string) {
-    return this.service.findOne(id);
+  // @Roles('ADMIN', 'MANAGER', 'USER')
+  async findOne(@Param('id') id: string, @Req() req) {
+    return this.productService.findOne(id, req.user);
   }
 
   @Put(':id')
-  @UseGuards(JwtLocalGuard)
-  update(@Param('id') id: string, @Body() dto: UpdateProductDto) {
-    return this.service.update(id, dto);
+  // @Roles('ADMIN', 'MANAGER')
+  async update(
+    @Param('id') id: string,
+    @Body() updateProductDto: UpdateProductDto,
+    @Req() req,
+  ) {
+    return this.productService.update(id, updateProductDto, req.user);
   }
 
   @Delete(':id')
-  @UseGuards(JwtLocalGuard)
-  remove(@Param('id') id: string) {
-    return this.service.remove(id);
+  // @Roles('ADMIN')
+  async remove(@Param('id') id: string, @Req() req) {
+    return this.productService.remove(id, req.user);
   }
 }

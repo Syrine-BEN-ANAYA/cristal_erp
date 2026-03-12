@@ -1,50 +1,30 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Req, Query } from '@nestjs/common';
-import { OrdersService } from './orders.service';
+import { Controller, Get, Post, Body, Put, Param, Delete, HttpCode, HttpStatus } from '@nestjs/common';
+import { OrderService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
-import { JwtLocalGuard } from '../common/guards/jwt-local.guard';
 
 @Controller('orders')
-export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+export class OrderController {
+  constructor(private readonly orderService: OrderService) {}
 
   @Post()
-  @UseGuards(JwtLocalGuard)
-  async create(@Body() dto: CreateOrderDto, @Req() req) {
-    const token = req.headers.authorization;
-    return this.ordersService.create(dto, token);
+  async create(@Body() createOrderDto: CreateOrderDto) {
+    return this.orderService.createOrder(createOrderDto);
   }
 
   @Get()
-  @UseGuards(JwtLocalGuard)
   async findAll() {
-    return this.ordersService.findAll();
+    return this.orderService.findAll();
   }
 
   @Get(':id')
-  @UseGuards(JwtLocalGuard)
   async findOne(@Param('id') id: string) {
-    return this.ordersService.findOne(id);
-  }
-
-  @Put(':id')
-  @UseGuards(JwtLocalGuard)
-  async update(@Param('id') id: string, @Body() dto: UpdateOrderDto, @Req() req) {
-    const token = req.headers.authorization;
-    return this.ordersService.update(id, dto, token);
+    return this.orderService.findOne(id);
   }
 
   @Delete(':id')
-  @UseGuards(JwtLocalGuard)
-  async remove(@Param('id') id: string, @Req() req) {
-    const token = req.headers.authorization;
-    return this.ordersService.remove(id, token);
-  }
-
-  @Delete()
-  @UseGuards(JwtLocalGuard)
-  async deleteByMonth(@Query('month') month: string, @Req() req) {
-    const token = req.headers.authorization;
-    return this.ordersService.deleteByMonth(month, token);
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async remove(@Param('id') id: string) {
+    await this.orderService.remove(id);
   }
 }

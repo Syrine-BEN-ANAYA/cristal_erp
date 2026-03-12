@@ -10,11 +10,9 @@ import { AuthGateway } from './routes/auth.gateway';
 import { UsersGateway } from './routes/users.gateway';
 import { ProductsGateway } from './routes/products.gateway';
 import { OrdersGateway } from './routes/orders.gateway';
-import { InventoryGateway } from './routes/inventory.gateway';
-import { CategoriesGateway } from './routes/categories.gateway';
-import { AlertsGateway } from './routes/alerts.gateway';
 import { SuppliersGateway } from './routes/suppliers.gateway';
 import { CustomersGateway } from './routes/customers.gateway';
+import { PurchasesGateway } from './routes/purchase.gateway';
 
 @Module({
   controllers: [
@@ -22,11 +20,9 @@ import { CustomersGateway } from './routes/customers.gateway';
     UsersGateway,
     ProductsGateway,
     OrdersGateway,
-    InventoryGateway,
-    CategoriesGateway,
-    AlertsGateway,
     SuppliersGateway,
     CustomersGateway,
+    PurchasesGateway
   ],
   providers: [
     {

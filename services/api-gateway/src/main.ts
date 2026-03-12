@@ -28,7 +28,7 @@ async function bootstrap() {
   // --- Gestion globale des exceptions ---
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  const PORT = 3004;
+  const PORT = 3104;
   await app.listen(PORT);
 
   Logger.log(`🚀 API-Gateway démarrée sur le port ${PORT}`);

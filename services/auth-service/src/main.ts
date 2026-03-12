@@ -14,7 +14,7 @@ async function bootstrap() {
 
   // Configuration CORS (une seule fois suffit)
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3005',
+    origin: process.env.FRONTEND_URL || 'http://localhost:3105',
     credentials: true,
   });
 
@@ -62,7 +62,7 @@ async function bootstrap() {
     console.error('Erreur lors de la création du SUPER_ADMIN:', error);
   }
 
-  const port = process.env.PORT || 3001;
+  const port = process.env.PORT || 3101;
   await app.listen(port);
 
   console.log(`Auth Service running on http://localhost:${port}`);

@@ -40,7 +40,7 @@ interface Customer {
 @Controller('customers')
 export class CustomersGateway {
   private CONTACT_SERVICE_URL =
-    process.env.CONTACT_SERVICE_URL || 'http://localhost:3003';
+    process.env.CONTACT_SERVICE_URL || 'http://localhost:3102';
 
   constructor() {
     Logger.log('CustomersGateway chargé correctement', 'API-GATEWAY');

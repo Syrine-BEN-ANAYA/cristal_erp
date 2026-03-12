@@ -17,33 +17,30 @@ import type { Request } from 'express';
 // DTOs et type Product
 interface CreateProductDto {
   name: string;
-  categoryId: string;
   price: number;
-  stock?: number;
-  description?: string;
+  supplierId?: string;
+    initialQuantity?: number;
+
 }
 
 interface UpdateProductDto {
-  name?: string;
-  categoryId?: string;
-  price?: number;
-  stock?: number;
-  description?: string;
+  name: string;
+  price: number;
+  supplierId?: string;
+    initialQuantity?: number;
 }
 
 interface Product {
-  id: string;
-  name: string;
-  categoryId: string;
+ name: string;
   price: number;
-  stock: number;
-  description?: string;
+  supplierId?: string;
+    initialQuantity?: number;
 }
 
 @Controller('products')
 export class ProductsGateway {
   private CORE_SERVICE_URL =
-    process.env.CORE_SERVICE_URL || 'http://localhost:3002';
+    process.env.CORE_SERVICE_URL || 'http://localhost:3102';
 
   constructor() {
     Logger.log('ProductsGateway chargé correctement', 'API-GATEWAY');

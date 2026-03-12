@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FiHome, FiPackage, FiShoppingCart, FiTag, FiUsers, FiTruck, FiBell } from 'react-icons/fi';
+import { FiPackage, FiShoppingCart, FiTag, FiUsers, FiTruck } from 'react-icons/fi';
 import '../styles/Layout.css';
 import logo from '../assets/logo.png';
 
@@ -9,14 +9,11 @@ const Layout = ({ children, user, onLogout }) => {
   const isAdminRoute = location.pathname.startsWith('/admin');
 
   const menuItems = [
-    { path: '/user/reporting', label: 'Reporting', icon: FiHome },
-    { path: '/user/inventory', label: 'Inventory', icon: FiPackage },
     { path: '/user/orders', label: 'Orders', icon: FiShoppingCart },
-    { path: '/user/categories', label: 'Categories', icon: FiTag },
+    { path: '/user/purchases', label: 'Purchases', icon: FiTag },
     { path: '/user/customers', label: 'Customers', icon: FiUsers },
     { path: '/user/suppliers', label: 'Suppliers', icon: FiTruck },
     { path: '/user/products', label: 'Products', icon: FiPackage },
-    { path: '/user/alerts', label: 'Stock Alerts', icon: FiBell }
   ];
 
   return (

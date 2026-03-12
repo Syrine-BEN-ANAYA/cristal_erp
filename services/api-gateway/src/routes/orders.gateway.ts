@@ -34,7 +34,7 @@ interface Order {
 @Controller('orders')
 export class OrdersGateway {
   private ORDERS_SERVICE_URL =
-    process.env.ORDERS_SERVICE_URL || 'http://localhost:3002';
+    process.env.ORDERS_SERVICE_URL || 'http://localhost:3102';
 
   constructor() {
     Logger.log('OrdersGateway chargé correctement', 'API-GATEWAY');

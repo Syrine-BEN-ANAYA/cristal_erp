@@ -2,7 +2,7 @@
 import axios from "axios";
 
 // ← URL vers l’API Gateway
-const API_GATEWAY_URL = "http://localhost:3004/customers";
+const API_GATEWAY_URL = "http://localhost:3104/customers";
 
 // Helper pour config avec token
 const getConfig = (token) => ({

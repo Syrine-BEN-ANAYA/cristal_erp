@@ -4,16 +4,14 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
 import Layout from "./components/Layout";
-import ReportingPage from "./pages/ReportingPage";
 import ProductsPage from "./pages/ProductsPage";
-import InventoryPage from "./pages/InventoryPage";
 import OrdersPage from "./pages/OrdersPage";
-import CategoriesPage from "./pages/CategoriesPage";
 import CustomersPage from "./pages/CustomersPage";
 import SuppliersPage from "./pages/SuppliersPage";
 import AdminPage from "./pages/AdminPage";
-import AlertsPage from "./pages/AlertsPage";
 import { getMe } from "./api/authService";
+import PurchasesPage from "./pages/PurchasesPage";
+
 
 function App() {
   const [user, setUser] = useState(null);
@@ -79,21 +77,19 @@ function App() {
   const defaultRoute =
     user.role === "ADMIN" || user.role === "SUPER_ADMIN"
       ? "/admin"
-      : "/user/reporting";
+      : "/user/orders";
 
   return (
   <Layout user={user} onLogout={handleLogout}>
     <Routes key={user.role}>
 
       {/* pages user */}
-      <Route path="/user/reporting" element={<ReportingPage token={token} />} />
       <Route path="/user/products" element={<ProductsPage token={token} />} />
-      <Route path="/user/inventory" element={<InventoryPage token={token} />} />
       <Route path="/user/orders" element={<OrdersPage token={token} />} />
-      <Route path="/user/categories" element={<CategoriesPage token={token} />} />
       <Route path="/user/customers" element={<CustomersPage token={token} />} />
       <Route path="/user/suppliers" element={<SuppliersPage token={token} />} />
-      <Route path="/user/alerts" element={<AlertsPage token={token} />} />
+            <Route path="/user/purchases" element={<PurchasesPage token={token} />} />
+
 
       {/* page admin */}
       {(user.role === "ADMIN" || user.role === "SUPER_ADMIN") && (

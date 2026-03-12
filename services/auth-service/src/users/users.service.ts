@@ -26,7 +26,7 @@ export class UsersService {
     let mustChangePassword = false;
 
     // Mot de passe temporaire pour USER ou MANAGER
-    if (dto.role === UserRole.USER || dto.role === UserRole.MANAGER) {
+    if (dto.role === UserRole.USER) {
       mustChangePassword = true;
       if (!password) {
         password = Math.random().toString(36).slice(-8) + 'A1!';

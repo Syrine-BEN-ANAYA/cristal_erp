@@ -1,4 +1,3 @@
-// product.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
@@ -9,16 +8,19 @@ export class Product {
   @Prop({ required: true })
   name: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'Category' })
-  categoryId: Types.ObjectId;
-
   @Prop({ required: true })
   price: number;
 
-  @Prop()
+  @Prop({ required: true, default: 0 })
   initialQuantity: number;
 
-  @Prop({ type: Types.ObjectId }) // ← pas de ref
+  @Prop({ required: true, default: 0 })
+  stock: number;
+
+  @Prop({ required: true, default: 0 })
+  threshold: number; // Seuil d'alerte
+
+  @Prop({ type: Types.ObjectId, ref: 'Supplier' })
   supplierId: Types.ObjectId;
 }
 

@@ -7,173 +7,94 @@ import {
   Param,
   Body,
   Req,
-  HttpException,
-  HttpStatus,
-  Logger,
-  
+  UseGuards,
 } from '@nestjs/common';
-import axios, { AxiosError } from 'axios';
-import type { Request } from 'express';
-
-// Typage DTOs et réponses
-interface CreateUserDto {
-  username: string;
-  email: string;
-  password: string;
-  role: string;
-}
-
-interface UpdateUserDto {
-  username?: string;
-  email?: string;
-  role?: string;
-}
-
-interface ChangePasswordDto {
-  password: string;
-}
-
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  role: string;
-  mustChangePassword?: boolean;
-  tempPassword?: string;
-}
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from './schemas/user.schema';
+import { UsersService } from './users.service';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Controller('users')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
-  private AUTH_SERVICE_URL =
-    process.env.AUTH_SERVICE_URL || 'http://localhost:3001';
+  constructor(private readonly usersService: UsersService) {}
 
-  constructor() {
-    Logger.log('UsersGateway chargé correctement', 'API-GATEWAY');
-  }
-
-  // ---------------------------
-  // GET /users
-  // ---------------------------
+  /**
+   * Récupère tous les utilisateurs (accessible aux SUPER_ADMIN et ADMIN)
+   */
   @Get()
-  async findAll(@Req() req: Request): Promise<User[]> {
-    try {
-      const res = await axios.get<User[]>(`${this.AUTH_SERVICE_URL}/users`, {
-        headers: { Authorization: req.headers.authorization || '' },
-      });
-      return res.data;
-    } catch (error) {
-      const err = error as AxiosError;
-      throw new HttpException(
-        err.response?.data || 'Erreur récupération users',
-        err.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  async findAll(@Req() req) {
+    return this.usersService.findAll(req.user);
   }
 
-  // ---------------------------
-  // GET /users/:id
-  // ---------------------------
+  /**
+   * Récupère un utilisateur par son ID (accessible aux SUPER_ADMIN et ADMIN)
+   */
   @Get(':id')
-  async findOne(@Param('id') id: string, @Req() req: Request): Promise<User> {
-    try {
-      const res = await axios.get<User>(`${this.AUTH_SERVICE_URL}/users/${id}`, {
-        headers: { Authorization: req.headers.authorization || '' },
-      });
-      return res.data;
-    } catch (error) {
-      const err = error as AxiosError;
-      throw new HttpException(
-        err.response?.data || 'Erreur récupération user',
-        err.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  async findOne(@Param('id') id: string, @Req() req) {
+    return this.usersService.findOne(id, req.user);
   }
 
-  // ---------------------------
-  // POST /users
-  // ---------------------------
+  /**
+   * Crée un nouvel utilisateur (accessible aux SUPER_ADMIN et ADMIN)
+   */
   @Post()
-  async create(@Body() body: CreateUserDto, @Req() req: Request): Promise<User> {
-    try {
-      const res = await axios.post<User>(`${this.AUTH_SERVICE_URL}/users`, body, {
-        headers: { Authorization: req.headers.authorization || '' },
-      });
-      return res.data;
-    } catch (error) {
-      const err = error as AxiosError;
-      throw new HttpException(
-        err.response?.data || 'Erreur création user',
-        err.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  async create(@Body() createUserDto: CreateUserDto, @Req() req) {
+    return this.usersService.create(createUserDto, req.user);
   }
 
-  // ---------------------------
-  // PUT /users/:id
-  // ---------------------------
+  /**
+   * Met à jour un utilisateur (accessible aux SUPER_ADMIN et ADMIN)
+   */
   @Put(':id')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   async update(
     @Param('id') id: string,
-    @Body() body: UpdateUserDto,
-    @Req() req: Request,
-  ): Promise<User> {
-    try {
-      const res = await axios.put<User>(
-        `${this.AUTH_SERVICE_URL}/users/${id}`,
-        body,
-        { headers: { Authorization: req.headers.authorization || '' } },
-      );
-      return res.data;
-    } catch (error) {
-      const err = error as AxiosError;
-      throw new HttpException(
-        err.response?.data || 'Erreur update user',
-        err.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+    @Body() updateUserDto: UpdateUserDto,
+    @Req() req,
+  ) {
+    return this.usersService.update(id, updateUserDto, req.user);
   }
 
-  // ---------------------------
-  // DELETE /users/:id
-  // ---------------------------
+  /**
+   * Supprime un utilisateur (accessible aux SUPER_ADMIN et ADMIN)
+   */
   @Delete(':id')
-  async remove(@Param('id') id: string, @Req() req: Request): Promise<User> {
-    try {
-      const res = await axios.delete<User>(`${this.AUTH_SERVICE_URL}/users/${id}`, {
-        headers: { Authorization: req.headers.authorization || '' },
-      });
-      return res.data;
-    } catch (error) {
-      const err = error as AxiosError;
-      throw new HttpException(
-        err.response?.data || 'Erreur suppression user',
-        err.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  async remove(@Param('id') id: string, @Req() req) {
+    return this.usersService.deleteUser(id, req.user);
   }
 
-  // ---------------------------
-  // PUT /users/change-password/:id
-  // ---------------------------
+  /**
+   * Change le mot de passe d'un utilisateur.
+   * Accessible à :
+   * - SUPER_ADMIN et ADMIN pour n'importe quel utilisateur
+   * - Un USER pour son propre compte (vérification faite dans le service)
+   */
   @Put('change-password/:id')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.USER)
   async changePassword(
     @Param('id') id: string,
-    @Body() body: ChangePasswordDto,
-    @Req() req: Request,
-  ): Promise<User> {
-    try {
-      const res = await axios.put<User>(
-        `${this.AUTH_SERVICE_URL}/users/change-password/${id}`,
-        body,
-        { headers: { Authorization: req.headers.authorization || '' } },
-      );
-      return res.data;
-    } catch (error) {
-      const err = error as AxiosError;
-      throw new HttpException(
-        err.response?.data || 'Erreur changement mot de passe',
-        err.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+    @Body() changePasswordDto: ChangePasswordDto,
+    @Req() req,
+  ) {
+    return this.usersService.changePassword(id, changePasswordDto, req.user);
+  }
+
+  /**
+   * Force un utilisateur à changer son mot de passe à la prochaine connexion.
+   * Accessible uniquement aux SUPER_ADMIN et ADMIN.
+   */
+  @Put('force-change-password/:id')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  async forceChangePassword(@Param('id') id: string) {
+    return this.usersService.forceChangePassword(id);
   }
 }

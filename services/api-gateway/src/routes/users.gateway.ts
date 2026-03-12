@@ -14,12 +14,16 @@ import {
 import axios, { AxiosError } from 'axios';
 import type { Request } from 'express';
 
+interface ChangePasswordDto {
+  newPassword: string;
+}
+
 // 🔹 Type minimal pour un utilisateur
 interface User {
   _id: string;
   username: string;
   email: string;
-  role: 'SUPER_ADMIN' | 'ADMIN' | 'MANAGER' | 'USER';
+  role: 'SUPER_ADMIN' | 'ADMIN' | 'USER';
   mustChangePassword: boolean;
   tempPassword?: string; // si création USER/Manager
 }
@@ -27,7 +31,7 @@ interface User {
 @Controller('users')
 export class UsersGateway {
   private AUTH_SERVICE_URL =
-    process.env.AUTH_SERVICE_URL || 'http://localhost:3001';
+    process.env.AUTH_SERVICE_URL || 'http://localhost:3101';
 
   constructor() {
     Logger.log('UsersGateway chargé correctement', 'API-GATEWAY');
@@ -152,6 +156,27 @@ export class UsersGateway {
       const err = error as AxiosError;
       throw new HttpException(
         err.response?.data || 'Erreur suppression user',
+        err.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+  @Put('change-password/:id')
+  async changePassword(
+    @Param('id') id: string,
+    @Body() body: ChangePasswordDto,
+    @Req() req: Request,
+  ): Promise<any> {
+    try {
+      const res = await axios.put(
+        `${this.AUTH_SERVICE_URL}/users/change-password/${id}`,
+        body,
+        { headers: { Authorization: req.headers.authorization } },
+      );
+      return res.data;
+    } catch (error) {
+      const err = error as AxiosError;
+      throw new HttpException(
+        err.response?.data || 'Erreur changement mot de passe',
         err.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

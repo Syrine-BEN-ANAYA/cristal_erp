@@ -2,7 +2,7 @@
 import axios from "axios";
 
 // URL de l'API Gateway pour les commandes
-const API_GATEWAY_URL = process.env.REACT_APP_API_GATEWAY_URL || "http://localhost:3004/orders";
+const API_GATEWAY_URL = process.env.REACT_APP_API_GATEWAY_URL || "http://localhost:3104/orders";
 
 // --- Helper pour config avec token ---
 const getConfig = (token) => ({
