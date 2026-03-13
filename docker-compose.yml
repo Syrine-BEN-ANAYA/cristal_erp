@@ -1,32 +1,53 @@
-version: "3.9"
 
 services:
 
-  api-gateway:
-    build: ./services/api-gateway
+  mongo:
+    image: mongo:6.0
+    container_name: mongo
+    restart: always
     ports:
-      - "3004:3004"
-    depends_on:
-      - auth-service
-      - core-service
-      - contact-service
+      - "27017:27017"
 
   auth-service:
     build: ./services/auth-service
+    container_name: auth-service
     ports:
-      - "3001:3001"
+      - "3101:3101"
+    environment:
+      MONGO_URI: mongodb://root:rootpassword@mongo:27017/core-service?authSource=admin
+      JWT_SECRET: ma_super_secrete
+    depends_on:
+      - mongo
 
   core-service:
     build: ./services/core-service
+    container_name: core-service
     ports:
-      - "3002:3002"
+      - "3102:3102"
+    environment:
+      MONGO_URI: mongodb://root:rootpassword@mongo:27017/core-service?authSource=admin
+    depends_on:
+      - mongo
 
-  contact-service:
-    build: ./services/contact-service
+  api-gateway:
+    build: ./services/api-gateway
+    container_name: api-gateway
     ports:
-      - "3003:3003"
+      - "3104:3104"
+    environment:
+      MONGO_URI: mongodb://root:rootpassword@mongo:27017/core-service?authSource=admin
+      JWT_SECRET: ma_super_secrete
+    depends_on:
+      - auth-service
+      - core-service
 
   frontend:
     build: ./erp-ui
+    container_name: frontend
     ports:
-      - "3005:3005"
+      - "3105:3105"
+    depends_on:
+      - api-gateway
+
+volumes:
+  mongo-data:

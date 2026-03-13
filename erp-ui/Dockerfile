@@ -12,4 +12,4 @@ FROM nginx:alpine
 
 COPY --from=build /app/build /usr/share/nginx/html
 
-EXPOSE 3005
+EXPOSE 3105
