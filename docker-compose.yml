@@ -1,6 +1,5 @@
 
 services:
-
   mongo:
     image: mongo:6.0
     container_name: mongo
@@ -12,9 +11,9 @@ services:
     build: ./services/auth-service
     container_name: auth-service
     ports:
-      - "3101:3101"
+      - "3101:3201"
     environment:
-      MONGO_URI: mongodb://root:rootpassword@mongo:27017/core-service?authSource=admin
+      MONGO_URI: mongodb://mongo:27017/core-service
       JWT_SECRET: ma_super_secrete
     depends_on:
       - mongo
@@ -23,9 +22,9 @@ services:
     build: ./services/core-service
     container_name: core-service
     ports:
-      - "3102:3102"
+      - "3102:3202"
     environment:
-      MONGO_URI: mongodb://root:rootpassword@mongo:27017/core-service?authSource=admin
+      MONGO_URI: mongodb://mongo:27017/core-service
     depends_on:
       - mongo
 
@@ -33,9 +32,9 @@ services:
     build: ./services/api-gateway
     container_name: api-gateway
     ports:
-      - "3104:3104"
+      - "3104:3204"
     environment:
-      MONGO_URI: mongodb://root:rootpassword@mongo:27017/core-service?authSource=admin
+      MONGO_URI: mongodb://mongo:27017/core-service
       JWT_SECRET: ma_super_secrete
     depends_on:
       - auth-service
@@ -45,9 +44,38 @@ services:
     build: ./erp-ui
     container_name: frontend
     ports:
-      - "3105:3105"
+      - "3105:80"
     depends_on:
       - api-gateway
 
+  automation-service:
+    build: ./services/automation-service
+    container_name: automation-service
+    ports:
+      - "3202:3200"
+    environment:
+      MONGO_URI: mongodb://mongo:27017/automation
+      N8N_URL: http://n8n:5678
+      N8N_API_KEY: super_secret_api_key
+    depends_on:
+      - mongo
+      - core-service
+      - n8n
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    ports:
+      - "5678:5678"
+    environment:
+      N8N_BASIC_AUTH_ACTIVE: "false"
+      N8N_HOST: n8n
+      N8N_PORT: 5678
+      DB_TYPE: sqlite
+      DB_SQLITE_FILENAME: /root/.n8n/database.sqlite
+    volumes:
+      - n8n_data:/root/.n8n
+    restart: always
+
 volumes:
-  mongo-data:
+  n8n_data:

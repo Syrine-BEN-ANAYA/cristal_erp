@@ -18,7 +18,7 @@ if (!process.env.MONGO_URI) {
 
 @Module({
   imports: [
-    MongooseModule.forRoot(process.env.MONGO_URI), // TypeScript sait que c'est une string
+    MongooseModule.forRoot(process.env.MONGO_URI as string),
     OrdersModule,
     ProductsModule,
     SuppliersModule,

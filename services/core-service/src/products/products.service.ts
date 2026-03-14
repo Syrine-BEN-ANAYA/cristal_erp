@@ -1,85 +1,143 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { ClientSession, Model } from 'mongoose';
-import axios from 'axios';
+import { Model, ClientSession, Types } from 'mongoose';
 import { Product, ProductDocument } from './schemas/product.schema';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { ProductThresholdDto } from './dto/product-threshold.dto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class ProductService {
-  private readonly N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL;
-  private readonly DEFAULT_THRESHOLD = 10; // seuil par défaut si non défini
+  private readonly DEFAULT_THRESHOLD = 10;
 
   constructor(
-    @InjectModel(Product.name) private productModel: Model<ProductDocument>,
-  ) {}
+    @InjectModel(Product.name) private readonly productModel: Model<ProductDocument>,
+    private readonly eventBus: EventEmitter2,
+  ) {
+    console.log('✅ ProductService instantiated');
+  }
 
   // -------------------- CRUD --------------------
   async create(createProductDto: CreateProductDto, requester: any): Promise<Product> {
+    console.log('🟢 create called with:', createProductDto);
     const stock = createProductDto.stock ?? createProductDto.initialQuantity ?? 0;
     const threshold = createProductDto.threshold ?? this.DEFAULT_THRESHOLD;
 
-    const createdProduct = new this.productModel({
+    const newProduct = new this.productModel({
       ...createProductDto,
       stock,
       threshold,
     });
 
-    return createdProduct.save();
+    const saved = await newProduct.save();
+    console.log('🟢 Product created:', saved);
+    return saved;
   }
 
   async findAll(requester: any): Promise<Product[]> {
-    return this.productModel.find().exec();
+    try {
+      console.log('🟢 findAll called');
+      const products = await this.productModel.find().exec();
+      console.log('🟢 Products found:', products.length);
+      return products;
+    } catch (err) {
+      console.error('❌ Error in findAll:', err);
+      throw err;
+    }
   }
 
-  async findOne(id: string, requester: any): Promise<Product> {
-    const product = await this.productModel.findById(id).exec();
-    if (!product) throw new NotFoundException(`Product with id ${id} not found`);
+ async findOne(id: string, requester: any): Promise<ProductDocument> { // ← ProductDocument, pas Product
+  console.log('🟢 findOne called with id:', id);
+
+  let product: ProductDocument | null;
+
+  if (Types.ObjectId.isValid(id)) {
+    product = await this.productModel.findById(id).exec();
+  } else {
+    product = await this.productModel.findOne({ slug: id }).exec();
+  }
+
+  if (!product) {
+    console.log('❌ Product not found:', id);
+    throw new NotFoundException(`Product not found: ${id}`);
+  }
+
+  console.log('🟢 Product found:', product);
+  return product; // ← type ProductDocument
+}
+
+  async update(id: string, updateDto: UpdateProductDto, requester: any): Promise<Product> {
+    console.log('🟢 update called with id:', id, 'data:', updateDto);
+
+    const product = await this.findOne(id, requester); // réutilise findOne pour ObjectId ou slug
+
+    Object.assign(product, updateDto);
+    await product.save();
+
+    if (product.stock <= product.threshold) {
+      this.emitLowStockEvent(product);
+    }
+
+    console.log('🟢 Product updated:', product);
     return product;
   }
 
-  async update(id: string, updateProductDto: UpdateProductDto, requester: any): Promise<Product> {
-    const product = await this.productModel.findByIdAndUpdate(
-      id,
-      updateProductDto,
-      { new: true, runValidators: true }
-    ).exec();
-    if (!product) throw new NotFoundException(`Product with id ${id} not found`);
+ async remove(id: string, requester: any): Promise<{ message: string }> {
+  console.log('🟢 remove called with id:', id);
 
-    // Vérifie le stock après update
-    await this.checkAndAlertLowStock();
-    return product;
-  }
-
-  async remove(id: string, requester: any): Promise<{ message: string }> {
-    const result = await this.productModel.findByIdAndDelete(id).exec();
-    if (!result) throw new NotFoundException(`Product with id ${id} not found`);
-    return { message: 'Product deleted successfully' };
-  }
+  const product = await this.findOne(id, requester);
+  await product.deleteOne(); // ← remplacer remove() par deleteOne()
+  
+  console.log('🟢 Product deleted:', product);
+  return { message: 'Product deleted successfully' };
+}
 
   // -------------------- Stock management --------------------
   async addStock(productId: string, quantity: number): Promise<void> {
-    const result = await this.productModel.updateOne(
+    console.log('🟢 addStock called:', productId, quantity);
+    const res = await this.productModel.updateOne(
       { _id: productId },
-      { $inc: { stock: quantity } }
+      { $inc: { stock: quantity } },
     );
-    if (result.modifiedCount === 0) throw new NotFoundException(`Product with id ${productId} not found`);
 
-    await this.checkAndAlertLowStock();
+    if (res.modifiedCount === 0) {
+      console.log('❌ Product not found for addStock:', productId);
+      throw new NotFoundException(`Product with id ${productId} not found`);
+    }
+    console.log('🟢 Stock added successfully for:', productId);
   }
 
   async removeStock(productId: string, quantity: number): Promise<void> {
+    console.log('🟢 removeStock called:', productId, quantity);
     const product = await this.productModel.findById(productId);
-    if (!product) throw new NotFoundException(`Product with id ${productId} not found`);
-    if (product.stock < quantity) throw new BadRequestException(`Insufficient stock for product ${productId}`);
+    if (!product) {
+      console.log('❌ Product not found for removeStock:', productId);
+      throw new NotFoundException(`Product with id ${productId} not found`);
+    }
+    if (product.stock < quantity) {
+      console.log('❌ Insufficient stock for:', productId);
+      throw new BadRequestException(`Insufficient stock for product ${productId}`);
+    }
 
-    await this.productModel.updateOne(
-      { _id: productId },
-      { $inc: { stock: -quantity } }
-    );
+    product.stock -= quantity;
+    await product.save();
+    console.log('🟢 Stock removed, new stock:', product.stock);
 
-    await this.checkAndAlertLowStock();
+    if (product.stock <= product.threshold) {
+      this.emitLowStockEvent(product);
+    }
+  }
+
+  private emitLowStockEvent(product: ProductDocument) {
+    const event: ProductThresholdDto = {
+      productId: product._id.toString(),
+      productName: product.name,
+      currentStock: product.stock,
+      threshold: product.threshold,
+    };
+    console.log('⚠️ Low stock event emitted:', event);
+    this.eventBus.emit('product.threshold.reached', event);
   }
 
   async decrementStockAtomic(
@@ -87,45 +145,22 @@ export class ProductService {
     quantity: number,
     session?: ClientSession,
   ): Promise<boolean> {
-    const result = await this.productModel.updateOne(
+    console.log('🟢 decrementStockAtomic called:', productId, quantity);
+    const res = await this.productModel.updateOne(
       { _id: productId, stock: { $gte: quantity } },
       { $inc: { stock: -quantity } },
       { session },
     );
-    if (result.modifiedCount > 0) await this.checkAndAlertLowStock();
-    return result.modifiedCount > 0;
+    console.log('🟢 decrement result:', res.modifiedCount);
+    return res.modifiedCount > 0;
   }
 
   async getLowStockProducts(): Promise<Product[]> {
-    return this.productModel.find({
-      $expr: { $lt: ["$stock", "$threshold"] }
+    console.log('🟢 getLowStockProducts called');
+    const products = await this.productModel.find({
+      $expr: { $lt: ["$stock", "$threshold"] },
     }).exec();
-  }
-
-  // -------------------- n8n Integration --------------------
-  private async triggerLowStockAlert(product: ProductDocument) {
-    if (!this.N8N_WEBHOOK_URL) return console.warn('N8N_WEBHOOK_URL not set. Skipping alert.');
-
-    try {
-      await axios.post(
-        this.N8N_WEBHOOK_URL,
-        {
-          productId: product.id,
-          name: product.name,
-          stock: product.stock,
-          threshold: product.threshold,
-        },
-        { timeout: 5000 } // timeout 5s pour éviter blocage
-      );
-    } catch (err) {
-      console.error('Failed to trigger n8n alert', err);
-    }
-  }
-
-  async checkAndAlertLowStock() {
-    const lowStockProducts = await this.getLowStockProducts() as ProductDocument[];
-    for (const product of lowStockProducts) {
-      await this.triggerLowStockAlert(product);
-    }
+    console.log('🟢 Low stock products found:', products.length);
+    return products;
   }
 }

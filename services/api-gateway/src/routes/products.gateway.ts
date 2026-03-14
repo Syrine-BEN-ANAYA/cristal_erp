@@ -2,7 +2,6 @@ import {
   Controller,
   Get,
   Post,
-  Put,
   Patch,
   Delete,
   Body,
@@ -14,8 +13,6 @@ import {
 } from '@nestjs/common';
 import axios, { AxiosError } from 'axios';
 import type { Request } from 'express';
-
-// DTOs internes (peuvent être externalisés si besoin)
 interface CreateProductDto {
   name: string;
   price: number;
@@ -45,7 +42,6 @@ interface Product {
   createdAt?: string;
   updatedAt?: string;
 }
-
 @Controller('products')
 export class ProductsGateway {
   private readonly PRODUCTS_SERVICE_URL =
@@ -55,23 +51,48 @@ export class ProductsGateway {
     Logger.log('ProductsGateway chargé correctement', 'API-GATEWAY');
   }
 
+  private handleAxiosError(err: AxiosError, defaultMsg: string): never {
+    const errResponse = err.response?.data;
+    let message = defaultMsg;
+
+    if (errResponse) {
+      if (typeof errResponse === 'string') message = errResponse;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+      else if ((errResponse as any).message)
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+        message = (errResponse as any).message;
+      else message = JSON.stringify(errResponse, null, 2);
+    } else if (err.message) {
+      message = err.message;
+    }
+
+    throw new HttpException(
+      message,
+      err.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+    );
+  }
+
+  private getHeaders(req: Request) {
+    return { Authorization: req.headers.authorization || '' };
+  }
+
+  // -------------------- CRUD --------------------
   @Post()
   async create(
-    @Body() createProductDto: CreateProductDto,
+    @Body() dto: CreateProductDto,
     @Req() req: Request,
   ): Promise<Product> {
     try {
       const response = await axios.post<Product>(
         `${this.PRODUCTS_SERVICE_URL}/products`,
-        createProductDto,
-        { headers: { Authorization: req.headers.authorization || '' } },
+        dto,
+        { headers: this.getHeaders(req) },
       );
       return response.data;
     } catch (error) {
-      const err = error as AxiosError;
-      throw new HttpException(
-        err.response?.data || 'Erreur lors de la création du produit',
-        err.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      this.handleAxiosError(
+        error as AxiosError,
+        'Erreur lors de la création du produit',
       );
     }
   }
@@ -81,32 +102,29 @@ export class ProductsGateway {
     try {
       const response = await axios.get<Product[]>(
         `${this.PRODUCTS_SERVICE_URL}/products`,
-        { headers: { Authorization: req.headers.authorization || '' } },
+        { headers: this.getHeaders(req) },
       );
       return response.data;
     } catch (error) {
-      const err = error as AxiosError;
-      throw new HttpException(
-        err.response?.data || 'Erreur lors de la récupération des produits',
-        err.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      this.handleAxiosError(
+        error as AxiosError,
+        'Erreur lors de la récupération des produits',
       );
     }
   }
 
-  @Get('low-stock')
+  @Get('low-stock/list') // correspond exactement au service
   async getLowStockProducts(@Req() req: Request): Promise<Product[]> {
     try {
       const response = await axios.get<Product[]>(
-        `${this.PRODUCTS_SERVICE_URL}/products/low-stock`,
-        { headers: { Authorization: req.headers.authorization || '' } },
+        `${this.PRODUCTS_SERVICE_URL}/products/low-stock/list`,
+        { headers: this.getHeaders(req) },
       );
       return response.data;
     } catch (error) {
-      const err = error as AxiosError;
-      throw new HttpException(
-        err.response?.data ||
-          'Erreur lors de la récupération des produits en stock faible',
-        err.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      this.handleAxiosError(
+        error as AxiosError,
+        'Erreur lors de la récupération des produits en stock faible',
       );
     }
   }
@@ -119,36 +137,34 @@ export class ProductsGateway {
     try {
       const response = await axios.get<Product>(
         `${this.PRODUCTS_SERVICE_URL}/products/${id}`,
-        { headers: { Authorization: req.headers.authorization || '' } },
+        { headers: this.getHeaders(req) },
       );
       return response.data;
     } catch (error) {
-      const err = error as AxiosError;
-      throw new HttpException(
-        err.response?.data || 'Erreur lors de la récupération du produit',
-        err.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      this.handleAxiosError(
+        error as AxiosError,
+        'Erreur lors de la récupération du produit',
       );
     }
   }
 
-  @Put(':id')
+  @Patch(':id')
   async update(
     @Param('id') id: string,
-    @Body() updateProductDto: UpdateProductDto,
+    @Body() dto: UpdateProductDto,
     @Req() req: Request,
   ): Promise<Product> {
     try {
-      const response = await axios.put<Product>(
+      const response = await axios.patch<Product>(
         `${this.PRODUCTS_SERVICE_URL}/products/${id}`,
-        updateProductDto,
-        { headers: { Authorization: req.headers.authorization || '' } },
+        dto,
+        { headers: this.getHeaders(req) },
       );
       return response.data;
     } catch (error) {
-      const err = error as AxiosError;
-      throw new HttpException(
-        err.response?.data || 'Erreur lors de la mise à jour du produit',
-        err.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      this.handleAxiosError(
+        error as AxiosError,
+        'Erreur lors de la mise à jour du produit',
       );
     }
   }
@@ -161,18 +177,18 @@ export class ProductsGateway {
     try {
       const response = await axios.delete<{ message: string }>(
         `${this.PRODUCTS_SERVICE_URL}/products/${id}`,
-        { headers: { Authorization: req.headers.authorization || '' } },
+        { headers: this.getHeaders(req) },
       );
       return response.data;
     } catch (error) {
-      const err = error as AxiosError;
-      throw new HttpException(
-        err.response?.data || 'Erreur lors de la suppression du produit',
-        err.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      this.handleAxiosError(
+        error as AxiosError,
+        'Erreur lors de la suppression du produit',
       );
     }
   }
 
+  // -------------------- Stock --------------------
   @Patch(':id/add-stock')
   async addStock(
     @Param('id') id: string,
@@ -183,14 +199,13 @@ export class ProductsGateway {
       const response = await axios.patch(
         `${this.PRODUCTS_SERVICE_URL}/products/${id}/add-stock`,
         body,
-        { headers: { Authorization: req.headers.authorization || '' } },
+        { headers: this.getHeaders(req) },
       );
       return response.data;
     } catch (error) {
-      const err = error as AxiosError;
-      throw new HttpException(
-        err.response?.data || 'Erreur lors de l’ajout de stock',
-        err.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      this.handleAxiosError(
+        error as AxiosError,
+        'Erreur lors de l’ajout de stock',
       );
     }
   }
@@ -205,14 +220,13 @@ export class ProductsGateway {
       const response = await axios.patch(
         `${this.PRODUCTS_SERVICE_URL}/products/${id}/remove-stock`,
         body,
-        { headers: { Authorization: req.headers.authorization || '' } },
+        { headers: this.getHeaders(req) },
       );
       return response.data;
     } catch (error) {
-      const err = error as AxiosError;
-      throw new HttpException(
-        err.response?.data || 'Erreur lors du retrait de stock',
-        err.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      this.handleAxiosError(
+        error as AxiosError,
+        'Erreur lors du retrait de stock',
       );
     }
   }

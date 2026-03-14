@@ -7,8 +7,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const reflector = app.get(Reflector);
 
-  app.useGlobalGuards(new JwtLocalGuard(), new RolesGuard(reflector));
-
+app.useGlobalGuards(new JwtLocalGuard(), new RolesGuard(reflector));
   app.enableCors({
     origin: 'http://localhost:3105',
     credentials: true,

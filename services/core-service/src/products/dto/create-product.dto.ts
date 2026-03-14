@@ -27,4 +27,6 @@ export class CreateProductDto {
   @IsNumber()
   @Min(10)
   threshold: number;
+
+
 }
