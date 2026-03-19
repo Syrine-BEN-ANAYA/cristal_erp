@@ -47,7 +47,7 @@ export default function ChangePasswordPage({ user, token, onPasswordChanged, onL
           <span className="company-name">AL RUBAI UNITED AL CRISTAL</span>
         </div>
         <div className="topbar-user">
-          <span className="user-email">{user?.email}</span>
+          <span className="user-username">{user?.username}</span>
           {/* Le bouton Logout a été supprimé */}
         </div>
       </header>
@@ -56,7 +56,7 @@ export default function ChangePasswordPage({ user, token, onPasswordChanged, onL
       <div className="change-password-container">
         <h1 className="page-title">Change password</h1>
         <p className="page-subtitle">
-          Hello <strong>{user.username || user.email}</strong>, please set a new password to continue.
+          Hello <strong>{user.username || user.username}</strong>, please set a new password to continue.
         </p>
 
         {error && <div className="error-message">{error}</div>}

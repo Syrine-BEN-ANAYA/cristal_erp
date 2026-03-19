@@ -4,7 +4,7 @@ import { Model, Types } from 'mongoose';
 import { Purchase, PurchaseDocument } from './schemas/purchase.schema';
 import { CreatePurchaseDto } from './dto/create-purchase.dto';
 import { UpdatePurchaseDto } from './dto/update-purchase.dto';
-import { ProductService } from '../products/products.service';
+import { ProductsService } from '../products/products.service';
 
 @Injectable()
 export class PurchaseService {
@@ -12,7 +12,7 @@ export class PurchaseService {
   constructor(
     @InjectModel(Purchase.name)
     private purchaseModel: Model<PurchaseDocument>,
-    private productService: ProductService,
+    private productService: ProductsService,
   ) {}
 
   async createPurchase(dto: CreatePurchaseDto) {

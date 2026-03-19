@@ -15,7 +15,7 @@ export class AuthController {
 
   @Post('login')
   async login(@Body() body: LoginDto) {
-    const user = await this.authService.validateUser(body.email, body.password);
+    const user = await this.authService.validateUser(body.username, body.password);
     return this.authService.login(user);
   }
 
@@ -53,7 +53,6 @@ export class AuthController {
       user: {
         id: user._id,
         username: user.username,
-        email: user.email,
         role: user.role,
       },
     };

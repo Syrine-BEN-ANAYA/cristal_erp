@@ -19,8 +19,8 @@ export class UsersService {
   // Créer un utilisateur
   // ==========================================
   async create(dto: CreateUserDto, requester: any) {
-    const existing = await this.userModel.findOne({ email: dto.email });
-    if (existing) throw new BadRequestException('Cet email est déjà utilisé');
+    const existing = await this.userModel.findOne({ username: dto.username });
+    if (existing) throw new BadRequestException('Ce username est déjà utilisé');
 
     let password = dto.password;
     let mustChangePassword = false;
@@ -37,7 +37,6 @@ export class UsersService {
 
     const newUser = new this.userModel({
       username: dto.username,
-      email: dto.email,
       password: hashedPassword,
       role: dto.role,
       mustChangePassword,

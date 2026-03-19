@@ -10,6 +10,7 @@ import {
   HttpException,
   HttpStatus,
   Logger,
+  Put,
 } from '@nestjs/common';
 import axios, { AxiosError } from 'axios';
 import type { Request } from 'express';
@@ -148,14 +149,14 @@ export class ProductsGateway {
     }
   }
 
-  @Patch(':id')
+  @Put(':id')
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateProductDto,
     @Req() req: Request,
   ): Promise<Product> {
     try {
-      const response = await axios.patch<Product>(
+      const response = await axios.put<Product>(
         `${this.PRODUCTS_SERVICE_URL}/products/${id}`,
         dto,
         { headers: this.getHeaders(req) },

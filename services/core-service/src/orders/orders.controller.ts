@@ -1,37 +1,38 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, HttpCode, HttpStatus } from '@nestjs/common';
-import { OrderService } from './orders.service';
+import { Controller, Get, Post, Param, Body, Delete, Put } from '@nestjs/common';
+import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
+import { OrderDocument } from './schemas/order.schema';
 
 @Controller('orders')
-export class OrderController {
-  constructor(private readonly orderService: OrderService) {}
+export class OrdersController {
+  constructor(private readonly ordersService: OrdersService) {}
 
   @Post()
-  async create(@Body() createOrderDto: CreateOrderDto) {
-    return this.orderService.createOrder(createOrderDto);
+  async create(@Body() dto: CreateOrderDto) {
+    return this.ordersService.createOrder(dto);
   }
 
   @Get()
   async findAll() {
-    return this.orderService.findAll();
+    return this.ordersService.findAll();
   }
- @Get('total')
-async getTotalOrderAmount() {
-  const total = await this.orderService.getTotalOrderAmount();
-  return { totalOrderAmount: total };
-}
+  @Put(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() dto: CreateOrderDto,
+  ): Promise<OrderDocument> {
+    return this.ordersService.updateOrder(id, dto);
+  }
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    return this.orderService.findOne(id);
+    return this.ordersService.findOne(id);
   }
-
+@Get('total')
+async getTotalOrderAmount(): Promise<{ totalOrderAmount: number }> {
+  return this.ordersService.getTotalOrderAmount();
+}
   @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id') id: string) {
-    await this.orderService.remove(id);
+    return this.ordersService.removeOrder(id);
   }
-
-  
-  
 }

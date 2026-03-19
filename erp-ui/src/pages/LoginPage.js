@@ -8,7 +8,7 @@ const LoginPage = ({ onLogin }) => {
 
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState('');
+  const [username, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
@@ -17,7 +17,7 @@ const LoginPage = ({ onLogin }) => {
     setError('');
 
     try {
-      const res = await login(email, password);
+      const res = await login(username, password);
 
       const { user, access_token } = res;
 
@@ -70,16 +70,16 @@ const LoginPage = ({ onLogin }) => {
             <form onSubmit={handleSubmit}>
 
               <div className="input-group">
-                <label htmlFor="email" className="input-label">Email</label>
+                <label htmlFor="username" className="input-label">Username</label>
 
                 <div className="input-wrapper">
                   <FiMail className="input-icon" />
                   <input
-                    type="email"
-                    id="email"
+                    type="username"
+                    id="username"
                     className="input-field"
-                    placeholder="username@cristal.com"
-                    value={email}
+                    placeholder="username"
+                    value={username}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />

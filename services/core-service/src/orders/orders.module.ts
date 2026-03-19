@@ -1,16 +1,19 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Order, OrderSchema } from './schemas/order.schema';
-import { OrderService } from './orders.service';
-import { OrderController } from './orders.controller';
-import { ProductsModule } from '../products/products.module'; // ← importer ProductsModule
+import { OrdersService } from './orders.service';
+import { OrdersController } from './orders.controller';
+import { ProductsModule } from '../products/products.module'; // 🔹 Import du module produit
+import { Order, OrderItem, OrderItemSchema, OrderSchema } from './schemas/order.schema';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Order.name, schema: OrderSchema }]),
-    ProductsModule, // ← permet d’injecter ProductService
+    MongooseModule.forFeature([
+      { name: Order.name, schema: OrderSchema },
+      { name: OrderItem.name, schema: OrderItemSchema },
+    ]),
+    ProductsModule, // 🔹 Injection de ProductService
   ],
-  controllers: [OrderController],
-  providers: [OrderService],
+  providers: [OrdersService],
+  controllers: [OrdersController],
 })
 export class OrdersModule {}

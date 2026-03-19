@@ -1,53 +1,59 @@
-import { Controller, Get, Post, Body, Param, Patch, Delete, Query } from '@nestjs/common';
-import { ProductService } from './products.service';
+import { Controller, Get, Post, Patch, Delete, Param, Body, Put } from '@nestjs/common';
+import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
+import { ProductDocument } from './schemas/product.schema';
 import { UpdateProductDto } from './dto/update-product.dto';
 
 @Controller('products')
-export class ProductController {
-  constructor(private readonly productService: ProductService) {}
+export class ProductsController {
+  constructor(private readonly productService: ProductsService) {}
 
-  // -------------------- CRUD --------------------
   @Post()
-  async create(@Body() dto: CreateProductDto, @Query('user') requester: any) {
-    return this.productService.create(dto, requester);
+  async create(@Body() dto: CreateProductDto): Promise<ProductDocument> {
+    return this.productService.create(dto);
   }
 
   @Get()
-  async findAll(@Query('user') requester: any) {
-    return this.productService.findAll(requester);
-  }
-
-  @Get(':id')
-  async findOne(@Param('id') id: string, @Query('user') requester: any) {
-    return this.productService.findOne(id, requester);
-  }
-
-  @Patch(':id')
-  async update(@Param('id') id: string, @Body() dto: UpdateProductDto, @Query('user') requester: any) {
-    return this.productService.update(id, dto, requester);
-  }
-
-  @Delete(':id')
-  async remove(@Param('id') id: string, @Query('user') requester: any) {
-    return this.productService.remove(id, requester);
-  }
-
-  // -------------------- Stock management --------------------
-  @Patch(':id/add-stock')
-  async addStock(@Param('id') id: string, @Body('quantity') quantity: number) {
-    await this.productService.addStock(id, quantity);
-    return { message: 'Stock added successfully' };
-  }
-
-  @Patch(':id/remove-stock')
-  async removeStock(@Param('id') id: string, @Body('quantity') quantity: number) {
-    await this.productService.removeStock(id, quantity);
-    return { message: 'Stock removed successfully' };
+  async findAll(): Promise<ProductDocument[]> {
+    return this.productService.findAll();
   }
 
   @Get('low-stock/list')
-  async getLowStockProducts() {
-    return this.productService.getLowStockProducts();
+  async findLowStock(): Promise<ProductDocument[]> {
+    return this.productService.findLowStock();
+  }
+
+  @Get(':id')
+  async findOne(@Param('id') id: string): Promise<ProductDocument> {
+    return this.productService.findOne(id);
+  }
+
+  @Put(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdateProductDto,
+  ): Promise<ProductDocument> {
+    return this.productService.update(id, dto);
+  }
+
+  @Delete(':id')
+  async remove(@Param('id') id: string): Promise<void> {
+    return this.productService.remove(id);
+  }
+
+  @Put(':id/add-stock')
+  async addStock(
+    @Param('id') id: string,
+    @Body('quantity') quantity: number,
+  ): Promise<ProductDocument> {
+    return this.productService.addStock(id, quantity);
+  }
+
+  @Put(':id/remove-stock')
+  async removeStock(
+    @Param('id') id: string,
+    @Body('quantity') quantity: number,
+  ): Promise<ProductDocument> {
+    return this.productService.removeStock(id, quantity);
   }
 }

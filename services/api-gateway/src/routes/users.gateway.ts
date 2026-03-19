@@ -22,7 +22,6 @@ interface ChangePasswordDto {
 interface User {
   _id: string;
   username: string;
-  email: string;
   role: 'SUPER_ADMIN' | 'ADMIN' | 'USER';
   mustChangePassword: boolean;
   tempPassword?: string; // si création USER/Manager

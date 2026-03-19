@@ -14,17 +14,17 @@ export class AuthService {
     private auditService: AuditService,
   ) {}
 
-  async validateUser(email: string, password: string): Promise<any> {
-    if (!email || !password)
-      throw new UnauthorizedException('Email et mot de passe requis');
+  async validateUser(username: string, password: string): Promise<any> {
+    if (!username || !password)
+      throw new UnauthorizedException('Username et mot de passe requis');
 
-    const user = await this.userModel.findOne({ email }).select('+password');
+    const user = await this.userModel.findOne({ username }).select('+password');
     if (!user || !user.password)
-      throw new UnauthorizedException('Email ou mot de passe invalide');
+      throw new UnauthorizedException('Username ou mot de passe invalide');
 
     const valid = await bcrypt.compare(password, user.password);
     if (!valid)
-      throw new UnauthorizedException('Email ou mot de passe invalide');
+      throw new UnauthorizedException('Username ou mot de passe invalide');
 
     const { password: _, ...result } = user.toObject();
     return result;
@@ -43,7 +43,6 @@ export class AuthService {
     access_token: this.jwtService.sign(payload),
     user: {
       id: user._id,
-      email: user.email,
       role: user.role,
       mustChangePassword: user.mustChangePassword || false, // ← maintenant dans user
     },
@@ -51,9 +50,9 @@ export class AuthService {
 }
 
   // ✅ Création sécurisée d'un utilisateur
-  async createUser(dto: { email: string; password: string; role?: UserRole }, requester: any) {
-    if (!dto.email || !dto.password)
-      throw new BadRequestException('Email et mot de passe requis');
+  async createUser(dto: { username: string; password: string; role?: UserRole }, requester: any) {
+    if (!dto.username || !dto.password)
+      throw new BadRequestException('Username et mot de passe requis');
 
     // Vérification du rôle selon requester
     let roleToAssign = UserRole.USER; // par défaut
@@ -69,17 +68,14 @@ export class AuthService {
       throw new ForbiddenException('Vous n\'avez pas la permission de créer des utilisateurs');
     }
 
-    const existing = await this.userModel.findOne({ email: dto.email });
+    const existing = await this.userModel.findOne({ username: dto.username });
     if (existing)
-      throw new BadRequestException('Cet email est déjà utilisé');
+      throw new BadRequestException('Ce username est déjà utilisé');
 
     const hashedPassword = await bcrypt.hash(dto.password, 12);
 
-    const username = dto.email.split('@')[0];
-
     const newUser = new this.userModel({
-      username,
-      email: dto.email,
+  username: dto.username, // ← utiliser dto.username
       password: hashedPassword,
       role: roleToAssign,
       mustChangePassword: true, // mot de passe à changer au premier login
@@ -118,14 +114,14 @@ export class AuthService {
     return result;
   }
 
-  async changeEmail(userId: string, newEmail: string) {
-    const existing = await this.userModel.findOne({ email: newEmail });
+  async changeUsername(userId: string, newUsername: string) {
+    const existing = await this.userModel.findOne({ username: newUsername });
     if (existing && existing._id.toString() !== userId)
-      throw new BadRequestException('Cet email est déjà utilisé');
+      throw new BadRequestException('Ce username est déjà utilisé');
 
     const user = await this.userModel.findByIdAndUpdate(
       userId,
-      { email: newEmail },
+      { username: newUsername },
       { new: true },
     );
 
@@ -133,7 +129,7 @@ export class AuthService {
 
     await this.auditService.log({
       userId: user._id.toString(),
-      action: 'CHANGE_EMAIL',
+      action: 'CHANGE_USERNAME',
       entity: 'USER',
     });
 

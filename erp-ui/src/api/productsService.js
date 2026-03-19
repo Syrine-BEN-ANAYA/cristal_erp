@@ -56,7 +56,7 @@ export const getProductById = (id, token) => request("get", `/${id}`, token);
 
 // ---------------- UPDATE PRODUCT ----------------
 export const updateProduct = (id, productData, token) =>
-  request("patch", `/${id}`, token, productData); // ← PATCH
+  request("put", `/${id}`, token, productData); 
 
 // ---------------- DELETE PRODUCT ----------------
 export const deleteProduct = (id, token) => request("delete", `/${id}`, token);

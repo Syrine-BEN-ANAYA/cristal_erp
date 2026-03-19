@@ -44,7 +44,6 @@ async function bootstrap() {
 
       const dto: CreateUserDto = {
         username: process.env.SUPERADMIN_USERNAME!,
-        email: process.env.SUPERADMIN_EMAIL!,
         password: superAdminPassword,
         role: UserRole.SUPER_ADMIN,
       };

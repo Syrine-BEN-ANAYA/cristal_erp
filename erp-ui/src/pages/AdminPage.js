@@ -15,7 +15,7 @@ const AdminPage = ({ user, token }) => {
 
   // Edit user modal state
   const [editingUser, setEditingUser] = useState(null);
-  const [editForm, setEditForm] = useState({ username: '', email: '', role: '' });
+  const [editForm, setEditForm] = useState({ username: '', role: '' });
 
   // Change password modal state
   const [changingPasswordUser, setChangingPasswordUser] = useState(null);
@@ -54,7 +54,7 @@ const AdminPage = ({ user, token }) => {
   // Open edit modal with user data
   const openEditModal = (user) => {
     setEditingUser(user);
-    setEditForm({ username: user.username, email: user.email, role: user.role });
+    setEditForm({ username: user.username, role: user.role });
   };
 
   // Handle edit form submission
@@ -109,7 +109,7 @@ const AdminPage = ({ user, token }) => {
     }
     try {
       const created = await createUser(
-        { email: newEmail, username: newUsername, password: newPassword, role: newRole },
+        { username: newUsername, password: newPassword, role: newRole },
         token
       );
       setUsers([...users, { ...created, id: created._id }]);
@@ -139,7 +139,7 @@ const AdminPage = ({ user, token }) => {
       {/* Header with logout */}
       <div className="admin-header">
         <div className="admin-welcome">
-          Welcome, <strong>{user.email}</strong> (Admin)
+          Welcome, <strong>{user.username}</strong> (Admin)
         </div>
         <button onClick={handleLogout} className="admin-logout-button">
           Log out
@@ -167,10 +167,10 @@ const AdminPage = ({ user, token }) => {
                 />
               </div>
               <div className="admin-form-group">
-                <label className="admin-label" htmlFor="email">Email</label>
+                <label className="admin-label" htmlFor="username">Username</label>
                 <input
-                  id="email"
-                  type="email"
+                  id="username"
+                  type="username"
                   className="admin-input"
                   placeholder="user@cristal.com"
                   value={newEmail}
@@ -222,7 +222,7 @@ const AdminPage = ({ user, token }) => {
             <thead>
               <tr>
                 <th>Username</th>
-                <th>Email</th>
+                <th>Username</th>
                 <th>Role</th>
                 <th>Actions</th>
               </tr>
@@ -231,7 +231,7 @@ const AdminPage = ({ user, token }) => {
               {users.map(u => (
                 <tr key={u.id}>
                   <td>{u.username}</td>
-                  <td>{u.email}</td>
+                  <td>{u.username}</td>
                   <td>
                     <span className="admin-role-badge">{u.role}</span>
                   </td>
@@ -288,12 +288,12 @@ const AdminPage = ({ user, token }) => {
                 />
               </div>
               <div className="admin-form-group">
-                <label className="admin-label">Email</label>
+                <label className="admin-label">Username</label>
                 <input
-                  type="email"
+                  type="username"
                   className="admin-input"
-                  value={editForm.email}
-                  onChange={e => setEditForm({ ...editForm, email: e.target.value })}
+                  value={editForm.username}
+                  onChange={e => setEditForm({ ...editForm, username: e.target.value })}
                   required
                 />
               </div>

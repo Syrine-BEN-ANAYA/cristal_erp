@@ -9,10 +9,10 @@ const getConfig = (token) => ({
 });
 
 // --- LOGIN ---
-export const login = async (email, password) => {
+export const login = async (username, password) => {
   const res = await axios.post(
     `${API_GATEWAY_URL}/auth/login`,
-    { email, password },
+    { username, password },
     { headers: { "Content-Type": "application/json" } }
   );
   return res.data;

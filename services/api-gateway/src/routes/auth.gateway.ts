@@ -13,13 +13,12 @@ import type { Request } from 'express';
 
 // Typage des DTOs
 interface LoginDto {
-  email: string;
+  username: string;
   password: string;
 }
 
 interface RegisterDto {
   username: string;
-  email: string;
   password: string;
   role: string;
 }
@@ -30,7 +29,6 @@ interface LoginResponse {
   user: {
     id: string;
     username: string;
-    email: string;
     role: string;
   };
 }
@@ -41,7 +39,6 @@ interface RegisterResponse {
   user: {
     id: string;
     username: string;
-    email: string;
     role: string;
   };
 }

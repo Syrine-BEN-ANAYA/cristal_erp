@@ -2,7 +2,6 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import DashboardPage from './DashboardPage';
-import InventoryPage from './InventoryPage';
 import OrdersPage from './OrdersPage';
 import CategoriesPage from './CategoriesPage';
 import CustomersPage from './CustomersPage';
@@ -15,7 +14,6 @@ const UserPage = ({ user, onLogout }) => {
       <Routes>
         <Route path="/" element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
-        <Route path="inventory" element={<InventoryPage />} />
         <Route path="orders" element={<OrdersPage />} />
         <Route path="categories" element={<CategoriesPage />} />
         <Route path="customers" element={<CustomersPage />} />
