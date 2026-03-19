@@ -10,7 +10,10 @@ export const createOrder = async (orderData, token) => {
   const res = await axios.post(API_GATEWAY_URL, orderData, getConfig(token));
   return res.data;
 };
-
+export const getTotalOrderAmount = async (token) => {
+  const res = await axios.get(`${API_GATEWAY_URL}/total`, getConfig(token));
+  return res.data; // { totalOrderAmount: number }
+};
 export const getOrders = async (token) => {
   const res = await axios.get(API_GATEWAY_URL, getConfig(token));
   return res.data;
@@ -32,7 +35,3 @@ export const deleteOrder = async (id, token) => {
   return res.data;
 };
 
-export const getTotalOrderAmount = async (token) => {
-  const res = await axios.get(`${API_GATEWAY_URL}/total`, getConfig(token));
-  return res.data;
-};

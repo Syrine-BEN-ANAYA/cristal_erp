@@ -11,7 +11,10 @@ export class OrdersController {
   async create(@Body() dto: CreateOrderDto) {
     return this.ordersService.createOrder(dto);
   }
-
+  @Get('total')
+  async getTotalOrderAmount() {
+    return this.ordersService.getTotalOrderAmount();
+  }
   @Get()
   async findAll() {
     return this.ordersService.findAll();
@@ -27,10 +30,7 @@ export class OrdersController {
   async findOne(@Param('id') id: string) {
     return this.ordersService.findOne(id);
   }
-@Get('total')
-async getTotalOrderAmount(): Promise<{ totalOrderAmount: number }> {
-  return this.ordersService.getTotalOrderAmount();
-}
+
   @Delete(':id')
   async remove(@Param('id') id: string) {
     return this.ordersService.removeOrder(id);
