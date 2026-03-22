@@ -3,23 +3,34 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   getPurchases,
   createPurchase,
+  updatePurchase, // 👈 NOUVEL IMPORT
   deletePurchase,
-  getTotalPurchaseAmount // 👈 NOUVEL IMPORT
+  getTotalPurchaseAmount
 } from '../api/purchasesService';
 import { getProducts } from '../api/productsService';
 import { getSuppliers } from '../api/suppliersService';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import logo from '../assets/logo.png';
-import { FiTrash2, FiDownload, FiPlus, FiX, FiDollarSign, FiShoppingBag } from 'react-icons/fi';
+import { FiTrash2, FiDownload, FiPlus, FiX, FiDollarSign, FiShoppingBag, FiEdit } from 'react-icons/fi'; // 👈 AJOUT FiEdit
 import '../styles/PurchasesPage.css';
 
 export default function PurchasesPage({ token }) {
   const [purchases, setPurchases] = useState([]);
   const [products, setProducts] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
-  const [totalPurchaseAmount, setTotalPurchaseAmount] = useState(0); // 👈 NOUVEL ÉTAT
+  const [totalPurchaseAmount, setTotalPurchaseAmount] = useState(0);
+
+  // États pour le formulaire d'ajout
   const [form, setForm] = useState({
+    supplierId: '',
+    items: [{ productId: '', quantity: 1, price: 0 }]
+  });
+
+  // États pour le modal d'édition
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingPurchaseId, setEditingPurchaseId] = useState(null);
+  const [editForm, setEditForm] = useState({
     supplierId: '',
     items: [{ productId: '', quantity: 1, price: 0 }]
   });
@@ -52,10 +63,9 @@ export default function PurchasesPage({ token }) {
     }
   }, [token]);
 
-  // 👇 NOUVELLE FONCTION POUR CHARGER LE TOTAL
   const loadTotalAmount = useCallback(async () => {
     try {
-      const data = await getTotalPurchaseAmount(token); // retourne { totalPurchaseAmount: number }
+      const data = await getTotalPurchaseAmount(token);
       setTotalPurchaseAmount(data.totalPurchaseAmount || 0);
     } catch (err) {
       console.error('Failed to load total purchase amount:', err.message);
@@ -66,10 +76,10 @@ export default function PurchasesPage({ token }) {
     loadPurchases();
     loadProducts();
     loadSuppliers();
-    loadTotalAmount(); // 👈 AJOUT
+    loadTotalAmount();
   }, [loadPurchases, loadProducts, loadSuppliers, loadTotalAmount]);
 
-  // ---------------- Form Handlers ----------------
+  // ---------------- Form Handlers (Add) ----------------
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
@@ -107,8 +117,8 @@ export default function PurchasesPage({ token }) {
     });
   };
 
-  const calculateTotal = () => {
-    return form.items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+  const calculateTotal = (items) => {
+    return items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
   };
 
   const handleSubmit = async () => {
@@ -134,19 +144,98 @@ export default function PurchasesPage({ token }) {
       await createPurchase(payload, token);
       resetForm();
       loadPurchases();
-      loadTotalAmount(); // 👈 RE-CHARGER LE TOTAL APRÈS AJOUT
+      loadTotalAmount();
     } catch (err) {
       console.error('Failed to save purchase:', err.message);
       alert(err.response?.data?.message || err.message || 'Error saving purchase');
     }
   };
 
+  // ---------------- Update Handlers ----------------
+  const openEditModal = (purchase) => {
+    // Extraire les IDs des objets imbriqués
+    const supplierId = purchase.supplierId?._id || purchase.supplierId;
+    const items = purchase.items.map(item => ({
+      productId: item.productId?._id || item.productId,
+      quantity: item.quantity,
+      price: item.price
+    }));
+    setEditForm({
+      supplierId,
+      items
+    });
+    setEditingPurchaseId(purchase._id);
+    setIsEditModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setIsEditModalOpen(false);
+    setEditingPurchaseId(null);
+    setEditForm({ supplierId: '', items: [{ productId: '', quantity: 1, price: 0 }] });
+  };
+
+  const handleEditItemChange = (index, field, value) => {
+    const newItems = [...editForm.items];
+    if (field === 'quantity' || field === 'price') {
+      newItems[index][field] = parseFloat(value) || 0;
+    } else {
+      newItems[index][field] = value;
+    }
+    setEditForm(prev => ({ ...prev, items: newItems }));
+  };
+
+  const addEditItem = () => {
+    setEditForm(prev => ({
+      ...prev,
+      items: [...prev.items, { productId: '', quantity: 1, price: 0 }]
+    }));
+  };
+
+  const removeEditItem = (index) => {
+    if (editForm.items.length <= 1) return;
+    setEditForm(prev => ({
+      ...prev,
+      items: prev.items.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleUpdateSubmit = async () => {
+    if (!editForm.supplierId) {
+      alert('Supplier is required');
+      return;
+    }
+    if (editForm.items.some(item => !item.productId || item.quantity < 1 || item.price < 0)) {
+      alert('All items must have a product, positive quantity, and non-negative price');
+      return;
+    }
+
+    const payload = {
+      supplierId: editForm.supplierId,
+      items: editForm.items.map(item => ({
+        productId: item.productId,
+        quantity: Number(item.quantity),
+        price: Number(item.price)
+      })),
+    };
+
+    try {
+      await updatePurchase(editingPurchaseId, payload, token);
+      closeEditModal();
+      loadPurchases();
+      loadTotalAmount();
+    } catch (err) {
+      console.error('Failed to update purchase:', err.message);
+      alert(err.response?.data?.message || err.message || 'Error updating purchase');
+    }
+  };
+
+  // ---------------- Delete ----------------
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this purchase?')) return;
     try {
       await deletePurchase(id, token);
       loadPurchases();
-      loadTotalAmount(); // 👈 RE-CHARGER LE TOTAL APRÈS SUPPRESSION
+      loadTotalAmount();
     } catch (err) {
       console.error('Failed to delete purchase:', err.message);
       alert(err.response?.data?.message || err.message || 'Error deleting purchase');
@@ -257,7 +346,7 @@ export default function PurchasesPage({ token }) {
         <p>Manage all purchases</p>
       </div>
 
-      {/* 👇 NOUVELLE SECTION KPI */}
+      {/* KPI */}
       <div className="kpi-grid" style={{ marginBottom: '2rem' }}>
         <div className="kpi-card">
           <FiShoppingBag className="kpi-icon" />
@@ -335,7 +424,7 @@ export default function PurchasesPage({ token }) {
             <FiPlus /> Add Product
           </button>
           <div className="total-preview">
-            Total: ${calculateTotal().toFixed(2)}
+            Total: ${calculateTotal(form.items).toFixed(2)}
           </div>
         </div>
 
@@ -377,8 +466,15 @@ export default function PurchasesPage({ token }) {
                   </td>
                   <td>${p.totalAmount?.toFixed(2) ?? '0.00'}</td>
                   <td className="actions">
-                    <button className="icon-btn delete-btn" onClick={() => handleDelete(p._id)} aria-label="Delete"><FiTrash2 /></button>
-                    <button className="icon-btn" onClick={() => generateInvoicePDF(p)} aria-label="Download PDF"><FiDownload /></button>
+                    <button className="icon-btn" onClick={() => openEditModal(p)} aria-label="Edit">
+                      <FiEdit />
+                    </button>
+                    <button className="icon-btn delete-btn" onClick={() => handleDelete(p._id)} aria-label="Delete">
+                      <FiTrash2 />
+                    </button>
+                    <button className="icon-btn" onClick={() => generateInvoicePDF(p)} aria-label="Download PDF">
+                      <FiDownload />
+                    </button>
                   </td>
                 </tr>
               );
@@ -387,6 +483,87 @@ export default function PurchasesPage({ token }) {
           </tbody>
         </table>
       </div>
+
+      {/* Modal d'édition */}
+      {isEditModalOpen && (
+        <div className="modal-overlay" onClick={closeEditModal}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Edit Purchase</h2>
+              <button className="close-btn" onClick={closeEditModal}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="form-grid">
+                <div className="input-group">
+                  <label>Supplier</label>
+                  <select
+                    value={editForm.supplierId}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, supplierId: e.target.value }))}
+                  >
+                    <option value="">Select supplier</option>
+                    {suppliers.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className="items-section">
+                <label>Products</label>
+                <div className="item-row-header">
+                  <span>Product</span>
+                  <span>Quantity</span>
+                  <span>Unit Price</span>
+                  <span></span>
+                </div>
+                {editForm.items.map((item, index) => (
+                  <div key={index} className="item-row">
+                    <select
+                      value={item.productId}
+                      onChange={(e) => handleEditItemChange(index, 'productId', e.target.value)}
+                    >
+                      <option value="">Select product</option>
+                      {products.map(p => (
+                        <option key={p._id} value={p._id}>
+                          {p.name} (Stock: {p.stock ?? 0})
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="number"
+                      min="1"
+                      placeholder="Qty"
+                      value={item.quantity}
+                      onChange={(e) => handleEditItemChange(index, 'quantity', e.target.value)}
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="Price"
+                      value={item.price}
+                      onChange={(e) => handleEditItemChange(index, 'price', e.target.value)}
+                    />
+                    {editForm.items.length > 1 && (
+                      <button className="icon-btn remove-btn" onClick={() => removeEditItem(index)}>
+                        <FiX />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button type="button" className="add-item-btn" onClick={addEditItem}>
+                  <FiPlus /> Add Product
+                </button>
+                <div className="total-preview">
+                  Total: ${calculateTotal(editForm.items).toFixed(2)}
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="cancel-btn" onClick={closeEditModal}>Cancel</button>
+              <button className="save-btn" onClick={handleUpdateSubmit}>Update Purchase</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

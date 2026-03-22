@@ -172,7 +172,7 @@ const AdminPage = ({ user, token }) => {
                   id="username"
                   type="username"
                   className="admin-input"
-                  placeholder="user@cristal.com"
+                  placeholder="username"
                   value={newEmail}
                   onChange={e => setNewEmail(e.target.value)}
                   required

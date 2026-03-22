@@ -1,14 +1,18 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, UseGuards, Req, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, UseGuards, Req, HttpCode, HttpStatus, Res } from '@nestjs/common';
 import { PurchaseService } from './purchase.service';
 import { CreatePurchaseDto } from './dto/create-purchase.dto';
 import { UpdatePurchaseDto } from './dto/update-purchase.dto';
-
+import type { Response as ExpressResponse } from 'express'; // ✅ important le "type" ici
 
 @Controller('purchases')
-// @UseGuards(JwtAuthGuard, RolesGuard)
 export class PurchaseController {
   constructor(private readonly purchaseService: PurchaseService) {}
 
+  @Get(':id/invoice')
+  async getInvoice(@Param('id') id: string, @Res() res: ExpressResponse) {
+    // Cast pour correspondre au type attendu par NestJS
+    return this.purchaseService.generateInvoice(id, res as any);
+  }
   @Post()
   // @Roles('ADMIN', 'MANAGER')
   async create(@Body() createPurchaseDto: CreatePurchaseDto, @Req() req) {
@@ -32,11 +36,9 @@ async getTotalPurchaseAmount() {
   async findOne(@Param('id') id: string) {
     return this.purchaseService.findOne(id);
   }
-
-  @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  // @Roles('ADMIN')
-  async remove(@Param('id') id: string) {
-    await this.purchaseService.remove(id);
+  @Put(':id')
+  update(@Param('id') id: string, @Body() dto: UpdatePurchaseDto) {
+    return this.purchaseService.update(id, dto);
   }
+
 }

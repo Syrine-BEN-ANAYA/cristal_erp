@@ -7,7 +7,8 @@ import { ProductsModule } from './products/products.module';
 import { SuppliersModule } from './suppliers/suppliers.module';
 import { CustomersModule } from './customers/customers.module';
 import { OrdersModule } from './orders/orders.module';
-import { PurchasesModule } from './purchases/purchase.module';
+import { ReportModule } from './report/report.module';
+import { PurchaseModule } from './purchases/purchase.module';
 
 dotenv.config();
 
@@ -23,7 +24,8 @@ if (!process.env.MONGO_URI) {
     ProductsModule,
     SuppliersModule,
     CustomersModule,
-    PurchasesModule,
+    PurchaseModule,
+    ReportModule
   ],
 })
 export class AppModule {}

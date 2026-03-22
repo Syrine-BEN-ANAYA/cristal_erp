@@ -27,7 +27,6 @@ services:
     container_name: core-service
     environment:
       MONGO_URI: mongodb://mongo:27017/core-service
-      PORT: 3102
     depends_on:
       mongo:
         condition: service_started
@@ -69,8 +68,10 @@ services:
       N8N_BASIC_AUTH_ACTIVE: "true"
       N8N_BASIC_AUTH_USER: admin
       N8N_BASIC_AUTH_PASSWORD: admin
+      N8N_BINARY_DATA_MODE: default        # inline binary storage
     volumes:
       - n8n-data:/home/node/.n8n
+      - ./invoices:/home/node/invoices     # dossier local pour les PDF
     networks:
       - erp-network
 

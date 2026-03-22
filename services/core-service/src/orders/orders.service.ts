@@ -45,6 +45,13 @@ export class OrdersService {
 
     return order.save();
   }
+  async findAllDetailed() {
+  return this.orderModel
+    .find()
+    .populate('products')
+    .populate('customer') // si tu as un client lié
+    .lean();
+}
 
   // ---------------- FIND ALL ORDERS ----------------
   async findAll(): Promise<OrderDocument[]> {
@@ -52,18 +59,19 @@ export class OrdersService {
   }
 
   // ---------------- FIND ONE ORDER ----------------
-  async findOne(orderId: string): Promise<OrderDocument> {
-    if (!Types.ObjectId.isValid(orderId)) throw new BadRequestException('ID commande invalide');
+  // orders.service.ts
+async findOne(orderId: string): Promise<OrderDocument> {
+  if (!Types.ObjectId.isValid(orderId)) throw new BadRequestException('ID commande invalide');
 
-    const order = await this.orderModel
-      .findById(orderId)
-      .populate('items.productId')
-      .populate('customerId')
-      .exec();
+  const order = await this.orderModel
+    .findById(orderId)
+    .populate('customerId')          // populate customer details
+    .populate('items.productId')     // populate product details inside each item
+    .exec();
 
-    if (!order) throw new NotFoundException('Commande non trouvée');
-    return order;
-  }
+  if (!order) throw new NotFoundException('Commande non trouvée');
+  return order;
+}
 
   // ---------------- UPDATE ORDER ----------------
   async updateOrder(orderId: string, dto: CreateOrderDto): Promise<OrderDocument> {

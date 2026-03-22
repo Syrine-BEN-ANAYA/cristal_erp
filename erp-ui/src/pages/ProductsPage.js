@@ -281,21 +281,9 @@ export default function ProductsPage({ token }) {
                     <td>${p.price?.toFixed(2) ?? '0.00'}</td>
                     <td>
                       <div className="stock-control">
-                        <button
-                          className="stock-btn remove"
-                          onClick={() => handleRemoveStock(p._id, p.stock)}
-                          title="Remove stock"
-                        >
-                          -
-                        </button>
+                      
                         <span className="stock-value">{p.stock ?? 0}</span>
-                        <button
-                          className="stock-btn"
-                          onClick={() => handleAddStock(p._id, p.stock)}
-                          title="Add stock"
-                        >
-                          +
-                        </button>
+                       
                         {isLowStock && (
                           <span className="low-stock-indicator" title="Low stock">
                             <FiAlertTriangle color="#b91c1c" />

@@ -25,6 +25,8 @@ export class Order {
 
   @Prop({ required: true, default: 0 })
   totalAmount: number; // 👈 Nouveau champ
-}
 
+ @Prop({ default: Date.now })
+  createdAt: Date;
+}
 export const OrderSchema = SchemaFactory.createForClass(Order);
