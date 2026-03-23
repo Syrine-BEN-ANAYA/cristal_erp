@@ -26,28 +26,30 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build, Test, Scan & Push Docker images
+      - name: Build Docker images
         run: |
-          # Build images
           docker compose build
-          
-          # Test containers
+
+      - name: List running containers
+        run: |
           docker compose up -d
           sleep 15
           docker ps
-          
-          # Security scan (optionnel, ne bloque pas le workflow)
-          trivy image auth-service --exit-code 1 --severity HIGH,CRITICAL || true
-          trivy image core-service --exit-code 1 --severity HIGH,CRITICAL || true
-          trivy image api-gateway --exit-code 1 --severity HIGH,CRITICAL || true
-          trivy image erp-ui --exit-code 1 --severity HIGH,CRITICAL || true
-          
-          # Tag & push to Docker Hub
+
+      - name: Security scan with Trivy
+        run: |
+          trivy image docker.io/syrinebenanaya/auth-service:latest --severity HIGH,CRITICAL || true
+          trivy image docker.io/syrinebenanaya/core-service:latest --severity HIGH,CRITICAL || true
+          trivy image docker.io/syrinebenanaya/api-gateway:latest --severity HIGH,CRITICAL || true
+          trivy image docker.io/syrinebenanaya/erp-ui:latest --severity HIGH,CRITICAL || true
+
+      - name: Tag & Push Docker images
+        run: |
           docker tag auth-service docker.io/syrinebenanaya/auth-service:latest
           docker tag core-service docker.io/syrinebenanaya/core-service:latest
           docker tag api-gateway docker.io/syrinebenanaya/api-gateway:latest
           docker tag erp-ui docker.io/syrinebenanaya/erp-ui:latest
-          
+
           docker push docker.io/syrinebenanaya/auth-service:latest
           docker push docker.io/syrinebenanaya/core-service:latest
           docker push docker.io/syrinebenanaya/api-gateway:latest

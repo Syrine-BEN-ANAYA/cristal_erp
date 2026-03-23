@@ -13,6 +13,7 @@ services:
 
   auth-service:
     build: ./services/auth-service
+    image: auth-service:latest
     container_name: auth-service
     environment:
       MONGO_URI: mongodb://mongo:27017/auth-service
@@ -24,6 +25,7 @@ services:
 
   core-service:
     build: ./services/core-service
+    image: core-service:latest
     container_name: core-service
     environment:
       MONGO_URI: mongodb://mongo:27017/core-service
@@ -37,6 +39,7 @@ services:
 
   api-gateway:
     build: ./services/api-gateway
+    image: api-gateway:latest
     container_name: api-gateway
     ports:
       - "3204:3104"
@@ -50,6 +53,7 @@ services:
 
   frontend:
     build: ./erp-ui
+    image: erp-ui:latest
     container_name: frontend
     ports:
       - "3205:3105"
@@ -68,10 +72,10 @@ services:
       N8N_BASIC_AUTH_ACTIVE: "true"
       N8N_BASIC_AUTH_USER: admin
       N8N_BASIC_AUTH_PASSWORD: admin
-      N8N_BINARY_DATA_MODE: default        # inline binary storage
+      N8N_BINARY_DATA_MODE: default
     volumes:
       - n8n-data:/home/node/.n8n
-      - ./invoices:/home/node/invoices     # dossier local pour les PDF
+      - ./invoices:/home/node/invoices
     networks:
       - erp-network
 
