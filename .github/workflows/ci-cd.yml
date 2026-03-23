@@ -7,10 +7,7 @@ on:
   pull_request:
 
 jobs:
-  # -------------------
-  # Build all services
-  # -------------------
-  build:
+  ci_cd:
     runs-on: ubuntu-latest
     services:
       docker:
@@ -23,47 +20,35 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Docker registry
+      - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build Docker images
+      - name: Build, Test, Scan & Push Docker images
         run: |
+          # Build images
           docker compose build
-
-      - name: List running containers (test)
-        run: |
+          
+          # Test containers
           docker compose up -d
           sleep 15
           docker ps
-
-      - name: Security scan with Trivy
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: auth-service
-          severity-threshold: HIGH,CRITICAL
-      - uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: core-service
-          severity-threshold: HIGH,CRITICAL
-      - uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: api-gateway
-          severity-threshold: HIGH,CRITICAL
-      - uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: erp-ui
-          severity-threshold: HIGH,CRITICAL
-
-      - name: Push Docker images
-        run: |
-          docker tag auth-service ${{ secrets.DOCKER_REGISTRY }}/auth-service:latest
-          docker tag core-service ${{ secrets.DOCKER_REGISTRY }}/core-service:latest
-          docker tag api-gateway ${{ secrets.DOCKER_REGISTRY }}/api-gateway:latest
-          docker tag erp-ui ${{ secrets.DOCKER_REGISTRY }}/erp-ui:latest
-          docker push ${{ secrets.DOCKER_REGISTRY }}/auth-service:latest
-          docker push ${{ secrets.DOCKER_REGISTRY }}/core-service:latest
-          docker push ${{ secrets.DOCKER_REGISTRY }}/api-gateway:latest
-          docker push ${{ secrets.DOCKER_REGISTRY }}/erp-ui:latest
+          
+          # Security scan (optionnel, ne bloque pas le workflow)
+          trivy image auth-service --exit-code 1 --severity HIGH,CRITICAL || true
+          trivy image core-service --exit-code 1 --severity HIGH,CRITICAL || true
+          trivy image api-gateway --exit-code 1 --severity HIGH,CRITICAL || true
+          trivy image erp-ui --exit-code 1 --severity HIGH,CRITICAL || true
+          
+          # Tag & push to Docker Hub
+          docker tag auth-service docker.io/syrinebenanaya/auth-service:latest
+          docker tag core-service docker.io/syrinebenanaya/core-service:latest
+          docker tag api-gateway docker.io/syrinebenanaya/api-gateway:latest
+          docker tag erp-ui docker.io/syrinebenanaya/erp-ui:latest
+          
+          docker push docker.io/syrinebenanaya/auth-service:latest
+          docker push docker.io/syrinebenanaya/core-service:latest
+          docker push docker.io/syrinebenanaya/api-gateway:latest
+          docker push docker.io/syrinebenanaya/erp-ui:latest
