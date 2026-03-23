@@ -1,0 +1,55 @@
+image: docker:24.0.5
+
+services:
+
+ docker:24.0.5-dind
+
+stages:
+
+ build
+ test
+ scan
+ push
+
+variables:
+DOCKER_HOST: tcp://docker:2375
+DOCKER_TLS_CERTDIR: ""
+IMAGE_PREFIX: $CI_REGISTRY_IMAGE
+
+before_script:
+
+ docker info
+
+build:
+stage: build
+script:
+- docker compose build
+
+test:
+stage: test
+script:
+- docker compose up -d
+- sleep 15
+- docker ps
+
+scan:
+stage: scan
+image: aquasec/trivy
+script:
+- trivy image auth-service --exit-code 1 --severity HIGH,CRITICAL
+- trivy image core-service --exit-code 1 --severity HIGH,CRITICAL
+- trivy image api-gateway --exit-code 1 --severity HIGH,CRITICAL
+- trivy image frontend --exit-code 1 --severity HIGH,CRITICAL
+
+push:
+stage: push
+script:
+- echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" $CI_REGISTRY --password-stdin
+- docker tag auth-service $IMAGE_PREFIX/auth-service:latest
+- docker tag core-service $IMAGE_PREFIX/core-service:latest
+- docker tag api-gateway $IMAGE_PREFIX/api-gateway:latest
+- docker tag frontend $IMAGE_PREFIX/frontend:latest
+- docker push $IMAGE_PREFIX/auth-service:latest
+- docker push $IMAGE_PREFIX/core-service:latest
+- docker push $IMAGE_PREFIX/api-gateway:latest
+- docker push $IMAGE_PREFIX/frontend:latest
