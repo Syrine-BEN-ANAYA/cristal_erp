@@ -1,0 +1,113 @@
+name: ERP Global CI/CD
+
+on:
+push:
+branches: [ "main" ]
+pull_request:
+
+env:
+REGISTRY: docker.io
+IMAGE_PREFIX: ${{ secrets.DOCKER_USER }}
+
+jobs:
+ci:
+runs-on: ubuntu-latest
+
+```
+steps:
+  - name: Checkout
+    uses: actions/checkout@v4
+
+  # 🔨 Build toutes les images
+  - name: Build services
+    run: docker compose build
+
+  # ▶️ Lancer stack
+  - name: Start stack
+    run: |
+      docker compose up -d
+      sleep 15
+
+  # 🧪 Test minimal (tu dois améliorer)
+  - name: Check running containers
+    run: docker ps
+
+  # 🔐 Scan sécurité sur TES images (pas juste mongo)
+  - name: Scan auth-service
+    uses: aquasecurity/trivy-action@v0.20.0
+    with:
+      image-ref: auth-service
+      severity: HIGH,CRITICAL
+      exit-code: 1
+
+  - name: Scan core-service
+    uses: aquasecurity/trivy-action@v0.20.0
+    with:
+      image-ref: core-service
+      severity: HIGH,CRITICAL
+      exit-code: 1
+
+  - name: Scan api-gateway
+    uses: aquasecurity/trivy-action@v0.20.0
+    with:
+      image-ref: api-gateway
+      severity: HIGH,CRITICAL
+      exit-code: 1
+
+  - name: Scan frontend
+    uses: aquasecurity/trivy-action@v0.20.0
+    with:
+      image-ref: frontend
+      severity: HIGH,CRITICAL
+      exit-code: 1
+```
+
+push:
+needs: ci
+runs-on: ubuntu-latest
+
+```
+steps:
+  - name: Checkout
+    uses: actions/checkout@v4
+
+  - name: Login Docker Hub
+    run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USER }}" --password-stdin
+
+  - name: Build & Tag images
+    run: |
+      docker compose build
+
+      docker tag auth-service $IMAGE_PREFIX/auth-service:latest
+      docker tag core-service $IMAGE_PREFIX/core-service:latest
+      docker tag api-gateway $IMAGE_PREFIX/api-gateway:latest
+      docker tag frontend $IMAGE_PREFIX/frontend:latest
+
+  - name: Push images
+    run: |
+      docker push $IMAGE_PREFIX/auth-service:latest
+      docker push $IMAGE_PREFIX/core-service:latest
+      docker push $IMAGE_PREFIX/api-gateway:latest
+      docker push $IMAGE_PREFIX/frontend:latest
+```
+
+deploy:
+needs: push
+runs-on: ubuntu-latest
+
+```
+steps:
+  - name: Deploy via SSH
+    uses: appleboy/ssh-action@v1.0.0
+    with:
+      host: ${{ secrets.SERVER_HOST }}
+      username: ${{ secrets.SERVER_USER }}
+      key: ${{ secrets.SERVER_SSH_KEY }}
+      script: |
+        cd /app
+
+        git pull
+
+        docker compose pull
+        docker compose up -d --remove-orphans
+```
