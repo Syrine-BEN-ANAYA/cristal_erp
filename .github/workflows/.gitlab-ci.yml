@@ -1,0 +1,45 @@
+stages:
+  - build
+  - scan
+  - push
+
+variables:
+  IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+
+# 1. BUILD
+build:
+  stage: build
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  script:
+    - docker compose build
+
+# 2. SCAN (Trivy)
+scan:
+  stage: scan
+  image: aquasec/trivy:latest
+  script:
+    - trivy image --severity HIGH,CRITICAL auth-service:latest
+    - trivy image --severity HIGH,CRITICAL core-service:latest
+    - trivy image --severity HIGH,CRITICAL api-gateway:latest
+    - trivy image --severity HIGH,CRITICAL erp-ui:latest
+
+# 3. PUSH
+push:
+  stage: push
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  script:
+    - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+
+    - docker tag auth-service docker.io/syrinebenanaya/auth-service:$IMAGE_TAG
+    - docker tag core-service docker.io/syrinebenanaya/core-service:$IMAGE_TAG
+    - docker tag api-gateway docker.io/syrinebenanaya/api-gateway:$IMAGE_TAG
+    - docker tag erp-ui docker.io/syrinebenanaya/erp-ui:$IMAGE_TAG
+
+    - docker push docker.io/syrinebenanaya/auth-service:$IMAGE_TAG
+    - docker push docker.io/syrinebenanaya/core-service:$IMAGE_TAG
+    - docker push docker.io/syrinebenanaya/api-gateway:$IMAGE_TAG
+    - docker push docker.io/syrinebenanaya/erp-ui:$IMAGE_TAG
