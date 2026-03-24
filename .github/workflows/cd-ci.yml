@@ -1,28 +1,39 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
 jobs:
   ci_cd:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Checkout le code
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # 2. Setup Docker Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # 3. Build les images Docker
       - name: Build Docker images
         run: docker compose build
 
+      # 4. Scan sécurité avec Trivy
       - name: Scan images with Trivy
         run: |
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL auth-service:latest
+            aquasec/trivy:latest image --severity HIGH,CRITICAL auth-service:latest
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL core-service:latest
+            aquasec/trivy:latest image --severity HIGH,CRITICAL core-service:latest
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL api-gateway:latest
+            aquasec/trivy:latest image --severity HIGH,CRITICAL api-gateway:latest
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL erp-ui:latest
+            aquasec/trivy:latest image --severity HIGH,CRITICAL erp-ui:latest
