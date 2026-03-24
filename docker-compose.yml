@@ -2,36 +2,40 @@
 services:
   mongo:
     image: mongo:6.0
-    container_name: mongo
-    restart: always
+    restart: unless-stopped
     ports:
       - "28017:27017"
     volumes:
       - mongo-data:/data/db
     networks:
       - erp-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   auth-service:
     build: ./services/auth-service
     image: auth-service:latest
-    container_name: auth-service
+    restart: unless-stopped
     environment:
       MONGO_URI: mongodb://mongo:27017/auth-service
     depends_on:
       mongo:
-        condition: service_started
+        condition: service_healthy
     networks:
       - erp-network
 
   core-service:
     build: ./services/core-service
     image: core-service:latest
-    container_name: core-service
+    restart: unless-stopped
     environment:
       MONGO_URI: mongodb://mongo:27017/core-service
     depends_on:
       mongo:
-        condition: service_started
+        condition: service_healthy
     ports:
       - "3202:3102"
     networks:
@@ -40,7 +44,7 @@ services:
   api-gateway:
     build: ./services/api-gateway
     image: api-gateway:latest
-    container_name: api-gateway
+    restart: unless-stopped
     ports:
       - "3204:3104"
     depends_on:
@@ -54,7 +58,7 @@ services:
   frontend:
     build: ./erp-ui
     image: erp-ui:latest
-    container_name: frontend
+    restart: unless-stopped
     ports:
       - "3205:3105"
     depends_on:
@@ -65,13 +69,13 @@ services:
 
   n8n:
     image: n8nio/n8n
-    container_name: n8n
+    restart: unless-stopped
     ports:
       - "5778:5678"
     environment:
       N8N_BASIC_AUTH_ACTIVE: "true"
-      N8N_BASIC_AUTH_USER: admin
-      N8N_BASIC_AUTH_PASSWORD: admin
+      N8N_BASIC_AUTH_USER: ${N8N_USER}
+      N8N_BASIC_AUTH_PASSWORD: ${N8N_PASSWORD}
       N8N_BINARY_DATA_MODE: default
     volumes:
       - n8n-data:/home/node/.n8n
