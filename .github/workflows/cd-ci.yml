@@ -27,13 +27,13 @@ jobs:
         run: |
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            aquasec/trivy:latest image --severity HIGH,CRITICAL auth-service:latest
+            ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL auth-service:latest
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            aquasec/trivy:latest image --severity HIGH,CRITICAL core-service:latest
+            ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL core-service:latest
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            aquasec/trivy:latest image --severity HIGH,CRITICAL api-gateway:latest
+            ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL api-gateway:latest
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            aquasec/trivy:latest image --severity HIGH,CRITICAL erp-ui:latest
+            ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL erp-ui:latest
