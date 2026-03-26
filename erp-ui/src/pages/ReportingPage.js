@@ -106,7 +106,7 @@ const ReportingPage = () => {
     return acc;
   }, []).sort((a, b) => a.sortDate - b.sortDate);
 
-  // PDF generation
+  // PDF generation (local)
   const generatePDF = () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -162,6 +162,10 @@ const ReportingPage = () => {
     doc.save('performance_report.pdf');
   };
 
+
+
+     
+
   if (loading) return <div className="reporting-page"><div className="loading-spinner">Loading data...</div></div>;
   if (error) return <div className="reporting-page"><div className="error-message">{error}</div></div>;
 
@@ -172,9 +176,12 @@ const ReportingPage = () => {
           <h1>Dashboard & Reporting</h1>
           <p>Key business insights</p>
         </div>
-        <button className="btn btn-primary" onClick={generatePDF}>
-          <FiDownload /> Download PDF Report
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button className="btn btn-primary" onClick={generatePDF}>
+            <FiDownload /> Download PDF Report
+          </button>
+        
+        </div>
       </div>
 
       {/* KPI Cards */}
@@ -223,10 +230,13 @@ const ReportingPage = () => {
       {/* Low Stock Products */}
       <div className="chart-container" style={{ marginTop: '1.5rem' }}>
         <div className="chart-header"><h3><FiAlertTriangle /> Low Stock Products</h3></div>
-        {lowStockProducts.length === 0 ? <p className="empty-message">No low stock products.</p> :
+        {lowStockProducts.length === 0 ? (
+          <p className="empty-message">No low stock products.</p>
+        ) : (
           <ul className="low-stock-list">
             {lowStockProducts.map(p => <li key={p._id || p.id}><span>{p.name}</span><span className="stock-value">{p.stock} units</span></li>)}
-          </ul>}
+          </ul>
+        )}
       </div>
     </div>
   );
