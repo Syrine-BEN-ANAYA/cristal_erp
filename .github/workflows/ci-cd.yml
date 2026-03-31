@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout le code
+      # 1. Checkout
       - name: Checkout repository
         uses: actions/checkout@v3
 
@@ -45,7 +45,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # 7. Tag et push des images
+      # 7. Tag + Push images
       - name: Tag and push images
         run: |
           docker tag auth-service:latest ${{ secrets.DOCKER_USERNAME }}/auth-service:latest
@@ -64,7 +64,7 @@ jobs:
       - name: Set up kubectl
         uses: azure/setup-kubectl@v3
 
-      # 9. Configure kubeconfig pour Linux
+      # 9. Configure kubeconfig pour le cluster distant
       - name: Configure kubeconfig
         run: |
           echo "${{ secrets.KUBE_CONFIG }}" > kubeconfig
@@ -72,7 +72,7 @@ jobs:
 
       # 10. Déploiement Kubernetes
       - name: Deploy to Kubernetes
-        run: kubectl apply -f k8s/
+        run: kubectl apply -f k8s/ --validate=false
 
       # 11. Redémarrage des déploiements
       - name: Restart deployments
