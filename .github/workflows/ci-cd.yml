@@ -19,11 +19,18 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # 3. Build les images Docker
+      # 3. Installer Docker Compose pour éviter exit code 127
+      - name: Install Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version
+
+      # 4. Build les images Docker
       - name: Build Docker images
         run: docker-compose build
 
-      # 4. Scan sécurité avec Trivy
+      # 5. Scan sécurité avec Trivy
       - name: Scan images with Trivy
         run: |
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL auth-service:latest
@@ -31,14 +38,14 @@ jobs:
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL api-gateway:latest
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL erp-ui:latest
 
-      # 5. Login DockerHub (avec token sécurisé)
+      # 6. Login DockerHub
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # 6. Tag et push des images
+      # 7. Tag et push des images
       - name: Tag and push images
         run: |
           docker tag auth-service:latest ${{ secrets.DOCKER_USERNAME }}/auth-service:latest
@@ -53,21 +60,21 @@ jobs:
           docker tag erp-ui:latest ${{ secrets.DOCKER_USERNAME }}/erp-ui:latest
           docker push ${{ secrets.DOCKER_USERNAME }}/erp-ui:latest
 
-      # 7. Setup kubectl
+      # 8. Setup kubectl
       - name: Set up kubectl
         uses: azure/setup-kubectl@v3
 
-      # 8. Configure kubeconfig
+      # 9. Configure kubeconfig
       - name: Configure kubeconfig
         run: |
           echo "${{ secrets.KUBE_CONFIG }}" > kubeconfig
           setx KUBECONFIG "%CD%\kubeconfig"
 
-      # 9. Déploiement Kubernetes
+      # 10. Déploiement Kubernetes
       - name: Deploy to Kubernetes
         run: kubectl apply -f k8s/
 
-      # 10. Redémarrage des déploiements
+      # 11. Redémarrage des déploiements
       - name: Restart deployments
         run: |
           kubectl rollout restart deployment auth-service
