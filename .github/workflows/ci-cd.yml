@@ -21,7 +21,7 @@ jobs:
 
       # 3. Build les images Docker
       - name: Build Docker images
-        run: docker compose build
+        run: docker-compose build
 
       # 4. Scan sécurité avec Trivy
       - name: Scan images with Trivy
@@ -67,7 +67,7 @@ jobs:
       - name: Deploy to Kubernetes
         run: kubectl apply -f k8s/
 
-      # 10. Redémarrage des déploiements pour prendre les nouvelles images
+      # 10. Redémarrage des déploiements
       - name: Restart deployments
         run: |
           kubectl rollout restart deployment auth-service
