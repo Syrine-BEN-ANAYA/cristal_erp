@@ -1,72 +1,61 @@
 name: CI/CD Pipeline
 
 on:
-push:
-branches: [main]
+  push:
+    branches: [main]
+  pull_request:
 
 jobs:
-ci_cd:
-runs-on: ubuntu-latest
+  ci_cd:
+    runs-on: ubuntu-latest
 
-```
-steps:
-  # 1. Checkout
-  - name: Checkout repository
-    uses: actions/checkout@v3
+    steps:
+      # 1. Checkout le code
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-  # 2. Docker setup
-  - name: Set up Docker Buildx
-    uses: docker/setup-buildx-action@v3
+      # 2. Setup Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-  # 3. Login DockerHub
-  - name: Login to DockerHub
-    uses: docker/login-action@v3
-    with:
-      username: ${{ secrets.DOCKER_USERNAME }}
-      password: ${{ secrets.DOCKER_PASSWORD }}
+      # 3. Build les images Docker
+      - name: Build Docker images
+        run: docker compose build
 
-  # 4. Build & Push images
-  - name: Build and push images
+      # 4. Scan sécurité avec Trivy
+      - name: Scan images with Trivy
+        run: |
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL auth-service:latest
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL core-service:latest
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL api-gateway:latest
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL erp-ui:latest
+
+            # Login DockerHub
+- name: Login to DockerHub
+  uses: docker/login-action@v3
+  with:
+    username: ${{ secrets.DOCKER_USERNAME }}
+    password: ${{ secrets.DOCKER_PASSWORD }}
+
+# Build + Push
+ - name: Build and push images
     run: |
-      docker build -t ${{ secrets.DOCKER_USERNAME }}/auth-service:latest ./services/auth-service
-      docker push ${{ secrets.DOCKER_USERNAME }}/auth-service:latest
+    docker build -t ${{ secrets.DOCKER_USERNAME }}/auth-service:latest ./services/auth-service
+    docker push ${{ secrets.DOCKER_USERNAME }}/auth-service:latest
 
-      docker build -t ${{ secrets.DOCKER_USERNAME }}/core-service:latest ./services/core-service
-      docker push ${{ secrets.DOCKER_USERNAME }}/core-service:latest
+    docker build -t ${{ secrets.DOCKER_USERNAME }}/core-service:latest ./services/core-service
+    docker push ${{ secrets.DOCKER_USERNAME }}/core-service:latest
 
-      docker build -t ${{ secrets.DOCKER_USERNAME }}/api-gateway:latest ./services/api-gateway
-      docker push ${{ secrets.DOCKER_USERNAME }}/api-gateway:latest
+    docker build -t ${{ secrets.DOCKER_USERNAME }}/api-gateway:latest ./services/api-gateway
+    docker push ${{ secrets.DOCKER_USERNAME }}/api-gateway:latest
 
-      docker build -t ${{ secrets.DOCKER_USERNAME }}/erp-ui:latest ./erp-ui
-      docker push ${{ secrets.DOCKER_USERNAME }}/erp-ui:latest
-
-  # 5. Scan sécurité
-  - name: Scan images with Trivy
-    run: |
-      docker run --rm -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL ${{ secrets.DOCKER_USERNAME }}/auth-service:latest
-      docker run --rm -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL ${{ secrets.DOCKER_USERNAME }}/core-service:latest
-      docker run --rm -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL ${{ secrets.DOCKER_USERNAME }}/api-gateway:latest
-      docker run --rm -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL ${{ secrets.DOCKER_USERNAME }}/erp-ui:latest
-
-  # 6. Setup kubectl
-  - name: Set up kubectl
-    uses: azure/setup-kubectl@v3
-
-  # 7. Configure kubeconfig
-  - name: Configure kubeconfig
-    run: |
-      echo "${{ secrets.KUBE_CONFIG }}" > kubeconfig
-      export KUBECONFIG=$PWD/kubeconfig
-
-  # 8. Deploy
-  - name: Deploy to Kubernetes
-    run: kubectl apply -f k8s/
-
-  # 9. Restart (IMPORTANT)
-  - name: Restart deployments
-    run: |
-      kubectl rollout restart deployment auth-service
-      kubectl rollout restart deployment core-service
-      kubectl rollout restart deployment api-gateway
-      kubectl rollout restart deployment erp-ui
-```
+    docker build -t ${{ secrets.DOCKER_USERNAME }}/erp-ui:latest ./erp-ui
+    docker push ${{ secrets.DOCKER_USERNAME }}/erp-ui:latest
