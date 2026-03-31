@@ -1,39 +1,77 @@
 name: CI/CD Pipeline
 
 on:
-  push:
-    branches: [main]
-  pull_request:
+push:
+branches:
+- main
 
 jobs:
-  ci_cd:
-    runs-on: ubuntu-latest
+ci_cd:
+runs-on: ubuntu-latest
 
-    steps:
-      # 1. Checkout le code
-      - name: Checkout repository
-        uses: actions/checkout@v3
 
-      # 2. Setup Docker Buildx
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+steps:
+  # 1. Checkout
+  - name: Checkout repository
+    uses: actions/checkout@v3
 
-      # 3. Build les images Docker
-      - name: Build Docker images
-        run: docker compose build
+  # 2. Docker setup
+  - name: Set up Docker Buildx
+    uses: docker/setup-buildx-action@v3
 
-      # 4. Scan sécurité avec Trivy
-      - name: Scan images with Trivy
-        run: |
-          docker run --rm \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL auth-service:latest
-          docker run --rm \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL core-service:latest
-          docker run --rm \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL api-gateway:latest
-          docker run --rm \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL erp-ui:latest
+  # 3. Build images
+  - name: Build Docker images
+    run: docker compose build
+
+  # 4. Scan sécurité
+  - name: Scan images with Trivy
+    run: |
+      docker run --rm -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL auth-service:latest
+      docker run --rm -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL core-service:latest
+      docker run --rm -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL api-gateway:latest
+      docker run --rm -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL erp-ui:latest
+
+  # 5. Login DockerHub
+  - name: Login to DockerHub
+    uses: docker/login-action@v3
+    with:
+      username: ${{ secrets.DOCKER_USERNAME }}
+      password: ${{ secrets.DOCKER_PASSWORD }}
+
+  # 6. Tag + Push images
+  - name: Tag and push images
+    run: |
+      docker tag auth-service:latest ${{ secrets.DOCKER_USERNAME }}/auth-service:latest
+      docker push ${{ secrets.DOCKER_USERNAME }}/auth-service:latest
+
+      docker tag core-service:latest ${{ secrets.DOCKER_USERNAME }}/core-service:latest
+      docker push ${{ secrets.DOCKER_USERNAME }}/core-service:latest
+
+      docker tag api-gateway:latest ${{ secrets.DOCKER_USERNAME }}/api-gateway:latest
+      docker push ${{ secrets.DOCKER_USERNAME }}/api-gateway:latest
+
+      docker tag erp-ui:latest ${{ secrets.DOCKER_USERNAME }}/erp-ui:latest
+      docker push ${{ secrets.DOCKER_USERNAME }}/erp-ui:latest
+
+  # 7. Setup kubectl
+  - name: Set up kubectl
+    uses: azure/setup-kubectl@v3
+
+  # 8. Configure kubeconfig
+  - name: Configure kubeconfig
+    run: |
+      echo "${{ secrets.KUBE_CONFIG }}" > kubeconfig
+      export KUBECONFIG=$PWD/kubeconfig
+
+  # 9. Deploy to Kubernetes
+  - name: Deploy
+    run: kubectl apply -f k8s/
+
+  # 10. Restart deployments (IMPORTANT)
+  - name: Restart deployments
+    run: |
+      kubectl rollout restart deployment auth-service
+      kubectl rollout restart deployment core-service
+      kubectl rollout restart deployment api-gateway
+      kubectl rollout restart deployment erp-ui
+
