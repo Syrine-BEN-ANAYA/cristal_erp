@@ -8,7 +8,8 @@ const LoginPage = ({ onLogin }) => {
 
   const navigate = useNavigate();
 
-  const [username, setEmail] = useState('');
+  // ✅ Cohérence : username partout
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
@@ -75,12 +76,12 @@ const LoginPage = ({ onLogin }) => {
                 <div className="input-wrapper">
                   <FiMail className="input-icon" />
                   <input
-                    type="username"
+                    type="text"  // ✅ Changé de "username" à "text"
                     id="username"
                     className="input-field"
-                    placeholder="username"
+                    placeholder="Enter your username"
                     value={username}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => setUsername(e.target.value)}  // ✅ setUsername au lieu de setEmail
                     required
                   />
                 </div>

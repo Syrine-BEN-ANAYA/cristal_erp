@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { getUsers, createUser, updateUser, deleteUser, changePassword } from '../api/authService';
+import { FiPlus, FiEdit2, FiTrash2, FiLock, FiX, FiUser, FiMail, FiShield, FiLogOut } from 'react-icons/fi';
 import '../styles/AdminPage.css';
 
 const AdminPage = ({ user, token }) => {
@@ -7,17 +8,17 @@ const AdminPage = ({ user, token }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // New user form state
+  // New user
   const [newEmail, setNewEmail] = useState('');
   const [newUsername, setNewUsername] = useState('');
   const [newRole, setNewRole] = useState('USER');
   const [newPassword, setNewPassword] = useState('');
 
-  // Edit user modal state
+  // Edit user
   const [editingUser, setEditingUser] = useState(null);
-  const [editForm, setEditForm] = useState({ username: '', role: '' });
+  const [editForm, setEditForm] = useState({ username: '', email: '', role: '' });
 
-  // Change password modal state
+  // Change password
   const [changingPasswordUser, setChangingPasswordUser] = useState(null);
   const [passwordForm, setPasswordForm] = useState({ newPassword: '', confirmPassword: '' });
 
@@ -39,64 +40,56 @@ const AdminPage = ({ user, token }) => {
     if (token) fetchUsers();
   }, [token, fetchUsers]);
 
-  // Delete user
-  const handleDelete = async (userId) => {
-    if (!window.confirm('Are you sure you want to delete this user?')) return;
+  // Delete
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this user?')) return;
     try {
-      await deleteUser(userId, token);
-      setUsers(users.filter(u => u.id !== userId));
-      setError('');
+      await deleteUser(id, token);
+      setUsers(users.filter(u => u.id !== id));
     } catch (err) {
-      setError(err.message || 'Error deleting user');
+      setError(err.message);
     }
   };
 
-  // Open edit modal with user data
-  const openEditModal = (user) => {
-    setEditingUser(user);
-    setEditForm({ username: user.username, role: user.role });
+  // Edit
+  const openEditModal = (u) => {
+    setEditingUser(u);
+    setEditForm({ username: u.username, email: u.email, role: u.role });
   };
 
-  // Handle edit form submission
   const handleUpdateSubmit = async (e) => {
     e.preventDefault();
-    if (!editingUser) return;
+    if (user.role === 'ADMIN' && editForm.role !== 'USER') {
+      setError('Admins cannot assign admin role');
+      return;
+    }
     try {
       const updated = await updateUser(editingUser.id, editForm, token);
       setUsers(users.map(u => (u.id === editingUser.id ? { ...updated, id: updated._id } : u)));
       setEditingUser(null);
-      setError('');
     } catch (err) {
-      setError(err.message || 'Error updating user');
+      setError(err.message);
     }
   };
 
-  // Open change password modal
-  const openPasswordModal = (user) => {
-    setChangingPasswordUser(user);
+  // Password
+  const openPasswordModal = (u) => {
+    setChangingPasswordUser(u);
     setPasswordForm({ newPassword: '', confirmPassword: '' });
   };
 
-  // Handle password change submission
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
-    if (!changingPasswordUser) return;
-    const { newPassword, confirmPassword } = passwordForm;
-    if (newPassword !== confirmPassword) {
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       setError("Passwords don't match");
       return;
     }
-    if (newPassword.length < 6) {
-      setError('Password must be at least 6 characters');
-      return;
-    }
     try {
-      await changePassword(changingPasswordUser.id, newPassword, token);
-      alert('Password updated successfully!');
+      await changePassword(changingPasswordUser.id, passwordForm.newPassword, token);
+      alert('Password updated');
       setChangingPasswordUser(null);
-      setError('');
     } catch (err) {
-      setError(err.message || 'Error changing password');
+      setError(err.message);
     }
   };
 
@@ -104,255 +97,233 @@ const AdminPage = ({ user, token }) => {
   const handleCreate = async (e) => {
     e.preventDefault();
     if (!newEmail || !newUsername || !newPassword) {
-      setError('All fields are required');
+      setError('All fields required');
+      return;
+    }
+    if (user.role === 'ADMIN' && newRole !== 'USER') {
+      setError('Admins can only create users');
       return;
     }
     try {
       const created = await createUser(
-        { username: newUsername, password: newPassword, role: newRole },
+        { username: newUsername, email: newEmail, password: newPassword, role: newRole },
         token
       );
       setUsers([...users, { ...created, id: created._id }]);
-      // Reset form
       setNewEmail('');
       setNewUsername('');
       setNewPassword('');
       setNewRole('USER');
-      setError('');
     } catch (err) {
-      setError(err.message || 'Error creating user');
+      setError(err.message);
     }
   };
 
-  // Logout
   const handleLogout = () => {
     localStorage.removeItem('token');
     window.location.href = '/login';
   };
 
-  if (loading) {
-    return <div className="admin-loading">Loading users...</div>;
-  }
+  if (loading) return <div className="admin-container"><div className="loading-spinner">Loading users…</div></div>;
 
   return (
     <div className="admin-container">
-      {/* Header with logout */}
-      <div className="admin-header">
-        <div className="admin-welcome">
-          Welcome, <strong>{user.username}</strong> (Admin)
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">User Management</h1>
+          <p className="page-subtitle">Manage system users and permissions</p>
         </div>
-        <button onClick={handleLogout} className="admin-logout-button">
-          Log out
+        <button className="btn btn-secondary" onClick={handleLogout}>
+          <FiLogOut /> Logout
         </button>
       </div>
 
-      {error && <div className="admin-error">{error}</div>}
+      {error && <div className="error-message">{error}</div>}
 
-      {/* Create user section */}
-      <section>
-        <h2 className="admin-section-title">Create new user</h2>
-        <div className="admin-form-card">
-          <form onSubmit={handleCreate}>
-            <div className="admin-form-row">
-              <div className="admin-form-group">
-                <label className="admin-label" htmlFor="username">Username</label>
+      {/* Create User Card */}
+      <div className="form-card">
+        <h3 className="form-title"><FiPlus /> Create New User</h3>
+        <form onSubmit={handleCreate}>
+          <div className="form-grid">
+            <div className="input-group">
+              <label className="input-label"><FiUser /> Username</label>
+              <div className="input-wrapper">
                 <input
-                  id="username"
                   type="text"
-                  className="admin-input"
-                  placeholder="user"
+                  className="input-field"
+                  placeholder="Username"
                   value={newUsername}
                   onChange={e => setNewUsername(e.target.value)}
                   required
                 />
               </div>
-              <div className="admin-form-group">
-                <label className="admin-label" htmlFor="username">Username</label>
+            </div>
+            <div className="input-group">
+              <label className="input-label"><FiMail /> Email</label>
+              <div className="input-wrapper">
                 <input
-                  id="username"
-                  type="username"
-                  className="admin-input"
-                  placeholder="username"
+                  type="email"
+                  className="input-field"
+                  placeholder="Email"
                   value={newEmail}
                   onChange={e => setNewEmail(e.target.value)}
                   required
                 />
               </div>
-              <div className="admin-form-group">
-                <label className="admin-label" htmlFor="password">Password</label>
+            </div>
+            <div className="input-group">
+              <label className="input-label"><FiLock /> Password</label>
+              <div className="input-wrapper">
                 <input
-                  id="password"
                   type="password"
-                  className="admin-input"
-                  placeholder="••••••••"
+                  className="input-field"
+                  placeholder="Password"
                   value={newPassword}
                   onChange={e => setNewPassword(e.target.value)}
                   required
                 />
               </div>
-              <div className="admin-form-group">
-                <label className="admin-label" htmlFor="role">Role</label>
-                <select
-                  id="role"
-                  className="admin-select"
-                  value={newRole}
-                  onChange={e => setNewRole(e.target.value)}
-                >
+            </div>
+            <div className="input-group">
+              <label className="input-label"><FiShield /> Role</label>
+              <div className="input-wrapper">
+                <select className="input-field" value={newRole} onChange={e => setNewRole(e.target.value)}>
                   <option value="USER">USER</option>
-                  <option value="MANAGER">MANAGER</option>
-                  <option value="ADMIN">ADMIN</option>
-                  <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+                  {user.role === 'SUPER_ADMIN' && <option value="ADMIN">ADMIN</option>}
                 </select>
               </div>
-              <div className="admin-form-group">
-                <button type="submit" className="admin-create-button">
-                  Create user
-                </button>
-              </div>
             </div>
-          </form>
-        </div>
-      </section>
+          </div>
+          <div className="form-actions">
+            <button type="submit" className="btn btn-primary">
+              <FiPlus /> Create User
+            </button>
+          </div>
+        </form>
+      </div>
 
-      {/* Users list */}
-      <section>
-        <h2 className="admin-section-title">User list</h2>
-        <div className="admin-table-wrapper">
-          <table className="admin-user-table">
-            <thead>
-              <tr>
-                <th>Username</th>
-                <th>Username</th>
-                <th>Role</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map(u => (
+      {/* Users Table */}
+      <div className="table-container">
+        <h3 className="table-title">User List</h3>
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.length === 0 ? (
+              <tr><td colSpan="4" className="empty-message">No users found.</td></tr>
+            ) : (
+              users.map(u => (
                 <tr key={u.id}>
                   <td>{u.username}</td>
-                  <td>{u.username}</td>
-                  <td>
-                    <span className="admin-role-badge">{u.role}</span>
-                  </td>
-                  <td>
-                    <div className="admin-actions">
-                      <button
-                        className="admin-action-button"
-                        onClick={() => openEditModal(u)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="admin-action-button admin-delete-button"
-                        onClick={() => handleDelete(u.id)}
-                      >
-                        Delete
-                      </button>
-                      <button
-                        className="admin-action-button"
-                        onClick={() => openPasswordModal(u)}
-                      >
-                        Change password
-                      </button>
-                    </div>
+                  <td>{u.email}</td>
+                  <td><span className={`role-badge role-${u.role.toLowerCase()}`}>{u.role}</span></td>
+                  <td className="actions-cell">
+                    <button className="icon-btn edit-btn" onClick={() => openEditModal(u)} title="Edit">
+                      <FiEdit2 />
+                    </button>
+                    <button className="icon-btn delete-btn" onClick={() => handleDelete(u.id)} title="Delete">
+                      <FiTrash2 />
+                    </button>
+                    <button className="icon-btn password-btn" onClick={() => openPasswordModal(u)} title="Change password">
+                      <FiLock />
+                    </button>
                   </td>
                 </tr>
-              ))}
-              {users.length === 0 && (
-                <tr>
-                  <td colSpan="4" style={{ textAlign: 'center', padding: '2rem', color: '#5f6b7a' }}>
-                    No users found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
-      {/* Edit User Modal */}
+      {/* Edit Modal */}
       {editingUser && (
         <div className="modal-overlay">
-          <div className="modal-content">
-            <h3>Edit user</h3>
+          <div className="modal-container">
+            <div className="modal-header">
+              <h3>Edit User</h3>
+              <button className="close-btn" onClick={() => setEditingUser(null)}><FiX /></button>
+            </div>
             <form onSubmit={handleUpdateSubmit}>
-              <div className="admin-form-group">
-                <label className="admin-label">Username</label>
+              <div className="input-group">
+                <label><FiUser /> Username</label>
                 <input
                   type="text"
-                  className="admin-input"
+                  className="input-field"
                   value={editForm.username}
                   onChange={e => setEditForm({ ...editForm, username: e.target.value })}
                   required
                 />
               </div>
-              <div className="admin-form-group">
-                <label className="admin-label">Username</label>
+              <div className="input-group">
+                <label><FiMail /> Email</label>
                 <input
-                  type="username"
-                  className="admin-input"
-                  value={editForm.username}
-                  onChange={e => setEditForm({ ...editForm, username: e.target.value })}
+                  type="email"
+                  className="input-field"
+                  value={editForm.email}
+                  onChange={e => setEditForm({ ...editForm, email: e.target.value })}
                   required
                 />
               </div>
-              <div className="admin-form-group">
-                <label className="admin-label">Role</label>
+              <div className="input-group">
+                <label><FiShield /> Role</label>
                 <select
-                  className="admin-select"
+                  className="input-field"
                   value={editForm.role}
                   onChange={e => setEditForm({ ...editForm, role: e.target.value })}
                 >
                   <option value="USER">USER</option>
-                  <option value="MANAGER">MANAGER</option>
-                  <option value="ADMIN">ADMIN</option>
-                  <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+                  {user.role === 'SUPER_ADMIN' && <option value="ADMIN">ADMIN</option>}
                 </select>
               </div>
-              <div className="modal-actions">
-                <button type="submit" className="admin-create-button">Save</button>
-                <button type="button" className="admin-logout-button" onClick={() => setEditingUser(null)}>
-                  Cancel
-                </button>
+              <div className="form-actions">
+                <button type="submit" className="btn btn-primary">Save Changes</button>
+                <button type="button" className="btn btn-secondary" onClick={() => setEditingUser(null)}>Cancel</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* Change Password Modal */}
+      {/* Password Modal */}
       {changingPasswordUser && (
         <div className="modal-overlay">
-          <div className="modal-content">
-            <h3>Change password for {changingPasswordUser.username}</h3>
+          <div className="modal-container">
+            <div className="modal-header">
+              <h3>Change Password</h3>
+              <button className="close-btn" onClick={() => setChangingPasswordUser(null)}><FiX /></button>
+            </div>
             <form onSubmit={handlePasswordSubmit}>
-              <div className="admin-form-group">
-                <label className="admin-label">New password</label>
+              <div className="input-group">
+                <label><FiLock /> New Password</label>
                 <input
                   type="password"
-                  className="admin-input"
+                  className="input-field"
+                  placeholder="New password"
                   value={passwordForm.newPassword}
                   onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
                   required
-                  minLength={6}
                 />
               </div>
-              <div className="admin-form-group">
-                <label className="admin-label">Confirm new password</label>
+              <div className="input-group">
+                <label><FiLock /> Confirm Password</label>
                 <input
                   type="password"
-                  className="admin-input"
+                  className="input-field"
+                  placeholder="Confirm password"
                   value={passwordForm.confirmPassword}
                   onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
                   required
                 />
               </div>
-              <div className="modal-actions">
-                <button type="submit" className="admin-create-button">Change password</button>
-                <button type="button" className="admin-logout-button" onClick={() => setChangingPasswordUser(null)}>
-                  Cancel
-                </button>
+              <div className="form-actions">
+                <button type="submit" className="btn btn-primary">Update Password</button>
+                <button type="button" className="btn btn-secondary" onClick={() => setChangingPasswordUser(null)}>Cancel</button>
               </div>
             </form>
           </div>

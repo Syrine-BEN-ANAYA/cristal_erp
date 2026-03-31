@@ -1,30 +1,42 @@
-import { Controller, Get, Post, Param, Body, Delete, Put, Res } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, Delete, Put, Res, UseGuards } from '@nestjs/common';
 import express from 'express';
 import PDFDocument from 'pdfkit';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderDocument } from './schemas/order.schema';
+import { JwtLocalGuard } from 'src/common/guards/jwt-local.guard';
+import { RolesGuard } from 'src/common/guards/roles.guard';
+import { Roles } from 'src/common/decorators/roles.decorator';
 
 @Controller('orders')
+@UseGuards(JwtLocalGuard, RolesGuard) 
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Post()
+    @Roles('SUPER_ADMIN', 'USER')
+  
   async create(@Body() dto: CreateOrderDto) {
     return this.ordersService.createOrder(dto);
   }
 
   @Get('total')
+    @Roles('SUPER_ADMIN', 'USER')
+
   async getTotalOrderAmount() {
     return this.ordersService.getTotalOrderAmount();
   }
 
   @Get()
+    @Roles('SUPER_ADMIN', 'USER')
+
   async findAll() {
     return this.ordersService.findAll();
   }
 
   @Put(':id')
+    @Roles('SUPER_ADMIN', 'USER')
+
   async update(
     @Param('id') id: string,
     @Body() dto: CreateOrderDto,
@@ -33,17 +45,23 @@ export class OrdersController {
   }
 
   @Get(':id')
+    @Roles('SUPER_ADMIN', 'USER')
+
   async findOne(@Param('id') id: string) {
     return this.ordersService.findOne(id);
   }
 
   @Delete(':id')
+    @Roles('SUPER_ADMIN', 'USER')
+
   async remove(@Param('id') id: string) {
     return this.ordersService.removeOrder(id);
   }
 
   // --- Endpoint de facture PDF ---
   @Get(':id/invoice')
+    @Roles('SUPER_ADMIN', 'USER')
+
   async getInvoice(@Param('id') orderId: string, @Res() res: express.Response) {
     // Utiliser le service pour récupérer la commande (qui popule déjà customerId et items.productId)
     const order = await this.ordersService.findOne(orderId);

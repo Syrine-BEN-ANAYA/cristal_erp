@@ -4,7 +4,7 @@ import {
 } from '../api/ordersService';
 import { getProducts } from '../api/productsService';
 import { getCustomers } from '../api/customersService';
-import { FiPackage, FiUser, FiShoppingCart, FiPlus, FiTrash2, FiX, FiDownload, FiDollarSign } from 'react-icons/fi';
+import { FiPackage, FiUser, FiShoppingCart, FiPlus, FiTrash2, FiX, FiDollarSign, FiMail, FiCheckCircle } from 'react-icons/fi';
 import '../styles/OrdersPage.css';
 
 export default function OrdersPage({ token }) {
@@ -16,6 +16,7 @@ export default function OrdersPage({ token }) {
   const [error, setError] = useState('');
   const [form, setForm] = useState({ customerId: '', items: [{ productId: '', quantity: 1 }] });
   const [editingOrderId, setEditingOrderId] = useState(null);
+  const [showInvoicePopup, setShowInvoicePopup] = useState(false); // popup visibility
 
   // --- Helpers ---
   const formatMoney = (value) => `$${(Number(value) || 0).toFixed(2)}`;
@@ -66,6 +67,14 @@ export default function OrdersPage({ token }) {
     loadTotalAmount();
   }, [token, loadProducts, loadCustomers, loadOrders, loadTotalAmount]);
 
+  // Auto-close popup after 5 seconds
+  useEffect(() => {
+    if (showInvoicePopup) {
+      const timer = setTimeout(() => setShowInvoicePopup(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [showInvoicePopup]);
+
   // --- Form handlers ---
   const handleItemChange = (index, field, value) => {
     const newItems = [...form.items];
@@ -92,8 +101,11 @@ export default function OrdersPage({ token }) {
       if (editingOrderId) {
         await updateOrder(editingOrderId, payload, token);
         setEditingOrderId(null);
+        // optional: show a different popup for update
       } else {
         await createOrder(payload, token);
+        // Show the popup after successful creation
+        setShowInvoicePopup(true);
       }
       resetForm();
       await loadOrders();
@@ -130,6 +142,22 @@ export default function OrdersPage({ token }) {
 
   return (
     <div className="orders-page">
+      {/* Modal Popup for Invoice Sent */}
+      {showInvoicePopup && (
+        <div className="popup-overlay" onClick={() => setShowInvoicePopup(false)}>
+          <div className="popup-content" onClick={(e) => e.stopPropagation()}>
+            <div className="popup-icon">
+              <FiMail size={40} />
+            </div>
+            <h3>Order Created!</h3>
+            <p>PDF Invoice sent by email to the customer.</p>
+            <button className="popup-close-btn" onClick={() => setShowInvoicePopup(false)}>
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="page-header">
         <h1>Orders</h1>
         <p>Manage customer orders</p>

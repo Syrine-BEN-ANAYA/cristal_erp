@@ -13,6 +13,7 @@ import { OrdersGateway } from './routes/orders.gateway';
 import { SuppliersGateway } from './routes/suppliers.gateway';
 import { CustomersGateway } from './routes/customers.gateway';
 import { PurchasesGateway } from './routes/purchase.gateway';
+import { HealthController } from './health.controller';
 
 @Module({
   controllers: [
@@ -22,7 +23,8 @@ import { PurchasesGateway } from './routes/purchase.gateway';
     OrdersGateway,
     SuppliersGateway,
     CustomersGateway,
-    PurchasesGateway
+    PurchasesGateway,
+    HealthController,
   ],
   providers: [
     {

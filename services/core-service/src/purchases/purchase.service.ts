@@ -98,15 +98,22 @@ async update(id: string, dto: UpdatePurchaseDto): Promise<Purchase> {
 
   return purchase;
 }
- async remove(id: string): Promise<void> {
+async remove(id: string): Promise<void> {
+  if (!Types.ObjectId.isValid(id)) {
+    throw new NotFoundException(`Purchase ID is invalid`);
+  }
+
   const purchase = await this.purchaseModel.findById(id);
   if (!purchase) throw new NotFoundException(`Purchase not found`);
 
+  // retirer le stock
   for (const item of purchase.items) {
     await this.productService.removeStock(item.productId.toString(), item.quantity);
   }
 
-  await this.purchaseModel.findByIdAndDelete(id);
+  // supprimer la purchase
+  const deleted = await this.purchaseModel.findByIdAndDelete(id);
+  if (!deleted) throw new NotFoundException(`Purchase not found during deletion`);
 }
  async findOne(id: string): Promise<PurchaseDocument> {
     const purchase = await this.purchaseModel

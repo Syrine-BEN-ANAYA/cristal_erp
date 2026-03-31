@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   getPurchases,
   createPurchase,
-  updatePurchase, // 👈 NOUVEL IMPORT
+  updatePurchase,
   deletePurchase,
   getTotalPurchaseAmount
 } from '../api/purchasesService';
@@ -12,7 +12,7 @@ import { getSuppliers } from '../api/suppliersService';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import logo from '../assets/logo.png';
-import { FiTrash2, FiDownload, FiPlus, FiX, FiDollarSign, FiShoppingBag, FiEdit } from 'react-icons/fi'; // 👈 AJOUT FiEdit
+import { FiTrash2, FiDownload, FiPlus, FiX, FiDollarSign, FiShoppingBag, FiEdit, FiCheckCircle } from 'react-icons/fi';
 import '../styles/PurchasesPage.css';
 
 export default function PurchasesPage({ token }) {
@@ -34,6 +34,17 @@ export default function PurchasesPage({ token }) {
     supplierId: '',
     items: [{ productId: '', quantity: 1, price: 0 }]
   });
+
+  // État pour le popup de succès (création)
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+
+  // Auto-fermeture du popup après 5 secondes
+  useEffect(() => {
+    if (showSuccessPopup) {
+      const timer = setTimeout(() => setShowSuccessPopup(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccessPopup]);
 
   // ---------------- Load Data ----------------
   const loadPurchases = useCallback(async () => {
@@ -142,6 +153,7 @@ export default function PurchasesPage({ token }) {
 
     try {
       await createPurchase(payload, token);
+      setShowSuccessPopup(true);   // 👈 Affiche le popup après création
       resetForm();
       loadPurchases();
       loadTotalAmount();
@@ -153,17 +165,13 @@ export default function PurchasesPage({ token }) {
 
   // ---------------- Update Handlers ----------------
   const openEditModal = (purchase) => {
-    // Extraire les IDs des objets imbriqués
     const supplierId = purchase.supplierId?._id || purchase.supplierId;
     const items = purchase.items.map(item => ({
       productId: item.productId?._id || item.productId,
       quantity: item.quantity,
       price: item.price
     }));
-    setEditForm({
-      supplierId,
-      items
-    });
+    setEditForm({ supplierId, items });
     setEditingPurchaseId(purchase._id);
     setIsEditModalOpen(true);
   };
@@ -282,7 +290,6 @@ export default function PurchasesPage({ token }) {
     doc.text(`Invoice #: ${invoiceNumber}`, margin, y);
     doc.text(`Invoice Date: ${new Date().toLocaleDateString('en-GB')}`, margin, y + 5);
 
-    // Supplier Info
     const supplier = suppliers.find(s => s._id === (purchase.supplierId?._id || purchase.supplierId));
     if (supplier) {
       doc.text('Supplier:', pageWidth - margin - 60, y);
@@ -341,6 +348,22 @@ export default function PurchasesPage({ token }) {
 
   return (
     <div className="purchases-page">
+      {/* Popup de succès après création */}
+      {showSuccessPopup && (
+        <div className="popup-overlay" onClick={() => setShowSuccessPopup(false)}>
+          <div className="popup-content" onClick={e => e.stopPropagation()}>
+            <div className="popup-icon">
+              <FiCheckCircle size={40} />
+            </div>
+            <h3>Purchase Created!</h3>
+            <p>Invoice sent by email to the supplier.</p>
+            <button className="popup-close-btn" onClick={() => setShowSuccessPopup(false)}>
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="page-header">
         <h1>Purchases</h1>
         <p>Manage all purchases</p>

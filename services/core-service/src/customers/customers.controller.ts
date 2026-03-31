@@ -7,35 +7,40 @@ import { JwtLocalGuard } from 'src/common/guards/jwt-local.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 
 @Controller('customers')
+@UseGuards(JwtLocalGuard, RolesGuard) 
 export class CustomersController {
   constructor(private readonly customersService: CustomersService) {}
 
   @Post()
-  @UseGuards(JwtLocalGuard, RolesGuard)
+  @Roles('SUPER_ADMIN', 'USER')
   create(@Body() dto: CreateCustomerDto) {
     return this.customersService.create(dto);
   }
 
   @Get()
-  @UseGuards(JwtLocalGuard, RolesGuard)
+    @Roles('SUPER_ADMIN', 'USER')
+
   findAll() {
     return this.customersService.findAll();
   }
 
   @Get(':id')
-  @UseGuards(JwtLocalGuard, RolesGuard)
+    @Roles('SUPER_ADMIN', 'USER')
+
   findOne(@Param('id') id: string) {
     return this.customersService.findOne(id);
   }
 
   @Put(':id')
-  @UseGuards(JwtLocalGuard, RolesGuard)
+    @Roles('SUPER_ADMIN', 'USER')
+
   update(@Param('id') id: string, @Body() dto: UpdateCustomerDto) {
     return this.customersService.update(id, dto);
   }
 
   @Delete(':id')
-  @UseGuards(JwtLocalGuard, RolesGuard)
+    @Roles('SUPER_ADMIN', 'USER')
+
   remove(@Param('id') id: string) {
     return this.customersService.remove(id);
   }

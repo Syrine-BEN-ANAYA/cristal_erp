@@ -30,5 +30,7 @@ import { AuditModule } from './audit/audit.module';
     UsersModule,
     AuditModule,
   ],
+    controllers: [],
+
 })
 export class AppModule {}

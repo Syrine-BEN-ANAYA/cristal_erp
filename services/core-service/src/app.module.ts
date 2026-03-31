@@ -27,5 +27,6 @@ if (!process.env.MONGO_URI) {
     PurchaseModule,
     ReportModule
   ],
+
 })
 export class AppModule {}
