@@ -297,41 +297,4 @@ spec:
       port: 5678
       targetPort: 5678
       nodePort: 30578
-      apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: sonarqube
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: sonarqube
-  template:
-    metadata:
-      labels:
-        app: sonarqube
-    spec:
-      containers:
-      - name: sonarqube
-        image: sonarqube:lts
-        ports:
-        - containerPort: 9000
-        resources:
-          limits:
-            memory: "2Gi"
-            cpu: "1"
-        env:
-          - name: SONAR_JDBC_URL
-            value: "jdbc:postgresql://postgres:5432/sonar"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: sonarqube
-spec:
-  selector:
-    app: sonarqube
-  ports:
-    - port: 9000
-      targetPort: 9000
-  type: NodePort
+     
