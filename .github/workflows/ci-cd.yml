@@ -5,14 +5,10 @@ on:
     branches: [main]
   pull_request:
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAMES: auth-service core-service api-gateway erp-ui  # adapte selon tes services
-
 jobs:
-  # ==================== CI/CD cloud ====================
   ci_cd:
     runs-on: ubuntu-latest
+
     steps:
       # 1. Checkout le code
       - name: Checkout repository
@@ -29,52 +25,15 @@ jobs:
       # 4. Scan sécurité avec Trivy
       - name: Scan images with Trivy
         run: |
-          for img in ${{ env.IMAGE_NAMES }}; do
-            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-              ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL "$img:latest"
-          done
-
-      # 5. Push des images sur GHCR (main seulement)
-      - name: Log in to container registry
-        if: github.ref == 'refs/heads/main'
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}
-
-      - name: Push Docker images
-        if: github.ref == 'refs/heads/main'
-        run: docker compose push
-
-  # ==================== CD sur runner Windows self-hosted ====================
-  cd:
-    needs: ci_cd
-    runs-on: self-hosted
-    if: github.ref == 'refs/heads/main'
-    steps:
-      # 1. Checkout le repo
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      # 2. Login Docker sur Windows
-      - name: Log in to container registry
-        shell: pwsh
-        run: |
-          $env:GITHUB_TOKEN = "${{ secrets.GHCR_PAT }}"
-          $env:REGISTRY = "${{ env.REGISTRY }}"
-          $env:GITHUB_ACTOR = "${{ github.actor }}"
-          echo $env:GITHUB_TOKEN | docker login $env:REGISTRY -u $env:GITHUB_ACTOR --password-stdin
-
-      # 3. Pull des images
-      - name: Pull Docker images
-        shell: pwsh
-        run: |
-          foreach ($img in "${{ env.IMAGE_NAMES }}".Split(" ")) {
-            docker pull "$img:latest"
-          }
-
-      # 4. Déploiement avec Docker Compose
-      - name: Deploy with Docker Compose
-        shell: pwsh
-        run: docker compose up -d
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL auth-service:latest
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL core-service:latest
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL api-gateway:latest
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL erp-ui:latest
