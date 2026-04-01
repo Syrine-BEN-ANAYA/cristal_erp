@@ -35,7 +35,7 @@ jobs:
               ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL "$img:latest"
           done
 
-      # 5. Push des images sur GHCR (main seulement)
+      # 5. Login et push Docker images sur GHCR (main seulement)
       - name: Log in to container registry
         if: github.ref == 'refs/heads/main'
         uses: docker/login-action@v3
@@ -58,7 +58,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2. Login Docker sur Windows
+      # 2. Login Docker sur Windows avec le secret
       - name: Log in to container registry
         shell: pwsh
         run: |
