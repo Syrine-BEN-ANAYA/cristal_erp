@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sonar-scan
+spec:
+  template:
+    spec:
+      containers:
+      - name: sonar-scanner
+        image: sonarsource/sonar-scanner-cli
+        env:
+        - name: SONAR_HOST_URL
+          value: "http://sonarqube.default.svc.cluster.local:9000"
+        - name: SONAR_LOGIN
+          value: "sqp_3a856d6b215f2a3e3a0059a2bac297f4084ca422"
+        volumeMounts:
+        - name: project-volume
+          mountPath: /usr/src
+        workingDir: /usr/src
+        args:
+        - "-Dsonar.projectKey=cristal_erp"
+        - "-Dsonar.projectName=Cristal ERP"
+        - "-Dsonar.projectVersion=1.0"
+        - "-Dsonar.sources=."
+        - "-Dsonar.login=sqp_3a856d6b215f2a3e3a0059a2bac297f4084ca422"
+      restartPolicy: Never
+      volumes:
+      - name: project-volume
+        hostPath:
+          path: /mnt/c/Users/Client/desktop/Cristal_ERP
