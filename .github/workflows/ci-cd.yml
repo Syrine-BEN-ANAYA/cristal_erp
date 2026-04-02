@@ -1,31 +1,29 @@
 name: CI Pipeline
 
 on:
-push:
-branches:
-- main
-pull_request:
+  push:
+    branches:
+      - main
+  pull_request:
 
 jobs:
-ci:
-runs-on: ubuntu-latest
+  ci:
+    runs-on: ubuntu-latest
 
-```
-steps:
-  - name: Checkout repository
-    uses: actions/checkout@v3
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-  - name: Build Docker images
-    run: docker compose build
+      - name: Build Docker images
+        run: docker compose build
 
-  - name: Scan images with Trivy
-    run: |
-      for image in auth-service core-service api-gateway erp-ui; do
-        docker run --rm \
-          -v /var/run/docker.sock:/var/run/docker.sock \
-          ghcr.io/aquasecurity/trivy:latest image \
-          --severity HIGH,CRITICAL \
-          --exit-code 1 \
-          $image:latest
-      done
-```
+      - name: Scan images with Trivy
+        run: |
+          for image in auth-service core-service api-gateway erp-ui; do
+            docker run --rm \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              ghcr.io/aquasecurity/trivy:latest image \
+              --severity HIGH,CRITICAL \
+              --exit-code 1 \
+              $image:latest
+          done
