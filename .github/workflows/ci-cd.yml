@@ -17,13 +17,24 @@ jobs:
       - name: Build Docker images
         run: docker compose build
 
-      - name: Scan images with Trivy
+      - name: Scan Docker images with Trivy
         run: |
-          for image in auth-service core-service api-gateway erp-ui; do
+          images=(
+            "syrinebenanaya/auth-service:latest"
+            "syrinebenanaya/core-service:latest"
+            "syrinebenanaya/api-gateway:latest"
+            "syrinebenanaya/erp-ui:latest"
+          )
+
+          for image in "${images[@]}"; do
+            echo "Scanning $image ..."
             docker run --rm \
               -v /var/run/docker.sock:/var/run/docker.sock \
               ghcr.io/aquasecurity/trivy:latest image \
               --severity HIGH,CRITICAL \
-              --exit-code 0 \   
-              $image:latest
+              --exit-code 0 \
+              --format table \
+              $image
+            echo "---------------------------------------------"
           done
+        shell: bash
