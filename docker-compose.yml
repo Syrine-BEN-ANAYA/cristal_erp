@@ -1,3 +1,5 @@
+version: '3.9'
+
 services:
   mongo:
     image: mongo:6.0
@@ -120,6 +122,30 @@ services:
     networks:
       - erp-network
 
+  sonarqube-db:
+    image: postgres:15
+    container_name: cristal_erp-sonarqube-db
+    environment:
+      POSTGRES_USER: sonarqube
+      POSTGRES_PASSWORD: sonarqube
+      POSTGRES_DB: sonarqube
+    networks:
+      - erp-network
+    volumes:
+      - sonarqube-db-data:/var/lib/postgresql/data
+
+  sonarqube:
+    image: sonarqube:latest
+    container_name: cristal_erp-sonarqube
+    ports:
+      - "9000:9000"
+    environment:
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+    depends_on:
+      - sonarqube-db
+    networks:
+      - erp-network
+
 networks:
   erp-network:
     driver: bridge
@@ -127,3 +153,4 @@ networks:
 volumes:
   mongo-data:
   n8n-data:
+  sonarqube-db-data:

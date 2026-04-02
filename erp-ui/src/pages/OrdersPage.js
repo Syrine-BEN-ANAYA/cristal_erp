@@ -4,7 +4,10 @@ import {
 } from '../api/ordersService';
 import { getProducts } from '../api/productsService';
 import { getCustomers } from '../api/customersService';
-import { FiPackage, FiUser, FiShoppingCart, FiPlus, FiTrash2, FiX, FiDollarSign, FiMail, FiCheckCircle } from 'react-icons/fi';
+import { FiPackage, FiUser, FiShoppingCart, FiPlus, FiTrash2, FiX, FiDollarSign, FiMail, FiCheckCircle, FiDownload } from 'react-icons/fi';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import logo from '../assets/logo.png'; // Assurez-vous que le chemin est correct
 import '../styles/OrdersPage.css';
 
 export default function OrdersPage({ token }) {
@@ -101,10 +104,8 @@ export default function OrdersPage({ token }) {
       if (editingOrderId) {
         await updateOrder(editingOrderId, payload, token);
         setEditingOrderId(null);
-        // optional: show a different popup for update
       } else {
         await createOrder(payload, token);
-        // Show the popup after successful creation
         setShowInvoicePopup(true);
       }
       resetForm();
@@ -136,6 +137,107 @@ export default function OrdersPage({ token }) {
     } catch (err) {
       alert(err.response?.data?.message || err.message || 'Failed to delete order');
     }
+  };
+
+  // --- Generate Invoice PDF (similar to PurchasesPage) ---
+  const generateInvoicePDF = (order) => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 15;
+    let y = 20;
+
+    // Logo
+    try {
+      doc.addImage(logo, 'PNG', margin, y, 40, 20);
+    } catch (e) {
+      console.warn('Logo could not be loaded', e);
+    }
+
+    // En-tête
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(10, 43, 78);
+    doc.text('UNITED AL RUBAI AL CRISTAL', pageWidth / 2, y + 10, { align: 'center' });
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
+    doc.text('Muscat, Oman', pageWidth - margin, y + 18, { align: 'right' });
+    doc.text('Email: info@cristal.om', pageWidth - margin, y + 23, { align: 'right' });
+
+    y += 30;
+
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('SALES INVOICE', margin, y);
+
+    y += 10;
+
+    doc.setFontSize(10);
+    doc.setTextColor(80, 80, 80);
+    doc.setFont('helvetica', 'normal');
+
+    const invoiceNumber = `ORD-${order._id.slice(-8)}`;
+    doc.text(`Invoice #: ${invoiceNumber}`, margin, y);
+    doc.text(`Invoice Date: ${new Date().toLocaleDateString('en-GB')}`, margin, y + 5);
+
+    // Customer info
+    const customer = customers.find(c => c._id === (order.customerId?._id || order.customerId));
+    if (customer) {
+      doc.text('Customer:', pageWidth - margin - 60, y);
+      doc.setFont('helvetica', 'bold');
+      doc.text(customer.name || 'N/A', pageWidth - margin - 60, y + 5);
+      doc.setFont('helvetica', 'normal');
+      if (customer.email) doc.text(`Email: ${customer.email}`, pageWidth - margin - 60, y + 10);
+      if (customer.phone) doc.text(`Phone: ${customer.phone}`, pageWidth - margin - 60, y + 15);
+    }
+
+    y += 25;
+
+    // Tableau des produits
+    const tableColumn = ['Product', 'Quantity', 'Unit Price (USD)', 'Total (USD)'];
+    const tableRows = order.items.map(item => {
+      const product = products.find(p => p._id === (item.productId?._id || item.productId));
+      const productName = product?.name || 'Unknown';
+      const quantity = item.quantity;
+      const price = product?.price || 0;
+      const total = price * quantity;
+      return [productName, quantity, price.toFixed(2), total.toFixed(2)];
+    });
+
+    autoTable(doc, {
+      startY: y,
+      head: [tableColumn],
+      body: tableRows,
+      theme: 'striped',
+      headStyles: { fillColor: [10, 43, 78], textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+      margin: { left: margin, right: margin },
+      columnStyles: { 0: { cellWidth: 'auto' }, 1: { halign: 'center' }, 2: { halign: 'right' }, 3: { halign: 'right' } }
+    });
+
+    const finalY = doc.lastAutoTable.finalY + 10;
+    const total = order.totalAmount || tableRows.reduce((sum, row) => sum + parseFloat(row[3]), 0);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Total Amount: $${total.toFixed(2)}`, pageWidth - margin - 50, finalY);
+
+    // Coordonnées bancaires
+    const bankY = finalY + 10;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(60, 60, 60);
+    doc.text('Bank Muscat', margin, bankY + 5);
+    doc.text('Account Number: 0123 4567 8901 2345', margin, bankY + 10);
+    doc.text('IBAN: OM12 3456 7890 1234 5678 9012', margin, bankY + 15);
+
+    const footerY = doc.internal.pageSize.getHeight() - 20;
+    doc.setFontSize(9);
+    doc.setTextColor(150, 150, 150);
+    doc.text('Thank you for your business!', pageWidth / 2, footerY, { align: 'center' });
+
+    doc.save(`order_invoice_${order._id}.pdf`);
   };
 
   if (loading) return <div className="orders-page"><div className="loading-spinner">Loading…</div></div>;
@@ -273,6 +375,9 @@ export default function OrdersPage({ token }) {
                   <td className="actions">
                     <button className="icon-btn edit-btn" onClick={() => startEditOrder(o)} aria-label="Edit">✎</button>
                     <button className="icon-btn delete-btn" onClick={() => handleDeleteOrder(o._id)} aria-label="Delete"><FiTrash2 /></button>
+                    <button className="icon-btn download-btn" onClick={() => generateInvoicePDF(o)} aria-label="Download PDF">
+                      <FiDownload />
+                    </button>
                   </td>
                 </tr>
               );
