@@ -5,81 +5,35 @@ on:
     branches: [main]
   pull_request:
 
-env:
-  REGISTRY: ghcr.io
-  USERNAME: syrine-ben-anaya
-  IMAGE_NAMES: auth-service core-service api-gateway erp-ui
-
 jobs:
-  # ==================== CI ====================
   ci_cd:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Checkout le code
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # 2. Setup Docker Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Build avec tags GHCR (IMPORTANT)
+      # 3. Build les images Docker
       - name: Build Docker images
-        run: |
-          for img in $IMAGE_NAMES; do
-            docker build -t $REGISTRY/$USERNAME/$img:latest ./services/$img
-          done
+        run: docker compose build
 
-      # Scan sécurité
+      # 4. Scan sécurité avec Trivy
       - name: Scan images with Trivy
         run: |
-          for img in $IMAGE_NAMES; do
-            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-              ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL \
-              $REGISTRY/$USERNAME/$img:latest
-          done
-
-      # Login GHCR
-      - name: Log in to GHCR
-        if: github.ref == 'refs/heads/main'
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: syrine-ben-anaya
-          password: ${{ secrets.GHCR_PAT }}
-
-      # Push
-      - name: Push Docker images
-        if: github.ref == 'refs/heads/main'
-        run: |
-          for img in $IMAGE_NAMES; do
-            docker push $REGISTRY/$USERNAME/$img:latest
-          done
-
-  # ==================== CD ====================
-  cd:
-    needs: ci_cd
-    runs-on: self-hosted
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      # Login GHCR (Windows)
-      - name: Log in to GHCR
-        shell: pwsh
-        run: |
-          echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u syrine-ben-anaya --password-stdin
-
-      # Pull images
-      - name: Pull Docker images
-        shell: pwsh
-        run: |
-          foreach ($img in "${{ env.IMAGE_NAMES }}".Split(" ")) {
-            docker pull "ghcr.io/syrine-ben-anaya/$img:latest"
-          }
-
-      # Deploy
-      - name: Deploy with Docker Compose
-        shell: pwsh
-        run: docker compose up -d
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL auth-service:latest
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL core-service:latest
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL api-gateway:latest
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            ghcr.io/aquasecurity/trivy:latest image --severity HIGH,CRITICAL erp-ui:latest

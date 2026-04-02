@@ -135,3 +135,195 @@
 [2026-04-01 09:31:20Z INFO Terminal] WRITE LINE: Current runner version: '2.333.1'
 [2026-04-01 09:31:20Z INFO Terminal] WRITE LINE: 2026-04-01 09:31:20Z: Listening for Jobs
 [2026-04-01 09:31:20Z INFO JobDispatcher] Set runner/worker IPC timeout to 30 seconds.
+[2026-04-01 10:21:42Z INFO RSAEncryptedFileKeyManager] Loading RSA key parameters from file C:\Users\Client\Desktop\Cristal_ERP\actions-runner\.credentials_rsaparams
+[2026-04-01 10:21:43Z INFO GitHubActionsService] AAD Correlation ID for this token request: Unknown
+[2026-04-01 11:12:06Z INFO RSAEncryptedFileKeyManager] Loading RSA key parameters from file C:\Users\Client\Desktop\Cristal_ERP\actions-runner\.credentials_rsaparams
+[2026-04-01 11:12:08Z INFO GitHubActionsService] AAD Correlation ID for this token request: Unknown
+[2026-04-01 12:02:32Z INFO RSAEncryptedFileKeyManager] Loading RSA key parameters from file C:\Users\Client\Desktop\Cristal_ERP\actions-runner\.credentials_rsaparams
+[2026-04-01 12:02:33Z INFO GitHubActionsService] AAD Correlation ID for this token request: Unknown
+[2026-04-01 12:53:03Z INFO RSAEncryptedFileKeyManager] Loading RSA key parameters from file C:\Users\Client\Desktop\Cristal_ERP\actions-runner\.credentials_rsaparams
+[2026-04-01 12:53:04Z INFO GitHubActionsService] AAD Correlation ID for this token request: Unknown
+[2026-04-01 13:43:29Z INFO RSAEncryptedFileKeyManager] Loading RSA key parameters from file C:\Users\Client\Desktop\Cristal_ERP\actions-runner\.credentials_rsaparams
+[2026-04-01 13:43:30Z INFO GitHubActionsService] AAD Correlation ID for this token request: Unknown
+[2026-04-01 14:33:55Z INFO RSAEncryptedFileKeyManager] Loading RSA key parameters from file C:\Users\Client\Desktop\Cristal_ERP\actions-runner\.credentials_rsaparams
+[2026-04-01 14:33:56Z INFO GitHubActionsService] AAD Correlation ID for this token request: Unknown
+[2026-04-01 14:43:20Z WARN GitHubActionsService] Attempt 1 of GET request to https://broker.actions.githubusercontent.com/message?sessionId=e2274430-3475-4391-9dbc-36193684975e&status=Online&runnerVersion=2.333.1&os=Windows&architecture=X64&disableUpdate=false failed (Socket Error: ConnectionReset). The operation will be retried in 11,12 seconds.
+[2026-04-01 15:24:05Z INFO RSAEncryptedFileKeyManager] Loading RSA key parameters from file C:\Users\Client\Desktop\Cristal_ERP\actions-runner\.credentials_rsaparams
+[2026-04-01 15:24:06Z INFO GitHubActionsService] AAD Correlation ID for this token request: Unknown
+[2026-04-01 16:14:30Z INFO RSAEncryptedFileKeyManager] Loading RSA key parameters from file C:\Users\Client\Desktop\Cristal_ERP\actions-runner\.credentials_rsaparams
+[2026-04-01 16:14:31Z INFO GitHubActionsService] AAD Correlation ID for this token request: Unknown
+[2026-04-01 16:21:11Z INFO Runner] Received RunnerRefreshConfigMessage for 'runner' config file
+[2026-04-01 16:21:11Z INFO RunnerConfigUpdater] Verifying runner qualified id: U_kgDOB3kbIg/R_kgDOReQAlA/self-hosted/21
+[2026-04-01 16:21:11Z INFO HostContext] Well known directory 'Bin': 'C:\Users\Client\Desktop\Cristal_ERP\actions-runner\bin'
+[2026-04-01 16:21:11Z INFO HostContext] Well known directory 'Root': 'C:\Users\Client\Desktop\Cristal_ERP\actions-runner'
+[2026-04-01 16:21:11Z INFO HostContext] Well known config file 'Runner': 'C:\Users\Client\Desktop\Cristal_ERP\actions-runner\.runner'
+[2026-04-01 16:21:13Z INFO RSAEncryptedFileKeyManager] Loading RSA key parameters from file C:\Users\Client\Desktop\Cristal_ERP\actions-runner\.credentials_rsaparams
+[2026-04-01 16:21:13Z INFO RSAEncryptedFileKeyManager] Loading RSA key parameters from file C:\Users\Client\Desktop\Cristal_ERP\actions-runner\.credentials_rsaparams
+[2026-04-01 16:21:14Z INFO GitHubActionsService] AAD Correlation ID for this token request: Unknown
+[2026-04-01 16:21:14Z INFO ConfigurationStore] Saving runner migrated settings
+[2026-04-01 16:21:14Z INFO ConfigurationStore] Migrated Settings Saved.
+[2026-04-01 16:21:14Z INFO Runner] Runner configuration was updated. Session restart has been scheduled
+[2026-04-01 16:21:14Z INFO Runner] Pending session restart detected and job dispatcher is not busy. Restarting session now.
+[2026-04-01 16:21:14Z INFO JobDispatcher] Shutting down JobDispatcher. Make sure all WorkerDispatcher has finished.
+[2026-04-01 16:21:14Z INFO Runner] Deleting Runner Session...
+[2026-04-01 16:21:15Z INFO Runner] Restarting runner session after config update...
+[2026-04-01 16:21:15Z INFO Runner] Runner configuration was refreshed, restarting session...
+[2026-04-01 16:21:15Z INFO ConfigurationManager] LoadSettings
+[2026-04-01 16:21:15Z INFO ConfigurationStore] IsConfigured()
+[2026-04-01 16:21:15Z INFO ConfigurationStore] IsConfigured: True
+[2026-04-01 16:21:15Z INFO ConfigurationManager] Is configured: True
+[2026-04-01 16:21:15Z INFO ConfigurationManager] Settings Loaded
+[2026-04-01 16:21:15Z INFO Runner] RunAsync
+[2026-04-01 16:21:15Z INFO HostContext] Well known directory 'Bin': 'C:\Users\Client\Desktop\Cristal_ERP\actions-runner\bin'
+[2026-04-01 16:21:15Z INFO HostContext] Well known directory 'Root': 'C:\Users\Client\Desktop\Cristal_ERP\actions-runner'
+[2026-04-01 16:21:15Z INFO HostContext] Well known directory 'Work': 'C:\Users\Client\Desktop\Cristal_ERP\actions-runner\cristal'
+[2026-04-01 16:21:15Z INFO Runner] Validating directory permissions for: 'C:\Users\Client\Desktop\Cristal_ERP\actions-runner\cristal'
+[2026-04-01 16:21:15Z INFO ConfigurationManager] LoadMigratedSettings
+[2026-04-01 16:21:15Z INFO ConfigurationStore] IsMigratedConfigured()
+[2026-04-01 16:21:15Z INFO ConfigurationStore] IsMigratedConfigured: True
+[2026-04-01 16:21:15Z INFO ConfigurationStore] Read migrated setting file: 409 chars
+[2026-04-01 16:21:15Z INFO ConfigurationManager] Migrated Settings Loaded
+[2026-04-01 16:21:15Z INFO Runner] Loaded migrated settings from .runner_migrated file
+[2026-04-01 16:21:15Z INFO Runner] {
+  "AgentId": 21,
+  "AgentName": "DESKTOP-QJAV7Q7",
+  "PoolId": 1,
+  "PoolName": "Default",
+  "ServerUrl": "https://pipelinesghubeus2.actions.githubusercontent.com/HjGILohtVV5GfzOjfD6cqkxfjShW0wnoa0BWHh4QZ0R78cb6fH/",
+  "GitHubUrl": "https://github.com/Syrine-BEN-ANAYA/Cristal_ERP",
+  "WorkFolder": "cristal",
+  "UseV2Flow": true,
+  "ServerUrlV2": "https://broker.actions.githubusercontent.com/"
+}
+[2026-04-01 16:21:15Z INFO Runner] Attempting to create session using migrated settings
+[2026-04-01 16:21:15Z INFO Runner] Using BrokerMessageListener
+[2026-04-01 16:21:15Z INFO BrokerMessageListener] Using provided settings
+[2026-04-01 16:21:15Z INFO BrokerMessageListener] Using migrated settings from .runner_migrated
+[2026-04-01 16:21:15Z INFO BrokerMessageListener] {
+  "AgentId": 21,
+  "AgentName": "DESKTOP-QJAV7Q7",
+  "PoolId": 1,
+  "PoolName": "Default",
+  "ServerUrl": "https://pipelinesghubeus2.actions.githubusercontent.com/HjGILohtVV5GfzOjfD6cqkxfjShW0wnoa0BWHh4QZ0R78cb6fH/",
+  "GitHubUrl": "https://github.com/Syrine-BEN-ANAYA/Cristal_ERP",
+  "WorkFolder": "cristal",
+  "UseV2Flow": true,
+  "ServerUrlV2": "https://broker.actions.githubusercontent.com/"
+}
+[2026-04-01 16:21:15Z INFO BrokerMessageListener] Loading Credentials
+[2026-04-01 16:21:15Z INFO ConfigurationStore] HasCredentials()
+[2026-04-01 16:21:15Z INFO ConfigurationStore] stored True
+[2026-04-01 16:21:15Z INFO CredentialManager] GetCredentialProvider
+[2026-04-01 16:21:15Z INFO CredentialManager] Creating type OAuth
+[2026-04-01 16:21:15Z INFO CredentialManager] Creating credential type: OAuth
+[2026-04-01 16:21:15Z INFO RSAEncryptedFileKeyManager] Loading RSA key parameters from file C:\Users\Client\Desktop\Cristal_ERP\actions-runner\.credentials_rsaparams
+[2026-04-01 16:21:15Z INFO BrokerMessageListener] Attempt to create session.
+[2026-04-01 16:21:15Z INFO BrokerMessageListener] Connecting to the Broker Server...
+[2026-04-01 16:21:15Z INFO ConfigurationStore] HasCredentials()
+[2026-04-01 16:21:15Z INFO ConfigurationStore] stored True
+[2026-04-01 16:21:15Z INFO CredentialManager] GetCredentialProvider
+[2026-04-01 16:21:15Z INFO CredentialManager] Creating type OAuth
+[2026-04-01 16:21:15Z INFO CredentialManager] Creating credential type: OAuth
+[2026-04-01 16:21:15Z INFO RSAEncryptedFileKeyManager] Loading RSA key parameters from file C:\Users\Client\Desktop\Cristal_ERP\actions-runner\.credentials_rsaparams
+[2026-04-01 16:21:15Z INFO BrokerMessageListener] VssConnection created
+[2026-04-01 16:21:15Z INFO BrokerMessageListener] Connecting to the Runner server...
+[2026-04-01 16:21:15Z INFO RunnerServer] EstablishVssConnection
+[2026-04-01 16:21:15Z INFO RunnerServer] Establish connection with 100 seconds timeout.
+[2026-04-01 16:21:15Z INFO GitHubActionsService] Starting operation Location.GetConnectionData
+[2026-04-01 16:21:15Z INFO RunnerServer] EstablishVssConnection
+[2026-04-01 16:21:15Z INFO RunnerServer] Establish connection with 60 seconds timeout.
+[2026-04-01 16:21:15Z INFO GitHubActionsService] Starting operation Location.GetConnectionData
+[2026-04-01 16:21:15Z INFO RunnerServer] EstablishVssConnection
+[2026-04-01 16:21:15Z INFO RunnerServer] Establish connection with 60 seconds timeout.
+[2026-04-01 16:21:15Z INFO GitHubActionsService] Starting operation Location.GetConnectionData
+[2026-04-01 16:21:16Z INFO GitHubActionsService] Finished operation Location.GetConnectionData
+[2026-04-01 16:21:16Z INFO GitHubActionsService] Finished operation Location.GetConnectionData
+[2026-04-01 16:21:16Z INFO GitHubActionsService] Finished operation Location.GetConnectionData
+[2026-04-01 16:21:16Z INFO BrokerMessageListener] VssConnection created
+[2026-04-01 16:21:16Z INFO Terminal] WRITE LINE: 
+[2026-04-01 16:21:16Z INFO Terminal] WRITE LINE: 
+[2026-04-01 16:21:16Z INFO RSAEncryptedFileKeyManager] Loading RSA key parameters from file C:\Users\Client\Desktop\Cristal_ERP\actions-runner\.credentials_rsaparams
+[2026-04-01 16:21:16Z INFO RSAEncryptedFileKeyManager] Loading RSA key parameters from file C:\Users\Client\Desktop\Cristal_ERP\actions-runner\.credentials_rsaparams
+[2026-04-01 16:21:18Z INFO GitHubActionsService] AAD Correlation ID for this token request: Unknown
+[2026-04-01 16:21:19Z INFO BrokerMessageListener] Session created.
+[2026-04-01 16:21:19Z INFO Runner] Successfully created session with migrated settings
+[2026-04-01 16:21:19Z INFO Terminal] WRITE LINE: Current runner version: '2.333.1'
+[2026-04-01 16:21:19Z INFO Terminal] WRITE LINE: 2026-04-01 16:21:19Z: Listening for Jobs
+[2026-04-01 16:21:19Z INFO JobDispatcher] Set runner/worker IPC timeout to 30 seconds.
+[2026-04-01 17:11:52Z INFO RSAEncryptedFileKeyManager] Loading RSA key parameters from file C:\Users\Client\Desktop\Cristal_ERP\actions-runner\.credentials_rsaparams
+[2026-04-01 17:11:53Z INFO GitHubActionsService] AAD Correlation ID for this token request: Unknown
+[2026-04-01 18:02:15Z INFO RSAEncryptedFileKeyManager] Loading RSA key parameters from file C:\Users\Client\Desktop\Cristal_ERP\actions-runner\.credentials_rsaparams
+[2026-04-01 18:02:17Z INFO GitHubActionsService] AAD Correlation ID for this token request: Unknown
+[2026-04-01 18:24:03Z INFO HostContext] Runner will be shutdown for UserCancelled
+[2026-04-01 18:24:03Z WARN GitHubActionsService] GET request to https://broker.actions.githubusercontent.com/message?sessionId=ae7bbe03-d24b-4163-9d73-883d8afd0afa&status=Online&runnerVersion=2.333.1&os=Windows&architecture=X64&disableUpdate=false has been cancelled.
+[2026-04-01 18:24:03Z ERR  BrokerServer] Catch exception during request
+[2026-04-01 18:24:03Z ERR  BrokerServer] System.Threading.Tasks.TaskCanceledException: The operation was canceled.
+ ---> System.Threading.Tasks.TaskCanceledException: The operation was canceled.
+ ---> System.IO.IOException: Unable to read data from the transport connection: L’opération d’entrée/sortie a été abandonnée en raison de l’arrêt d’un thread ou à la demande d’une application..
+ ---> System.Net.Sockets.SocketException (995): L’opération d’entrée/sortie a été abandonnée en raison de l’arrêt d’un thread ou à la demande d’une application.
+   --- End of inner exception stack trace ---
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Int32>.GetResult(Int16 token)
+   at System.Net.Security.SslStream.EnsureFullTlsFrameAsync[TIOAdapter](CancellationToken cancellationToken, Int32 estimatedSize)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at System.Net.Security.SslStream.ReadAsyncInternal[TIOAdapter](Memory`1 buffer, CancellationToken cancellationToken)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at System.Net.Http.HttpConnection.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnection.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.AuthenticationHelper.SendWithNtAuthAsync(HttpRequestMessage request, Uri authUri, Boolean async, ICredentials credentials, Boolean isProxyAuth, HttpConnection connection, HttpConnectionPool connectionPool, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.AuthenticationHelper.SendWithAuthAsync(HttpRequestMessage request, Uri authUri, Boolean async, ICredentials credentials, Boolean preAuthenticate, Boolean isProxyAuth, Boolean doRequestAuth, HttpConnectionPool pool, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at GitHub.Services.Common.RawHttpMessageHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+   at GitHub.Services.Common.VssHttpRetryMessageHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpClient.HandleFailure(Exception e, Boolean telemetryStarted, HttpResponseMessage response, CancellationTokenSource cts, CancellationToken cancellationToken, CancellationTokenSource pendingRequestsCts)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   at Sdk.WebApi.WebApi.RawHttpClientBase.SendAsync(HttpRequestMessage message, HttpCompletionOption completionOption, Object userState, CancellationToken cancellationToken)
+   at Sdk.WebApi.WebApi.RawHttpClientBase.SendAsync[T](HttpRequestMessage message, Boolean readErrorBody, Object userState, CancellationToken cancellationToken)
+   at Sdk.WebApi.WebApi.RawHttpClientBase.SendAsync[T](HttpMethod method, IEnumerable`1 additionalHeaders, Uri requestUri, HttpContent content, IEnumerable`1 queryParameters, Boolean readErrorBody, Object userState, CancellationToken cancellationToken)
+   at GitHub.Actions.RunService.WebApi.BrokerHttpClient.GetRunnerMessageAsync(Nullable`1 sessionId, String runnerVersion, Nullable`1 status, String os, String architecture, Nullable`1 disableUpdate, CancellationToken cancellationToken)
+   at GitHub.Runner.Common.BrokerServer.<>c__DisplayClass7_0.<<GetRunnerMessageAsync>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at GitHub.Runner.Common.RunnerService.RetryRequest[T](Func`1 func, CancellationToken cancellationToken, Int32 maxAttempts, Func`2 shouldRetry)
+[2026-04-01 18:24:03Z ERR  BrokerServer] #####################################################
+[2026-04-01 18:24:03Z ERR  BrokerServer] System.Threading.Tasks.TaskCanceledException: The operation was canceled.
+ ---> System.IO.IOException: Unable to read data from the transport connection: L’opération d’entrée/sortie a été abandonnée en raison de l’arrêt d’un thread ou à la demande d’une application..
+ ---> System.Net.Sockets.SocketException (995): L’opération d’entrée/sortie a été abandonnée en raison de l’arrêt d’un thread ou à la demande d’une application.
+   --- End of inner exception stack trace ---
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Int32>.GetResult(Int16 token)
+   at System.Net.Security.SslStream.EnsureFullTlsFrameAsync[TIOAdapter](CancellationToken cancellationToken, Int32 estimatedSize)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at System.Net.Security.SslStream.ReadAsyncInternal[TIOAdapter](Memory`1 buffer, CancellationToken cancellationToken)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at System.Net.Http.HttpConnection.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnection.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.AuthenticationHelper.SendWithNtAuthAsync(HttpRequestMessage request, Uri authUri, Boolean async, ICredentials credentials, Boolean isProxyAuth, HttpConnection connection, HttpConnectionPool connectionPool, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.AuthenticationHelper.SendWithAuthAsync(HttpRequestMessage request, Uri authUri, Boolean async, ICredentials credentials, Boolean preAuthenticate, Boolean isProxyAuth, Boolean doRequestAuth, HttpConnectionPool pool, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at GitHub.Services.Common.RawHttpMessageHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+   at GitHub.Services.Common.VssHttpRetryMessageHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+[2026-04-01 18:24:03Z ERR  BrokerServer] #####################################################
+[2026-04-01 18:24:03Z ERR  BrokerServer] System.IO.IOException: Unable to read data from the transport connection: L’opération d’entrée/sortie a été abandonnée en raison de l’arrêt d’un thread ou à la demande d’une application..
+ ---> System.Net.Sockets.SocketException (995): L’opération d’entrée/sortie a été abandonnée en raison de l’arrêt d’un thread ou à la demande d’une application.
+   --- End of inner exception stack trace ---
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Int32>.GetResult(Int16 token)
+   at System.Net.Security.SslStream.EnsureFullTlsFrameAsync[TIOAdapter](CancellationToken cancellationToken, Int32 estimatedSize)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at System.Net.Security.SslStream.ReadAsyncInternal[TIOAdapter](Memory`1 buffer, CancellationToken cancellationToken)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at System.Net.Http.HttpConnection.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+[2026-04-01 18:24:03Z ERR  BrokerServer] #####################################################
+[2026-04-01 18:24:03Z ERR  BrokerServer] System.Net.Sockets.SocketException (995): L’opération d’entrée/sortie a été abandonnée en raison de l’arrêt d’un thread ou à la demande d’une application.
+[2026-04-01 18:24:03Z WARN BrokerServer] Back off 9,946 seconds before next retry. 4 attempt left.
+[2026-04-01 18:24:03Z INFO BrokerMessageListener] Get next message has been cancelled.
+[2026-04-01 18:24:03Z INFO JobDispatcher] Shutting down JobDispatcher. Make sure all WorkerDispatcher has finished.
+[2026-04-01 18:24:03Z INFO Runner] Deleting Runner Session...
+[2026-04-01 18:24:04Z INFO Listener] Runner execution been cancelled.
