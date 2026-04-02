@@ -1,4 +1,3 @@
-
 services:
   mongo:
     image: mongo:6.0
@@ -14,6 +13,19 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  mongodb-exporter:
+    image: bitnami/mongodb-exporter:latest
+    container_name: cristal_erp-mongodb-exporter-1
+    restart: unless-stopped
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+    ports:
+      - "9216:9216"
+    networks:
+      - erp-network
+    depends_on:
+      - mongo
 
   auth-service:
     build: ./services/auth-service
@@ -48,10 +60,8 @@ services:
     ports:
       - "3204:3104"
     depends_on:
-      auth-service:
-        condition: service_started
-      core-service:
-        condition: service_started
+      - auth-service
+      - core-service
     networks:
       - erp-network
 
@@ -62,8 +72,7 @@ services:
     ports:
       - "3205:3105"
     depends_on:
-      api-gateway:
-        condition: service_started
+      - api-gateway
     networks:
       - erp-network
 
@@ -80,6 +89,34 @@ services:
     volumes:
       - n8n-data:/home/node/.n8n
       - ./invoices:/home/node/invoices
+    networks:
+      - erp-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    networks:
+      - erp-network
+    depends_on:
+      - auth-service
+      - core-service
+      - api-gateway
+      - mongodb-exporter
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    depends_on:
+      - prometheus
     networks:
       - erp-network
 

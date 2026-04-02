@@ -1,0 +1,19 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'auth-service'
+    static_configs:
+      - targets: ['cristal_erp-auth-service-1:3101']
+
+  - job_name: 'core-service'
+    static_configs:
+      - targets: ['cristal_erp-core-service-1:3102']
+
+  - job_name: 'api-gateway'
+    static_configs:
+      - targets: ['cristal_erp-api-gateway-1:3104']
+
+  - job_name: 'mongodb'
+    static_configs:
+      - targets: ['cristal_erp-mongodb-exporter-1:9216']
