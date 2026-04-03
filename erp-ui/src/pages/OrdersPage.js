@@ -1,4 +1,6 @@
+// OrdersPage.js
 import React, { useEffect, useState, useCallback } from 'react';
+import PropTypes from 'prop-types';
 import { 
   getOrders, createOrder, updateOrder, deleteOrder, getTotalOrderAmount 
 } from '../api/ordersService';
@@ -7,9 +9,218 @@ import { getCustomers } from '../api/customersService';
 import { FiPackage, FiUser, FiShoppingCart, FiPlus, FiTrash2, FiX, FiDollarSign, FiMail, FiDownload } from 'react-icons/fi';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import logo from '../assets/logo.png'; // Assurez-vous que le chemin est correct
+import logo from '../assets/logo.png';
 import '../styles/OrdersPage.css';
 
+// --- Constants ---
+const INITIAL_ITEM = { id: Date.now(), productId: '', quantity: 1 };
+const POPUP_DURATION = 5000;
+const INVOICE_NUMBER_LENGTH = 8;
+
+// --- Helper Functions ---
+const normalizeId = (objOrId) => {
+  if (typeof objOrId === 'string') return objOrId;
+  return objOrId?._id || '';
+};
+
+const formatMoney = (value) => {
+  const numericValue = Number(value) || 0;
+  return `$${numericValue.toFixed(2)}`;
+};
+
+const calculateOrderTotal = (items, products) => {
+  return items.reduce((total, item) => {
+    const productId = normalizeId(item.productId);
+    const product = products.find(p => p._id === productId);
+    const itemPrice = product?.price || 0;
+    const itemQuantity = item.quantity || 0;
+    return total + (itemPrice * itemQuantity);
+  }, 0);
+};
+
+const validateOrderForm = (form) => {
+  if (!form.customerId) {
+    return { isValid: false, error: 'Please select a customer' };
+  }
+  
+  const hasInvalidItem = form.items.some(item => !item.productId || item.quantity <= 0);
+  if (hasInvalidItem) {
+    return { isValid: false, error: 'Fill all items correctly' };
+  }
+  
+  return { isValid: true, error: null };
+};
+
+// --- Subcomponents ---
+const KPI = ({ icon: Icon, title, value }) => (
+  <div className="kpi-card">
+    <Icon className="kpi-icon" />
+    <div>
+      <h3>{title}</h3>
+      <p>{value}</p>
+    </div>
+  </div>
+);
+
+KPI.propTypes = {
+  icon: PropTypes.elementType.isRequired,
+  title: PropTypes.string.isRequired,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+};
+
+const ItemRow = ({ item, index, products, onChange, onRemove, removable }) => (
+  <div className="item-row">
+    <select
+      value={normalizeId(item.productId)}
+      onChange={event => onChange(index, 'productId', event.target.value)}
+      required
+      aria-label="Product selection"
+    >
+      <option value="">Select product</option>
+      {products.map(product => (
+        <option key={product._id} value={product._id}>{product.name}</option>
+      ))}
+    </select>
+    <input
+      type="number"
+      min="1"
+      value={item.quantity}
+      onChange={event => onChange(index, 'quantity', Number(event.target.value))}
+      required
+      aria-label="Quantity"
+    />
+    {removable && (
+      <button 
+        type="button" 
+        className="icon-btn remove-btn" 
+        onClick={() => onRemove(index)}
+        aria-label="Remove item"
+      >
+        <FiX />
+      </button>
+    )}
+  </div>
+);
+
+ItemRow.propTypes = {
+  item: PropTypes.shape({
+    productId: PropTypes.oneOfType([PropTypes.string, PropTypes.object]).isRequired,
+    quantity: PropTypes.number.isRequired,
+  }).isRequired,
+  index: PropTypes.number.isRequired,
+  products: PropTypes.array.isRequired,
+  onChange: PropTypes.func.isRequired,
+  onRemove: PropTypes.func.isRequired,
+  removable: PropTypes.bool.isRequired,
+};
+
+const OrdersTable = ({ orders, customers, products, startEditOrder, handleDeleteOrder, generateInvoicePDF }) => (
+  <div className="table-container">
+    <h3><FiShoppingCart /> Order List</h3>
+    <table className="data-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Customer</th>
+          <th>Items</th>
+          <th>Total</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {orders.length === 0 && (
+          <tr>
+            <td colSpan="6" className="empty-message">No orders found.</td>
+          </tr>
+        )}
+        {orders.map(order => {
+          const customer = getCustomerForOrder(order, customers);
+          const total = order.totalAmount || calculateOrderTotal(order.items, products);
+          
+          return (
+            <tr key={order._id}>
+              <td>{order._id.slice(-6)}</td>
+              <td>{customer?.name || normalizeId(order.customerId)}</td>
+              <td>{order.items?.length || 0}</td>
+              <td>{formatMoney(total)}</td>
+              <td>{new Date(order.createdAt).toLocaleDateString()}</td>
+              <td className="actions">
+                <button 
+                  type="button" 
+                  className="icon-btn edit-btn" 
+                  onClick={() => startEditOrder(order)} 
+                  aria-label="Edit"
+                >
+                  ✎
+                </button>
+                <button 
+                  type="button" 
+                  className="icon-btn delete-btn" 
+                  onClick={() => handleDeleteOrder(order._id)} 
+                  aria-label="Delete"
+                >
+                  <FiTrash2 />
+                </button>
+                <button 
+                  type="button" 
+                  className="icon-btn download-btn" 
+                  onClick={() => generateInvoicePDF(order)} 
+                  aria-label="Download PDF"
+                >
+                  <FiDownload />
+                </button>
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  </div>
+);
+
+OrdersTable.propTypes = {
+  orders: PropTypes.array.isRequired,
+  customers: PropTypes.array.isRequired,
+  products: PropTypes.array.isRequired,
+  startEditOrder: PropTypes.func.isRequired,
+  handleDeleteOrder: PropTypes.func.isRequired,
+  generateInvoicePDF: PropTypes.func.isRequired,
+};
+
+const getCustomerForOrder = (order, customers) => {
+  if (typeof order.customerId === 'object') return order.customerId;
+  return customers.find(customer => customer._id === order.customerId);
+};
+
+const SuccessPopup = ({ isVisible, onClose }) => {
+  useEffect(() => {
+    if (isVisible) {
+      const timer = setTimeout(onClose, POPUP_DURATION);
+      return () => clearTimeout(timer);
+    }
+  }, [isVisible, onClose]);
+
+  if (!isVisible) return null;
+
+  return (
+    <div className="popup-overlay">
+      <div className="popup-content" role="dialog" aria-modal="true">
+        <div className="popup-icon"><FiMail size={40} /></div>
+        <h3>Order Created!</h3>
+        <p>PDF Invoice sent by email to the customer.</p>
+        <button className="popup-close-btn" type="button" onClick={onClose}>OK</button>
+      </div>
+    </div>
+  );
+};
+
+SuccessPopup.propTypes = {
+  isVisible: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+};
+
+// --- Main Component ---
 export default function OrdersPage({ token }) {
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
@@ -17,37 +228,36 @@ export default function OrdersPage({ token }) {
   const [totalOrderAmount, setTotalOrderAmount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [form, setForm] = useState({ customerId: '', items: [{ productId: '', quantity: 1 }] });
+  const [form, setForm] = useState({ customerId: '', items: [{ ...INITIAL_ITEM }] });
   const [editingOrderId, setEditingOrderId] = useState(null);
-  const [showInvoicePopup, setShowInvoicePopup] = useState(false); // popup visibility
+  const [showInvoicePopup, setShowInvoicePopup] = useState(false);
 
-  // --- Helpers ---
-  const formatMoney = (value) => `$${(Number(value) || 0).toFixed(2)}`;
-  const normalizeId = (objOrId) => (typeof objOrId === 'string' ? objOrId : objOrId?._id);
-  const calculateTotal = (items) => {
-    return items.reduce((acc, item) => {
-      const productId = normalizeId(item.productId);
-      const product = products.find(p => p._id === productId);
-      return acc + (product?.price || 0) * (item.quantity || 0);
-    }, 0);
-  };
-
-  // --- Load data ---
+  // --- Data Loading ---
   const loadProducts = useCallback(async () => {
-    try { setProducts(await getProducts(token)); } catch {} 
+    try {
+      const productsData = await getProducts(token);
+      setProducts(productsData);
+    } catch (error) {
+      console.error('Failed to load products:', error);
+    }
   }, [token]);
 
   const loadCustomers = useCallback(async () => {
-    try { setCustomers(await getCustomers(token)); } catch {}
+    try {
+      const customersData = await getCustomers(token);
+      setCustomers(customersData);
+    } catch (error) {
+      console.error('Failed to load customers:', error);
+    }
   }, [token]);
 
   const loadOrders = useCallback(async () => {
     try {
-      const data = await getOrders(token);
-      setOrders(data);
+      const ordersData = await getOrders(token);
+      setOrders(ordersData);
       setError('');
-    } catch (err) {
-      setError(err.message || 'Failed to load orders');
+    } catch (error) {
+      setError(error.message || 'Failed to load orders');
     } finally {
       setLoading(false);
     }
@@ -57,49 +267,76 @@ export default function OrdersPage({ token }) {
     try {
       const data = await getTotalOrderAmount(token);
       setTotalOrderAmount(data.totalOrderAmount || 0);
-    } catch (err) {
-      console.error('Failed to load total order amount:', err.message);
+    } catch (error) {
+      console.error('Failed to load total amount:', error);
     }
   }, [token]);
 
   useEffect(() => {
     if (!token) return;
-    loadProducts();
-    loadCustomers();
-    loadOrders();
-    loadTotalAmount();
+    
+    const loadAllData = async () => {
+      await Promise.all([
+        loadProducts(),
+        loadCustomers(),
+        loadOrders(),
+        loadTotalAmount()
+      ]);
+    };
+    
+    loadAllData();
   }, [token, loadProducts, loadCustomers, loadOrders, loadTotalAmount]);
 
-  // Auto-close popup after 5 seconds
-  useEffect(() => {
-    if (showInvoicePopup) {
-      const timer = setTimeout(() => setShowInvoicePopup(false), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [showInvoicePopup]);
-
-  // --- Form handlers ---
-  const handleItemChange = (index, field, value) => {
-    const newItems = [...form.items];
-    newItems[index][field] = field === 'quantity' ? Number(value) : value;
-    setForm({ ...form, items: newItems });
+  // --- Form Handlers ---
+  const handleItemChange = (itemId, field, value) => {
+    setForm(previousForm => ({
+      ...previousForm,
+      items: previousForm.items.map(item => 
+        item.id === itemId ? { ...item, [field]: field === 'quantity' ? Number(value) : value } : item
+      )
+    }));
   };
-  const addItem = () => setForm({ ...form, items: [...form.items, { productId: '', quantity: 1 }] });
-  const removeItem = (index) => setForm({ ...form, items: form.items.filter((_, i) => i !== index) });
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
-  const resetForm = () => setForm({ customerId: '', items: [{ productId: '', quantity: 1 }] });
 
-  // --- Create / Update Order ---
+  const addItem = () => {
+    setForm(previousForm => ({
+      ...previousForm,
+      items: [...previousForm.items, { ...INITIAL_ITEM, id: Date.now() }]
+    }));
+  };
+
+  const removeItem = (itemId) => {
+    setForm(previousForm => ({
+      ...previousForm,
+      items: previousForm.items.filter(item => item.id !== itemId)
+    }));
+  };
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setForm(previousForm => ({ ...previousForm, [name]: value }));
+  };
+
+  const resetForm = () => {
+    setForm({ customerId: '', items: [{ ...INITIAL_ITEM }] });
+  };
+
   const handleCreateOrUpdateOrder = async () => {
-    if (!form.customerId) { setError('Please select a customer'); return; }
-    if (form.items.some(i => !i.productId || i.quantity <= 0)) { setError('Fill all items correctly'); return; }
+    const validation = validateOrderForm(form);
+    if (!validation.isValid) {
+      setError(validation.error);
+      return;
+    }
+    
     setError('');
-
+    
     const payload = {
       customerId: normalizeId(form.customerId),
-      items: form.items.map(i => ({ productId: normalizeId(i.productId), quantity: i.quantity })),
+      items: form.items.map(item => ({
+        productId: normalizeId(item.productId),
+        quantity: item.quantity
+      }))
     };
-
+    
     try {
       if (editingOrderId) {
         await updateOrder(editingOrderId, payload, token);
@@ -108,12 +345,12 @@ export default function OrdersPage({ token }) {
         await createOrder(payload, token);
         setShowInvoicePopup(true);
       }
+      
       resetForm();
-      await loadOrders();
-      await loadProducts();
-      await loadTotalAmount();
-    } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Error saving order');
+      await Promise.all([loadOrders(), loadProducts(), loadTotalAmount()]);
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || 'Error saving order';
+      setError(errorMessage);
     }
   };
 
@@ -121,184 +358,205 @@ export default function OrdersPage({ token }) {
     setEditingOrderId(order._id);
     setForm({
       customerId: order.customerId,
-      items: order.items.map(i => ({ productId: normalizeId(i.productId), quantity: i.quantity })),
+      items: order.items.map((item, index) => ({
+        id: Date.now() + index,
+        productId: normalizeId(item.productId),
+        quantity: item.quantity
+      }))
     });
   };
-  const cancelEdit = () => { setEditingOrderId(null); resetForm(); };
 
-  // --- Delete Order ---
-  const handleDeleteOrder = async (id) => {
-    if (!window.confirm('Delete this order?')) return;
+  const cancelEdit = () => {
+    setEditingOrderId(null);
+    resetForm();
+  };
+
+  const handleDeleteOrder = async (orderId) => {
+    const isConfirmed = window.confirm('Delete this order?');
+    if (!isConfirmed) return;
+    
     try {
-      await deleteOrder(id, token);
-      await loadOrders();
-      await loadProducts();
-      await loadTotalAmount();
-    } catch (err) {
-      alert(err.response?.data?.message || err.message || 'Failed to delete order');
+      await deleteOrder(orderId, token);
+      await Promise.all([loadOrders(), loadProducts(), loadTotalAmount()]);
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to delete order';
+      alert(errorMessage);
     }
   };
 
-  // --- Generate Invoice PDF (similar to PurchasesPage) ---
+  // --- PDF Generation ---
   const generateInvoicePDF = (order) => {
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
+    const document = new jsPDF();
+    const pageWidth = document.internal.pageSize.getWidth();
     const margin = 15;
-    let y = 20;
+    
+    addInvoiceHeader(document, pageWidth, margin);
+    addInvoiceBody(document, order, margin, pageWidth);
+    addInvoiceFooter(document, pageWidth, margin);
+    
+    document.save(`order_invoice_${order._id}.pdf`);
+  };
 
-    // Logo
+  const addInvoiceHeader = (document, pageWidth, margin) => {
+    let yPosition = 20;
+    
     try {
-      doc.addImage(logo, 'PNG', margin, y, 40, 20);
-    } catch (e) {
-      console.warn('Logo could not be loaded', e);
+      document.addImage(logo, 'PNG', margin, yPosition, 40, 20);
+    } catch (error) {
+      console.warn('Logo not found:', error);
     }
+    
+    document.setFontSize(16);
+    document.setFont('helvetica', 'bold');
+    document.setTextColor(10, 43, 78);
+    document.text('UNITED AL RUBAI AL CRISTAL', pageWidth / 2, yPosition + 10, { align: 'center' });
+    
+    document.setFontSize(9);
+    document.setFont('helvetica', 'normal');
+    document.setTextColor(60, 60, 60);
+    document.text('Muscat, Oman', pageWidth - margin, yPosition + 18, { align: 'right' });
+    document.text('Email: info@cristal.om', pageWidth - margin, yPosition + 23, { align: 'right' });
+  };
 
-    // En-tête
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(10, 43, 78);
-    doc.text('UNITED AL RUBAI AL CRISTAL', pageWidth / 2, y + 10, { align: 'center' });
-
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(60, 60, 60);
-    doc.text('Muscat, Oman', pageWidth - margin, y + 18, { align: 'right' });
-    doc.text('Email: info@cristal.om', pageWidth - margin, y + 23, { align: 'right' });
-
-    y += 30;
-
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text('SALES INVOICE', margin, y);
-
-    y += 10;
-
-    doc.setFontSize(10);
-    doc.setTextColor(80, 80, 80);
-    doc.setFont('helvetica', 'normal');
-
-    const invoiceNumber = `ORD-${order._id.slice(-8)}`;
-    doc.text(`Invoice #: ${invoiceNumber}`, margin, y);
-    doc.text(`Invoice Date: ${new Date().toLocaleDateString('en-GB')}`, margin, y + 5);
-
-    // Customer info
-    const customer = customers.find(c => c._id === (order.customerId?._id || order.customerId));
+  const addInvoiceBody = (document, order, margin, pageWidth) => {
+    let yPosition = 50;
+    
+    document.setFontSize(16);
+    document.setFont('helvetica', 'bold');
+    document.text('SALES INVOICE', margin, yPosition);
+    
+    yPosition += 10;
+    const invoiceNumber = `ORD-${order._id.slice(-INVOICE_NUMBER_LENGTH)}`;
+    
+    document.setFontSize(10);
+    document.setFont('helvetica', 'normal');
+    document.setTextColor(80, 80, 80);
+    document.text(`Invoice #: ${invoiceNumber}`, margin, yPosition);
+    document.text(`Invoice Date: ${new Date().toLocaleDateString('en-GB')}`, margin, yPosition + 5);
+    
+    const customer = getCustomerForOrder(order, customers);
     if (customer) {
-      doc.text('Customer:', pageWidth - margin - 60, y);
-      doc.setFont('helvetica', 'bold');
-      doc.text(customer.name || 'N/A', pageWidth - margin - 60, y + 5);
-      doc.setFont('helvetica', 'normal');
-      if (customer.email) doc.text(`Email: ${customer.email}`, pageWidth - margin - 60, y + 10);
-      if (customer.phone) doc.text(`Phone: ${customer.phone}`, pageWidth - margin - 60, y + 15);
+      const rightMargin = pageWidth - margin - 60;
+      document.text('Customer:', rightMargin, yPosition);
+      document.setFont('helvetica', 'bold');
+      document.text(customer.name || 'N/A', rightMargin, yPosition + 5);
+      document.setFont('helvetica', 'normal');
+      
+      if (customer.email) {
+        document.text(`Email: ${customer.email}`, rightMargin, yPosition + 10);
+      }
+      if (customer.phone) {
+        document.text(`Phone: ${customer.phone}`, rightMargin, yPosition + 15);
+      }
     }
+    
+    yPosition += 25;
+    addInvoiceTable(document, order, margin, yPosition);
+  };
 
-    y += 25;
-
-    // Tableau des produits
+  const addInvoiceTable = (document, order, margin, startY) => {
     const tableColumn = ['Product', 'Quantity', 'Unit Price (USD)', 'Total (USD)'];
     const tableRows = order.items.map(item => {
-      const product = products.find(p => p._id === (item.productId?._id || item.productId));
+      const product = products.find(product => product._id === normalizeId(item.productId));
       const productName = product?.name || 'Unknown';
       const quantity = item.quantity;
-      const price = product?.price || 0;
-      const total = price * quantity;
-      return [productName, quantity, price.toFixed(2), total.toFixed(2)];
+      const unitPrice = product?.price || 0;
+      const totalPrice = unitPrice * quantity;
+      
+      return [productName, quantity, unitPrice.toFixed(2), totalPrice.toFixed(2)];
     });
-
-    autoTable(doc, {
-      startY: y,
+    
+    autoTable(document, {
+      startY,
       head: [tableColumn],
       body: tableRows,
       theme: 'striped',
       headStyles: { fillColor: [10, 43, 78], textColor: 255, fontStyle: 'bold' },
       alternateRowStyles: { fillColor: [245, 245, 245] },
       margin: { left: margin, right: margin },
-      columnStyles: { 0: { cellWidth: 'auto' }, 1: { halign: 'center' }, 2: { halign: 'right' }, 3: { halign: 'right' } }
+      columnStyles: {
+        0: { cellWidth: 'auto' },
+        1: { halign: 'center' },
+        2: { halign: 'right' },
+        3: { halign: 'right' }
+      }
     });
-
-    const finalY = doc.lastAutoTable.finalY + 10;
+    
+    const finalYPosition = document.lastAutoTable.finalY + 10;
     const total = order.totalAmount || tableRows.reduce((sum, row) => sum + parseFloat(row[3]), 0);
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(0, 0, 0);
-    doc.text(`Total Amount: $${total.toFixed(2)}`, pageWidth - margin - 50, finalY);
-
-    // Coordonnées bancaires
-    const bankY = finalY + 10;
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(60, 60, 60);
-    doc.text('Bank Muscat', margin, bankY + 5);
-    doc.text('Account Number: 0123 4567 8901 2345', margin, bankY + 10);
-    doc.text('IBAN: OM12 3456 7890 1234 5678 9012', margin, bankY + 15);
-
-    const footerY = doc.internal.pageSize.getHeight() - 20;
-    doc.setFontSize(9);
-    doc.setTextColor(150, 150, 150);
-    doc.text('Thank you for your business!', pageWidth / 2, footerY, { align: 'center' });
-
-    doc.save(`order_invoice_${order._id}.pdf`);
+    
+    document.setFontSize(12);
+    document.setFont('helvetica', 'bold');
+    document.setTextColor(0, 0, 0);
+    document.text(`Total Amount: $${total.toFixed(2)}`, document.internal.pageSize.getWidth() - margin - 50, finalYPosition);
   };
 
-  if (loading) return <div className="orders-page"><div className="loading-spinner">Loading…</div></div>;
+  const addInvoiceFooter = (document, pageWidth, margin) => {
+    const bankYPosition = document.lastAutoTable.finalY + 20;
+    
+    document.setFontSize(9);
+    document.setFont('helvetica', 'bold');
+    document.setTextColor(60, 60, 60);
+    document.text('Bank Muscat', margin, bankYPosition + 5);
+    document.text('Account Number: 0123 4567 8901 2345', margin, bankYPosition + 10);
+    document.text('IBAN: OM12 3456 7890 1234 5678 9012', margin, bankYPosition + 15);
+    
+    const footerYPosition = document.internal.pageSize.getHeight() - 20;
+    document.setFontSize(9);
+    document.setTextColor(150, 150, 150);
+    document.text('Thank you for your business!', pageWidth / 2, footerYPosition, { align: 'center' });
+  };
+
+  const closePopup = () => {
+    setShowInvoicePopup(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="orders-page">
+        <div className="loading-spinner">Loading…</div>
+      </div>
+    );
+  }
 
   return (
     <div className="orders-page">
-      {/* Modal Popup for Invoice Sent */}
-      {showInvoicePopup && (
-        <div className="popup-overlay" onClick={() => setShowInvoicePopup(false)}>
-          <div className="popup-content" onClick={(e) => e.stopPropagation()}>
-            <div className="popup-icon">
-              <FiMail size={40} />
-            </div>
-            <h3>Order Created!</h3>
-            <p>PDF Invoice sent by email to the customer.</p>
-            <button className="popup-close-btn" onClick={() => setShowInvoicePopup(false)}>
-              OK
-            </button>
-          </div>
-        </div>
-      )}
-
+      <SuccessPopup isVisible={showInvoicePopup} onClose={closePopup} />
+      
       <div className="page-header">
         <h1>Orders</h1>
         <p>Manage customer orders</p>
       </div>
-
+      
       {error && <div className="error-message">{error}</div>}
-
-      {/* KPI Cards */}
+      
       <div className="kpi-grid" style={{ marginBottom: '2rem' }}>
-        <div className="kpi-card">
-          <FiShoppingCart className="kpi-icon" />
-          <div>
-            <h3>Total Orders</h3>
-            <p>{orders.length}</p>
-          </div>
-        </div>
-        <div className="kpi-card">
-          <FiDollarSign className="kpi-icon" />
-          <div>
-            <h3>Total Revenue</h3>
-            <p>${totalOrderAmount.toFixed(2)}</p>
-          </div>
-        </div>
+        <KPI icon={FiShoppingCart} title="Total Orders" value={orders.length} />
+        <KPI icon={FiDollarSign} title="Total Revenue" value={formatMoney(totalOrderAmount)} />
       </div>
-
-      {/* Form Card */}
+      
       <div className="form-card">
-        <h3>{editingOrderId ? <>Edit Order</> : <>New Order</>}</h3>
-
+        <h3>{editingOrderId ? 'Edit Order' : 'New Order'}</h3>
         <div className="form-grid">
           <div className="input-group">
-            <label><FiUser /> Customer</label>
-            <select name="customerId" value={normalizeId(form.customerId)} onChange={handleChange} required>
+            <label htmlFor="customer-select">
+              <FiUser /> Customer
+            </label>
+            <select 
+              id="customer-select" 
+              name="customerId" 
+              value={normalizeId(form.customerId)} 
+              onChange={handleChange} 
+              required
+            >
               <option value="">Select customer</option>
-              {customers.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+              {customers.map(customer => (
+                <option key={customer._id} value={customer._id}>{customer.name}</option>
+              ))}
             </select>
           </div>
         </div>
-
+        
         <div className="items-section">
           <label><FiPackage /> Products</label>
           <div className="item-row-header">
@@ -306,85 +564,48 @@ export default function OrdersPage({ token }) {
             <span>Quantity</span>
             <span></span>
           </div>
+          
           {form.items.map((item, index) => (
-            <div key={index} className="item-row">
-              <select
-                value={normalizeId(item.productId)}
-                onChange={(e) => handleItemChange(index, 'productId', e.target.value)}
-                required
-              >
-                <option value="">Select product</option>
-                {products.map(p => <option key={p._id} value={p._id}>{p.name}</option>)}
-              </select>
-              <input
-                type="number"
-                min="1"
-                value={item.quantity}
-                onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-                required
-              />
-              {form.items.length > 1 && (
-                <button type="button" className="icon-btn remove-btn" onClick={() => removeItem(index)}>
-                  <FiX />
-                </button>
-              )}
-            </div>
+            <ItemRow 
+              key={item.id}
+              item={item}
+              index={index}
+              products={products}
+              onChange={handleItemChange}
+              onRemove={removeItem}
+              removable={form.items.length > 1}
+            />
           ))}
+          
           <button type="button" className="add-item-btn" onClick={addItem}>
             <FiPlus /> Add Product
           </button>
         </div>
-
+        
         <div className="form-actions">
-          <button className="btn btn-primary" onClick={handleCreateOrUpdateOrder}>
+          <button className="btn btn-primary" type="button" onClick={handleCreateOrUpdateOrder}>
             <FiPlus /> {editingOrderId ? 'Update Order' : 'Create Order'}
           </button>
-          {editingOrderId && <button className="btn btn-secondary" onClick={cancelEdit}><FiX /> Cancel</button>}
+          {editingOrderId && (
+            <button className="btn btn-secondary" type="button" onClick={cancelEdit}>
+              <FiX /> Cancel
+            </button>
+          )}
         </div>
       </div>
-
-      {/* Orders Table */}
-      <div className="table-container">
-        <h3><FiShoppingCart /> Order List</h3>
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Customer</th>
-              <th>Items</th>
-              <th>Total</th>
-              <th>Date</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.length === 0 && (
-              <tr>
-                <td colSpan="6" className="empty-message">No orders found.</td>
-              </tr>
-            )}
-            {orders.map(o => {
-              const customerObj = typeof o.customerId === 'object' ? o.customerId : customers.find(c => c._id === o.customerId);
-              return (
-                <tr key={o._id}>
-                  <td>{o._id.slice(-6)}</td>
-                  <td>{customerObj?.name || normalizeId(o.customerId)}</td>
-                  <td>{o.items?.length || 0}</td>
-                  <td>{formatMoney(o.totalAmount || calculateTotal(o.items))}</td>
-                  <td>{new Date(o.createdAt).toLocaleDateString()}</td>
-                  <td className="actions">
-                    <button className="icon-btn edit-btn" onClick={() => startEditOrder(o)} aria-label="Edit">✎</button>
-                    <button className="icon-btn delete-btn" onClick={() => handleDeleteOrder(o._id)} aria-label="Delete"><FiTrash2 /></button>
-                    <button className="icon-btn download-btn" onClick={() => generateInvoicePDF(o)} aria-label="Download PDF">
-                      <FiDownload />
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      
+      <OrdersTable 
+        orders={orders}
+        customers={customers}
+        products={products}
+        startEditOrder={startEditOrder}
+        handleDeleteOrder={handleDeleteOrder}
+        generateInvoicePDF={generateInvoicePDF}
+      />
     </div>
   );
 }
+
+OrdersPage.propTypes = {
+  token: PropTypes.string.isRequired,
+};

@@ -17,10 +17,10 @@ import { AuditModule } from '../audit/audit.module';
     JwtModule.registerAsync({
       imports: [ConfigModule], // importe ConfigModule ici aussi
       inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '1d' },
-      }),
+     useFactory: async (configService: ConfigService) => ({
+  secret: configService.get<string>('JWT_SECRET'),
+  signOptions: { expiresIn: configService.get('JWT_EXPIRES_IN') as any || '1d' },
+}),
     }),
   ],
   providers: [AuthService, JwtStrategy],
