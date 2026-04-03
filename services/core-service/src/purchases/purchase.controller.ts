@@ -3,9 +3,9 @@ import { PurchaseService } from './purchase.service';
 import { CreatePurchaseDto } from './dto/create-purchase.dto';
 import { UpdatePurchaseDto } from './dto/update-purchase.dto';
 import type { Response as ExpressResponse } from 'express'; // ✅ important le "type" ici
-import { JwtLocalGuard } from 'src/common/guards/jwt-local.guard';
-import { RolesGuard } from 'src/common/guards/roles.guard';
-import { Roles } from 'src/common/decorators/roles.decorator';
+import { Roles } from '../common/decorators/roles.decorator';
+import { JwtLocalGuard } from '../common/guards/jwt-local.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
 
 @Controller('purchases')
 @UseGuards(JwtLocalGuard, RolesGuard) 

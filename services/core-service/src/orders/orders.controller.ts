@@ -4,9 +4,9 @@ import PDFDocument from 'pdfkit';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderDocument } from './schemas/order.schema';
-import { JwtLocalGuard } from 'src/common/guards/jwt-local.guard';
-import { RolesGuard } from 'src/common/guards/roles.guard';
-import { Roles } from 'src/common/decorators/roles.decorator';
+import { Roles } from '../common/decorators/roles.decorator';
+import { JwtLocalGuard } from '../common/guards/jwt-local.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
 
 @Controller('orders')
 @UseGuards(JwtLocalGuard, RolesGuard) 

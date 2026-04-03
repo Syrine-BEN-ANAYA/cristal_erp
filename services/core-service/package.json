@@ -1,5 +1,5 @@
 {
-  "name": "sales-service",
+  "name": "core-service",
   "version": "1.0.0",
   "description": "Microservice Sales pour ERP",
   "scripts": {

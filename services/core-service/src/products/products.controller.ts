@@ -3,9 +3,9 @@ import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { ProductDocument } from './schemas/product.schema';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { RolesGuard } from 'src/common/guards/roles.guard';
-import { JwtLocalGuard } from 'src/common/guards/jwt-local.guard';
-import { Roles } from 'src/common/decorators/roles.decorator';
+import { Roles } from '../common/decorators/roles.decorator';
+import { JwtLocalGuard } from '../common/guards/jwt-local.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
 
 @Controller('products')
 @UseGuards(JwtLocalGuard, RolesGuard) 

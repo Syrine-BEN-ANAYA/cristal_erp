@@ -1,10 +1,11 @@
 import { Controller, Get, UseGuards, Req } from '@nestjs/common';
 import { AuditService } from './audit.service';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { User } from 'src/auth/decorators/user.decorator';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { UserRole } from 'src/users/schemas/user.schema';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { User } from '../auth/decorators/user.decorator';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { UserRole } from '../users/schemas/user.schema';
+
 
 @Controller('audits')
 export class AuditController {

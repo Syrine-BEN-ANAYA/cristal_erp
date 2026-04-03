@@ -2,9 +2,9 @@ import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards } from '@nes
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
-import { Roles } from 'src/common/decorators/roles.decorator';
-import { JwtLocalGuard } from 'src/common/guards/jwt-local.guard';
-import { RolesGuard } from 'src/common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import { JwtLocalGuard } from '../common/guards/jwt-local.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
 
 @Controller('customers')
 @UseGuards(JwtLocalGuard, RolesGuard) 
