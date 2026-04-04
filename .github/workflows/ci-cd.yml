@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  pull_request:
 
 jobs:
   ci:
@@ -33,3 +34,15 @@ jobs:
           docker push syrinebenanaya/core-service:latest
           docker push syrinebenanaya/api-gateway:latest
           docker push syrinebenanaya/erp-ui:latest
+
+  cd:
+    needs: ci
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Deploy to production
+        run: |
+          echo "🚀 Déploiement automatique vers la production"
+          echo "📦 Pull des dernières images depuis Docker Hub"
+          echo "🔄 Redémarrage des services avec docker-compose"
+          # ssh user@votre-serveur "cd /app && docker-compose pull && docker-compose up -d"
