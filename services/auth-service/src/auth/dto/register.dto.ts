@@ -3,12 +3,12 @@ import { UserRole } from '../../users/schemas/user.schema';
 
 export class RegisterDto {
   @IsNotEmpty()
-  username: string;
+  username!: string;
 
   @MinLength(8)
-  password: string;
+  password!: string;
 
   @IsEnum(UserRole, { message: 'Le rôle doit être USER, MANAGER ou ADMIN' })
   @IsNotEmpty({ message: 'Le rôle est obligatoire' })
-  role: UserRole; // ✅ obligatoire maintenant
+  role!: UserRole; // ✅ obligatoire maintenant
 }

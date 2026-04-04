@@ -9,6 +9,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -22,21 +23,22 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
   @Get()
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
-  async findAll(@Req() req) {
+  async findAll(@Req() req: Request) {
     return this.usersService.findAll(req.user);
   }
 
   @Get(':id')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
-  async findOne(@Param('id') id: string, @Req() req) {
+  async findOne(@Param('id') id: string, @Req() req: Request) {
     return this.usersService.findOne(id, req.user);
   }
 
   @Post()
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
-  async create(@Body() createUserDto: CreateUserDto, @Req() req) {
+  async create(@Body() createUserDto: CreateUserDto, @Req() req: Request) {
     return this.usersService.create(createUserDto, req.user);
   }
 
@@ -45,14 +47,14 @@ export class UsersController {
   async update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
-    @Req() req,
+    @Req() req: Request,
   ) {
     return this.usersService.update(id, updateUserDto, req.user);
   }
 
   @Delete(':id')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
-  async remove(@Param('id') id: string, @Req() req) {
+  async remove(@Param('id') id: string, @Req() req: Request) {
     return this.usersService.deleteUser(id, req.user);
   }
 
@@ -61,10 +63,11 @@ export class UsersController {
   async changePassword(
     @Param('id') id: string,
     @Body() changePasswordDto: ChangePasswordDto,
-    @Req() req,
+    @Req() req: Request,
   ) {
     return this.usersService.changePassword(id, changePasswordDto, req.user);
   }
+
   @Put('force-change-password/:id')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   async forceChangePassword(@Param('id') id: string) {

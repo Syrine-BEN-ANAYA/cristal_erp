@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { RolesGuard } from './common/guards/roles.guard';

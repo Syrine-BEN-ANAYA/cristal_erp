@@ -3,14 +3,14 @@ import { UserRole } from '../schemas/user.schema';
 
 export class CreateUserDto {
   @IsNotEmpty()
-  username: string;
+  username!: string;
 
 
   @IsNotEmpty()
   @MinLength(6)
-  password: string;
+  password!: string;
 
   @IsEnum(UserRole, { message: 'Le rôle doit être USER, MANAGER ou ADMIN' })
   @IsNotEmpty({ message: 'Le rôle est obligatoire' })
-  role: UserRole; // ✅ obligatoire maintenant
+  role!: UserRole; // ✅ obligatoire maintenant
 }

@@ -6,13 +6,13 @@ export type AuditDocument = Audit & Document;
 @Schema({ timestamps: true })
 export class Audit {
   @Prop({ required: true })
-  userId: string;
+  userId!: string;
 
   @Prop({ required: true })
-  action: string;
+  action!: string;
 
   @Prop({ required: true })
-  entity: string;
+  entity!: string;
 
   @Prop()
   ip?: string;
@@ -21,7 +21,7 @@ export class Audit {
   endpoint?: string;
 
   @Prop({ default: Date.now })
-  timestamp: Date;
+  timestamp!: Date;
 }
 
 export const AuditSchema = SchemaFactory.createForClass(Audit);
