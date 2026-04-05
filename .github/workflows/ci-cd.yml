@@ -17,6 +17,29 @@ jobs:
       - name: Build Docker images
         run: docker compose build
 
+      # ✅ TRIVY SECURITY SCANNING
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+      
+      - name: Upload Trivy results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+      
+      # Optional: Fail on critical vulnerabilities
+      - name: Run Trivy with exit code (fail on critical)
+        run: |
+          trivy image --severity CRITICAL --exit-code 1 --ignore-unfixed auth-service:latest
+          trivy image --severity CRITICAL --exit-code 1 --ignore-unfixed core-service:latest
+          trivy image --severity CRITICAL --exit-code 1 --ignore-unfixed api-gateway:latest
+          trivy image --severity CRITICAL --exit-code 1 --ignore-unfixed erp-ui:latest
+
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -42,7 +65,7 @@ jobs:
     steps:
       - name: Deploy to production
         run: |
-          echo "🚀 Déploiement automatique vers la production"
-          echo "📦 Pull des dernières images depuis Docker Hub"
-          echo "🔄 Redémarrage des services avec docker-compose"
-          # ssh user@votre-serveur "cd /app && docker-compose pull && docker-compose up -d"
+          echo "Déploiement automatique vers la production"
+          echo "Pull des dernières images depuis Docker Hub"
+          echo "Redémarrage des services avec docker-compose"
+          # ssh user@serveur "cd /app && docker-compose pull && docker-compose up -d"

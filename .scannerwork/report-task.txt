@@ -1,6 +1,6 @@
 projectKey=cristal_erp
-serverUrl=http://localhost:9000
+serverUrl=http://127.0.0.1:9000
 serverVersion=26.3.0.120487
-dashboardUrl=http://localhost:9000/dashboard?id=cristal_erp
-ceTaskId=506d52ef-4ff7-4e7f-ac11-a8222c388384
-ceTaskUrl=http://localhost:9000/api/ce/task?id=506d52ef-4ff7-4e7f-ac11-a8222c388384
+dashboardUrl=http://127.0.0.1:9000/dashboard?id=cristal_erp
+ceTaskId=88c32ee9-f5fa-49b4-aae6-44e469a97c7d
+ceTaskUrl=http://127.0.0.1:9000/api/ce/task?id=88c32ee9-f5fa-49b4-aae6-44e469a97c7d

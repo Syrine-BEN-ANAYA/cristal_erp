@@ -29,16 +29,18 @@ services:
       - mongo
 
   auth-service:
-    build: ./services/auth-service
-    image: auth-service:latest
-    restart: unless-stopped
-    environment:
-      MONGO_URI: mongodb://mongo:27017/auth-service
-    depends_on:
-      mongo:
-        condition: service_healthy
-    networks:
-      - erp-network
+   build: ./services/auth-service
+   image: auth-service:latest
+   ports:
+    - "3201:3101"  # Correct : c'est un tableau
+   restart: unless-stopped
+   environment:
+     MONGO_URI: mongodb://mongo:27017/auth-service
+   depends_on:
+     mongo:
+      condition: service_healthy
+   networks:
+    - erp-network
 
   core-service:
     build: ./services/core-service
@@ -137,7 +139,7 @@ services:
     image: sonarqube:latest
     container_name: cristal_erp-sonarqube
     ports:
-      - "9000:9000"
+      - "127.0.0.1:9000:9000"
     environment:
       SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
     depends_on:
