@@ -1,4 +1,4 @@
-// src/pages/ReportingPage.js
+// src/pages/ReportingPage.js (version finale)
 import React, { useState, useEffect } from 'react';
 import { getOrders } from '../api/ordersService';
 import { getProducts, getLowStockProducts } from '../api/productsService';
@@ -18,7 +18,12 @@ import {
 import { FiPackage, FiShoppingCart, FiAlertTriangle, FiShoppingBag, FiCalendar, FiBarChart2, FiDownload } from 'react-icons/fi';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import logo from '../assets/logo.png';
+import KPICard from '../components/KPICard';
+import ChartContainer from '../components/ChartContainer';
+import LowStockList from '../components/LowStockList';
+import PageHeaderWithButton from '../components/PageHeaderWithButton';
+import LoadingSpinner from '../components/LoadingSpinner';
+import ErrorMessage from '../components/ErrorMessage';
 import '../styles/ReportingPage.css';
 
 const ReportingPage = () => {
@@ -106,14 +111,12 @@ const ReportingPage = () => {
     return acc;
   }, []).sort((a, b) => a.sortDate - b.sortDate);
 
-  // PDF generation (local)
+  // PDF generation
   const generatePDF = () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 15;
     let y = 20;
-
-    try { doc.addImage(logo, 'PNG', margin, y, 40, 20); } catch {}
 
     doc.setFontSize(20);
     doc.setFont('helvetica', 'bold');
@@ -136,23 +139,54 @@ const ReportingPage = () => {
       ['Purchases', totalPurchases.toString(), `$${totalPurchaseAmount.toFixed(2)}`],
       ['Profit', '', `$${profit.toFixed(2)}`]
     ];
-    autoTable(doc, { startY: y, head: [['Metric', 'Count', 'Value']], body: kpiData, theme: 'striped', headStyles: { fillColor: [10, 43, 78], textColor: 255 }, margin: { left: margin, right: margin } });
+    autoTable(doc, { 
+      startY: y, 
+      head: [['Metric', 'Count', 'Value']], 
+      body: kpiData, 
+      theme: 'striped', 
+      headStyles: { fillColor: [10, 43, 78], textColor: 255 }, 
+      margin: { left: margin, right: margin } 
+    });
     y = doc.lastAutoTable.finalY + 15;
 
     // Orders by month
-    doc.text('Monthly Order Trends', margin, y); y += 5;
-    autoTable(doc, { startY: y, head: [['Month', 'Order Count', 'Revenue']], body: ordersByMonth.map(o => [o.month, o.count.toString(), `$${o.revenue.toFixed(2)}`]), theme: 'striped', headStyles: { fillColor: [10, 43, 78], textColor: 255 }, margin: { left: margin, right: margin } });
+    doc.text('Monthly Order Trends', margin, y); 
+    y += 5;
+    autoTable(doc, { 
+      startY: y, 
+      head: [['Month', 'Order Count', 'Revenue']], 
+      body: ordersByMonth.map(o => [o.month, o.count.toString(), `$${o.revenue.toFixed(2)}`]), 
+      theme: 'striped', 
+      headStyles: { fillColor: [10, 43, 78], textColor: 255 }, 
+      margin: { left: margin, right: margin } 
+    });
     y = doc.lastAutoTable.finalY + 15;
 
     // Purchases by month
-    doc.text('Monthly Purchase Trends', margin, y); y += 5;
-    autoTable(doc, { startY: y, head: [['Month', 'Purchase Count', 'Amount']], body: purchasesByMonth.map(p => [p.month, p.count.toString(), `$${p.amount.toFixed(2)}`]), theme: 'striped', headStyles: { fillColor: [10, 43, 78], textColor: 255 }, margin: { left: margin, right: margin } });
+    doc.text('Monthly Purchase Trends', margin, y); 
+    y += 5;
+    autoTable(doc, { 
+      startY: y, 
+      head: [['Month', 'Purchase Count', 'Amount']], 
+      body: purchasesByMonth.map(p => [p.month, p.count.toString(), `$${p.amount.toFixed(2)}`]), 
+      theme: 'striped', 
+      headStyles: { fillColor: [10, 43, 78], textColor: 255 }, 
+      margin: { left: margin, right: margin } 
+    });
     y = doc.lastAutoTable.finalY + 15;
 
     // Low Stock
     if (lowStockProducts.length > 0) {
-      doc.text('Low Stock Products', margin, y); y += 5;
-      autoTable(doc, { startY: y, head: [['Product', 'Stock']], body: lowStockProducts.map(p => [p.name, p.stock.toString()]), theme: 'striped', headStyles: { fillColor: [10, 43, 78], textColor: 255 }, margin: { left: margin, right: margin } });
+      doc.text('Low Stock Products', margin, y); 
+      y += 5;
+      autoTable(doc, { 
+        startY: y, 
+        head: [['Product', 'Stock']], 
+        body: lowStockProducts.map(p => [p.name, p.stock.toString()]), 
+        theme: 'striped', 
+        headStyles: { fillColor: [10, 43, 78], textColor: 255 }, 
+        margin: { left: margin, right: margin } 
+      });
     }
 
     doc.setFontSize(8);
@@ -162,40 +196,47 @@ const ReportingPage = () => {
     doc.save('performance_report.pdf');
   };
 
-
-
-     
-
-  if (loading) return <div className="reporting-page"><div className="loading-spinner">Loading data...</div></div>;
-  if (error) return <div className="reporting-page"><div className="error-message">{error}</div></div>;
+  if (loading) return <LoadingSpinner message="Loading data..." />;
+  if (error) return <ErrorMessage message={error} />;
 
   return (
     <div className="reporting-page">
-      <div className="page-header">
-        <div>
-          <h1>Dashboard & Reporting</h1>
-          <p>Key business insights</p>
-        </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button className="btn btn-primary" onClick={generatePDF}>
-            <FiDownload /> Download PDF Report
-          </button>
-        
-        </div>
-      </div>
+      <PageHeaderWithButton
+        title="Dashboard & Reporting"
+        subtitle="Key business insights"
+        buttonText="Download PDF Report"
+        buttonIcon={FiDownload}
+        onButtonClick={generatePDF}
+      />
 
-      {/* KPI Cards */}
       <div className="kpi-grid">
-        <div className="kpi-card"><FiShoppingCart className="kpi-icon" /><div><h3>Total Orders</h3><p>{totalOrders}</p><div className="kpi-sub">${totalRevenue.toFixed(2)}</div></div></div>
-        <div className="kpi-card"><FiPackage className="kpi-icon" /><div><h3>Products</h3><p>{totalProducts}</p><div className="kpi-sub">Low stock: {lowStockCount}</div></div></div>
-        <div className="kpi-card"><FiShoppingBag className="kpi-icon" /><div><h3>Total Purchases</h3><p>{totalPurchases}</p><div className="kpi-sub">${totalPurchaseAmount.toFixed(2)}</div></div></div>
-        <div className="kpi-card"><FiBarChart2 className="kpi-icon" /><div><h3>Profit</h3><p>${profit.toFixed(2)}</p></div></div>
+        <KPICard 
+          icon={FiShoppingCart} 
+          title="Total Orders" 
+          value={totalOrders}
+          subtitle={`$${totalRevenue.toFixed(2)}`}
+        />
+        <KPICard 
+          icon={FiPackage} 
+          title="Products" 
+          value={totalProducts}
+          subtitle={`Low stock: ${lowStockCount}`}
+        />
+        <KPICard 
+          icon={FiShoppingBag} 
+          title="Total Purchases" 
+          value={totalPurchases}
+          subtitle={`$${totalPurchaseAmount.toFixed(2)}`}
+        />
+        <KPICard 
+          icon={FiBarChart2} 
+          title="Profit" 
+          value={`$${profit.toFixed(2)}`}
+        />
       </div>
 
-      {/* Charts */}
       <div className="charts-grid">
-        <div className="chart-container">
-          <div className="chart-header"><h3><FiCalendar /> Monthly Order Trends</h3></div>
+        <ChartContainer title="Monthly Order Trends" icon={FiCalendar}>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={ordersByMonth}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -208,10 +249,9 @@ const ReportingPage = () => {
               <Line yAxisId="right" type="monotone" dataKey="revenue" stroke="#82ca9d" name="Revenue ($)" />
             </LineChart>
           </ResponsiveContainer>
-        </div>
+        </ChartContainer>
 
-        <div className="chart-container">
-          <div className="chart-header"><h3><FiCalendar /> Monthly Purchases</h3></div>
+        <ChartContainer title="Monthly Purchases" icon={FiCalendar}>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={purchasesByMonth}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -224,20 +264,12 @@ const ReportingPage = () => {
               <Bar yAxisId="right" dataKey="amount" fill="#82ca9d" name="Amount ($)" />
             </BarChart>
           </ResponsiveContainer>
-        </div>
+        </ChartContainer>
       </div>
 
-      {/* Low Stock Products */}
-      <div className="chart-container" style={{ marginTop: '1.5rem' }}>
-        <div className="chart-header"><h3><FiAlertTriangle /> Low Stock Products</h3></div>
-        {lowStockProducts.length === 0 ? (
-          <p className="empty-message">No low stock products.</p>
-        ) : (
-          <ul className="low-stock-list">
-            {lowStockProducts.map(p => <li key={p._id || p.id}><span>{p.name}</span><span className="stock-value">{p.stock} units</span></li>)}
-          </ul>
-        )}
-      </div>
+      <ChartContainer title="Low Stock Products" icon={FiAlertTriangle}>
+        <LowStockList products={lowStockProducts} />
+      </ChartContainer>
     </div>
   );
 };

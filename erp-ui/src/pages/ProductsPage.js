@@ -1,3 +1,4 @@
+// src/pages/ProductsPage.js (version finale)
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   getProducts,
@@ -8,7 +9,10 @@ import {
   removeStock
 } from '../api/productsService';
 import { getSuppliers } from '../api/suppliersService';
-import { FiPlus, FiEdit2, FiTrash2, FiX, FiPackage, FiAlertTriangle } from 'react-icons/fi';
+import ProductForm from '../components/ProductForm';
+import ProductsTable from '../components/ProductsTable';
+import ErrorMessage from '../components/ErrorMessage';
+import LoadingSpinner from '../components/LoadingSpinner';
 import '../styles/ProductsPage.css';
 
 export default function ProductsPage({ token }) {
@@ -72,9 +76,13 @@ export default function ProductsPage({ token }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name) { setError('Name is required'); return; }
+    if (!form.name) { 
+      setError('Name is required'); 
+      return; 
+    }
     if (form.price < 0 || form.initialQuantity < 0 || form.threshold < 0) {
-      setError('Values cannot be negative'); return;
+      setError('Values cannot be negative'); 
+      return;
     }
 
     try {
@@ -159,7 +167,7 @@ export default function ProductsPage({ token }) {
     }
   };
 
-  if (loading) return <div className="products-page"><div className="loading">Loading products…</div></div>;
+  if (loading) return <LoadingSpinner message="Loading products…" />;
 
   return (
     <div className="products-page">
@@ -168,146 +176,25 @@ export default function ProductsPage({ token }) {
         <p>Manage your product catalog</p>
       </div>
 
-      {error && <div className="error-message">{error}</div>}
+      <ErrorMessage message={error} onDismiss={() => setError('')} />
 
-      {/* Form Card */}
-      <div className="form-card">
-        <h3><FiPackage /> {form._id ? 'Edit Product' : 'Add New Product'}</h3>
-        <form onSubmit={handleSubmit}>
-          <div className="form-grid">
-            <div className="input-group">
-              <label>Name *</label>
-              <input
-                type="text"
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                placeholder="Product name"
-                required
-              />
-            </div>
-            <div className="input-group">
-              <label>Price ($)</label>
-              <input
-                type="number"
-                name="price"
-                value={form.price}
-                onChange={handleChange}
-                min="0"
-                step="0.01"
-                placeholder="0.00"
-              />
-            </div>
-            <div className="input-group">
-              <label>Initial Quantity</label>
-              <input
-                type="number"
-                name="initialQuantity"
-                value={form.initialQuantity}
-                onChange={handleChange}
-                min="0"
-                placeholder="0"
-              />
-            </div>
-            <div className="input-group">
-              <label>Current Stock</label>
-              <input
-                type="number"
-                name="stock"
-                value={form.stock}
-                onChange={handleChange}
-                min="0"
-                placeholder="0"
-              />
-            </div>
-            <div className="input-group">
-              <label>Alert Threshold</label>
-              <input
-                type="number"
-                name="threshold"
-                value={form.threshold}
-                onChange={handleChange}
-                min="0"
-                placeholder="0"
-              />
-            </div>
-            <div className="input-group">
-              <label>Supplier</label>
-              <select name="supplierId" value={form.supplierId} onChange={handleChange}>
-                <option value="">-- No supplier --</option>
-                {suppliers.map(s => (
-                  <option key={s._id} value={s._id}>{s.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <div className="form-actions">
-            <button type="submit" className="btn btn-primary">
-              {form._id ? <><FiEdit2 /> Update Product</> : <><FiPlus /> Add Product</>}
-            </button>
-            {form._id && (
-              <button type="button" className="btn btn-secondary" onClick={resetForm}>
-                <FiX /> Cancel
-              </button>
-            )}
-          </div>
-        </form>
-      </div>
+      <ProductForm
+        form={form}
+        suppliers={suppliers}
+        onChange={handleChange}
+        onSubmit={handleSubmit}
+        onCancel={resetForm}
+        isEditing={!!form._id}
+      />
 
-      {/* Products Table */}
-      <div className="table-container">
-        <h3><FiPackage /> Product List</h3>
-        <table className="products-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Price</th>
-              <th>Stock</th>
-              <th>Threshold</th>
-              <th>Supplier</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.length === 0 ? (
-              <tr><td colSpan="6" className="empty-message">No products found.</td></tr>
-            ) : (
-              products.map(p => {
-                const supplier = suppliers.find(s => s._id === p.supplierId);
-                const isLowStock = p.stock <= p.threshold;
-                return (
-                  <tr key={p._id}>
-                    <td>{p.name}</td>
-                    <td>${p.price?.toFixed(2) ?? '0.00'}</td>
-                    <td>
-                      <div className="stock-control">
-                      
-                        <span className="stock-value">{p.stock ?? 0}</span>
-                       
-                        {isLowStock && (
-                          <span className="low-stock-indicator" title="Low stock">
-                            <FiAlertTriangle color="#b91c1c" />
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td>{p.threshold ?? 0}</td>
-                    <td>{supplier?.name || '—'}</td>
-                    <td className="actions">
-                      <button className="icon-btn" onClick={() => handleEdit(p)} title="Edit">
-                        <FiEdit2 />
-                      </button>
-                      <button className="icon-btn delete-btn" onClick={() => handleDelete(p._id)} title="Delete">
-                        <FiTrash2 />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+      <ProductsTable
+        products={products}
+        suppliers={suppliers}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        onAddStock={handleAddStock}
+        onRemoveStock={handleRemoveStock}
+      />
     </div>
   );
 }
