@@ -1,14 +1,7 @@
-// src/pages/ChangePasswordPage.js (version finale)
 import React, { useState } from "react";
 import { changePassword } from "../api/authService";
-import FormInput from "../components/FormInput";
-import TopBar from "../components/TopBar";
-import Footer from "../components/Footer";
-import LoadingSpinner from "../components/LoadingSpinner";
-import ErrorMessage from "../components/ErrorMessage";
-import SuccessMessage from "../components/SuccessMessage";
-import { FiLock } from "react-icons/fi";
 import "../styles/ChangePasswordPage.css";
+import logo from "../assets/logo.png";
 
 export default function ChangePasswordPage({ user, token, onPasswordChanged, onLogout }) {
   const [password, setPassword] = useState("");
@@ -44,43 +37,55 @@ export default function ChangePasswordPage({ user, token, onPasswordChanged, onL
     }
   };
 
-  if (loading) {
-    return <LoadingSpinner message="Updating password..." />;
-  }
-
   return (
     <div className="change-password-page">
-      <TopBar user={user} />
+      <header className="topbar">
+        <div className="topbar-logo">
+          <img src={logo} alt="Al Rubai United Al Cristal" />
+          <span className="company-name">AL RUBAI UNITED AL CRISTAL</span>
+        </div>
+        <div className="topbar-user">
+          <span className="user-username">{user?.username}</span>
+        </div>
+      </header>
 
       <div className="change-password-container">
         <h1 className="page-title">Change password</h1>
         <p className="page-subtitle">
-          Hello <strong>{user.username}</strong>, please set a new password to continue.
+          Hello <strong>{user.username || user.username}</strong>, please set a new password to continue.
         </p>
 
-        <ErrorMessage message={error} onDismiss={() => setError("")} />
-        <SuccessMessage message={success} onDismiss={() => setSuccess("")} />
+        {error && <div className="error-message">{error}</div>}
+        {success && <div className="success-message">{success}</div>}
 
         <form onSubmit={handleSubmit}>
-          <FormInput
-            label="New password"
-            icon={FiLock}
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter new password"
-            required
-          />
+          <div className="input-group">
+            <label className="input-label">New password</label>
+            <div className="input-wrapper">
+              <span className="input-icon">🔒</span>
+              <input
+                type="password"
+                className="input-field"
+                placeholder="Enter new password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+          </div>
 
-          <FormInput
-            label="Confirm password"
-            icon={FiLock}
-            type="password"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            placeholder="Confirm new password"
-            required
-          />
+          <div className="input-group">
+            <label className="input-label">Confirm password</label>
+            <div className="input-wrapper">
+              <span className="input-icon">🔒</span>
+              <input
+                type="password"
+                className="input-field"
+                placeholder="Confirm new password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+              />
+            </div>
+          </div>
 
           <div className="form-actions">
             <button type="submit" className="btn btn-primary" disabled={loading}>
@@ -90,7 +95,9 @@ export default function ChangePasswordPage({ user, token, onPasswordChanged, onL
         </form>
       </div>
 
-      <Footer />
+      <footer className="app-footer">
+        <p>© 2026 AL RUBAI UNITED AL CRISTAL. All rights reserved.</p>
+      </footer>
     </div>
   );
 }

@@ -1,28 +1,24 @@
-// AdminPage.js (version corrigée)
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { getUsers, createUser, updateUser, deleteUser, changePassword } from '../api/authService';
-import Modal from '../components/Modal';
-import FormInput from '../components/FormInput';
-import PageHeader from '../components/PageHeader';
-import LoadingSpinner from '../components/LoadingSpinner';
-import ErrorMessage from '../components/ErrorMessage';
-import UserFormCard from '../components/UserFormCard';
-import UserTable from '../components/UserTable';
-import { FiUser, FiMail, FiLock } from 'react-icons/fi'; // Enlevé FiShield qui n'est pas utilisé
+import { FiPlus, FiEdit2, FiTrash2, FiLock, FiX, FiUser, FiMail, FiShield } from 'react-icons/fi';
+import '../styles/AdminPage.css';
 
 const AdminPage = ({ user, token }) => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Form states
+  // New user
   const [newEmail, setNewEmail] = useState('');
   const [newUsername, setNewUsername] = useState('');
   const [newRole, setNewRole] = useState('USER');
   const [newPassword, setNewPassword] = useState('');
-  
+
+  // Edit user
   const [editingUser, setEditingUser] = useState(null);
   const [editForm, setEditForm] = useState({ username: '', email: '', role: '' });
+
+  // Change password
   const [changingPasswordUser, setChangingPasswordUser] = useState(null);
   const [passwordForm, setPasswordForm] = useState({ newPassword: '', confirmPassword: '' });
 
@@ -44,7 +40,7 @@ const AdminPage = ({ user, token }) => {
     if (token) fetchUsers();
   }, [token, fetchUsers]);
 
-  // Delete handler
+  // Delete
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this user?')) return;
     try {
@@ -55,7 +51,7 @@ const AdminPage = ({ user, token }) => {
     }
   };
 
-  // Edit handlers
+  // Edit
   const openEditModal = (u) => {
     setEditingUser(u);
     setEditForm({ username: u.username, email: u.email, role: u.role });
@@ -63,6 +59,10 @@ const AdminPage = ({ user, token }) => {
 
   const handleUpdateSubmit = async (e) => {
     e.preventDefault();
+    if (user.role === 'ADMIN' && editForm.role !== 'USER') {
+      setError('Admins cannot assign admin role');
+      return;
+    }
     try {
       const updated = await updateUser(editingUser.id, editForm, token);
       setUsers(users.map(u => (u.id === editingUser.id ? { ...updated, id: updated._id } : u)));
@@ -72,7 +72,7 @@ const AdminPage = ({ user, token }) => {
     }
   };
 
-  // Password handlers
+  // Password
   const openPasswordModal = (u) => {
     setChangingPasswordUser(u);
     setPasswordForm({ newPassword: '', confirmPassword: '' });
@@ -93,9 +93,17 @@ const AdminPage = ({ user, token }) => {
     }
   };
 
-  // Create user handler
+  // Create user
   const handleCreate = async (e) => {
     e.preventDefault();
+    if (!newEmail || !newUsername || !newPassword) {
+      setError('All fields required');
+      return;
+    }
+    if (user.role === 'ADMIN' && newRole !== 'USER') {
+      setError('Admins can only create users');
+      return;
+    }
     try {
       const created = await createUser(
         { username: newUsername, email: newEmail, password: newPassword, role: newRole },
@@ -111,112 +119,208 @@ const AdminPage = ({ user, token }) => {
     }
   };
 
-  // Logout handler
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    window.location.href = '/login';
-  };
-
-  // Role options
-  const roleOptions = [
-    { value: 'USER', label: 'USER' },
-    ...(user.role === 'SUPER_ADMIN' ? [{ value: 'ADMIN', label: 'ADMIN' }] : [])
-  ];
-
-  if (loading) return <LoadingSpinner message="Loading users…" />;
+  if (loading) return <div className="admin-container"><div className="loading-spinner">Loading users…</div></div>;
 
   return (
     <div className="admin-container">
-      <PageHeader
-        title="User Management"
-        subtitle="Manage system users and permissions"
-        onLogout={handleLogout}
-      />
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">User Management</h1>
+          <p className="page-subtitle">Manage system users and permissions</p>
+        </div>
+      </div>
 
-      <ErrorMessage message={error} onDismiss={() => setError('')} />
+      {error && <div className="error-message">{error}</div>}
 
-      <UserFormCard
-        onSubmit={handleCreate}
-        username={newUsername}
-        setUsername={setNewUsername}
-        email={newEmail}
-        setEmail={setNewEmail}
-        password={newPassword}
-        setPassword={setNewPassword}
-        role={newRole}
-        setRole={setNewRole}
-        roleOptions={roleOptions}
-        currentUserRole={user.role}
-      />
+      {/* Create User Card */}
+      <div className="form-card">
+        <h3 className="form-title"><FiPlus /> Create New User</h3>
+        <form onSubmit={handleCreate}>
+          <div className="form-grid">
+            <div className="input-group">
+              <label className="input-label"><FiUser /> Username</label>
+              <div className="input-wrapper">
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="Username"
+                  value={newUsername}
+                  onChange={e => setNewUsername(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+            <div className="input-group">
+              <label className="input-label"><FiMail /> Email</label>
+              <div className="input-wrapper">
+                <input
+                  type="email"
+                  className="input-field"
+                  placeholder="Email"
+                  value={newEmail}
+                  onChange={e => setNewEmail(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+            <div className="input-group">
+              <label className="input-label"><FiLock /> Password</label>
+              <div className="input-wrapper">
+                <input
+                  type="password"
+                  className="input-field"
+                  placeholder="Password"
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+            <div className="input-group">
+              <label className="input-label"><FiShield /> Role</label>
+              <div className="input-wrapper">
+                <select className="input-field" value={newRole} onChange={e => setNewRole(e.target.value)}>
+                  <option value="USER">USER</option>
+                  {user.role === 'SUPER_ADMIN' && <option value="ADMIN">ADMIN</option>}
+                </select>
+              </div>
+            </div>
+          </div>
+          <div className="form-actions">
+            <button type="submit" className="btn btn-primary">
+              <FiPlus /> Create User
+            </button>
+          </div>
+        </form>
+      </div>
 
-      <UserTable
-        users={users}
-        onEdit={openEditModal}
-        onDelete={handleDelete}
-        onPassword={openPasswordModal}
-      />
+      {/* Users Table */}
+      <div className="table-container">
+        <h3 className="table-title">User List</h3>
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.length === 0 ? (
+              <tr><td colSpan="4" className="empty-message">No users found.</td></tr>
+            ) : (
+              users.map(u => (
+                <tr key={u.id}>
+                  <td>{u.username}</td>
+                  <td>{u.email}</td>
+                  <td><span className={`role-badge role-${u.role.toLowerCase()}`}>{u.role}</span></td>
+                  <td className="actions-cell">
+                    <button className="icon-btn edit-btn" onClick={() => openEditModal(u)} title="Edit">
+                      <FiEdit2 />
+                    </button>
+                    <button className="icon-btn delete-btn" onClick={() => handleDelete(u.id)} title="Delete">
+                      <FiTrash2 />
+                    </button>
+                    <button className="icon-btn password-btn" onClick={() => openPasswordModal(u)} title="Change password">
+                      <FiLock />
+                    </button>
+                   </td>
+                 </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {/* Edit Modal */}
-      <Modal isOpen={!!editingUser} onClose={() => setEditingUser(null)} title="Edit User">
-        <form onSubmit={handleUpdateSubmit}>
-          <FormInput
-            label="Username"
-            icon={FiUser}
-            value={editForm.username}
-            onChange={e => setEditForm({ ...editForm, username: e.target.value })}
-            required
-          />
-          <FormInput
-            label="Email"
-            icon={FiMail}
-            type="email"
-            value={editForm.email}
-            onChange={e => setEditForm({ ...editForm, email: e.target.value })}
-            required
-          />
-          <select
-            className="input-field"
-            value={editForm.role}
-            onChange={e => setEditForm({ ...editForm, role: e.target.value })}
-          >
-            {roleOptions.map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-          <div className="form-actions">
-            <button type="submit" className="btn btn-primary">Save Changes</button>
-            <button type="button" className="btn btn-secondary" onClick={() => setEditingUser(null)}>Cancel</button>
+      {editingUser && (
+        <div className="modal-overlay">
+          <div className="modal-container">
+            <div className="modal-header">
+              <h3>Edit User</h3>
+              <button className="close-btn" onClick={() => setEditingUser(null)}><FiX /></button>
+            </div>
+            <form onSubmit={handleUpdateSubmit}>
+              <div className="input-group">
+                <label><FiUser /> Username</label>
+                <input
+                  type="text"
+                  className="input-field"
+                  value={editForm.username}
+                  onChange={e => setEditForm({ ...editForm, username: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="input-group">
+                <label><FiMail /> Email</label>
+                <input
+                  type="email"
+                  className="input-field"
+                  value={editForm.email}
+                  onChange={e => setEditForm({ ...editForm, email: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="input-group">
+                <label><FiShield /> Role</label>
+                <select
+                  className="input-field"
+                  value={editForm.role}
+                  onChange={e => setEditForm({ ...editForm, role: e.target.value })}
+                >
+                  <option value="USER">USER</option>
+                  {user.role === 'SUPER_ADMIN' && <option value="ADMIN">ADMIN</option>}
+                </select>
+              </div>
+              <div className="form-actions">
+                <button type="submit" className="btn btn-primary">Save Changes</button>
+                <button type="button" className="btn btn-secondary" onClick={() => setEditingUser(null)}>Cancel</button>
+              </div>
+            </form>
           </div>
-        </form>
-      </Modal>
+        </div>
+      )}
 
       {/* Password Modal */}
-      <Modal isOpen={!!changingPasswordUser} onClose={() => setChangingPasswordUser(null)} title="Change Password">
-        <form onSubmit={handlePasswordSubmit}>
-          <FormInput
-            label="New Password"
-            icon={FiLock}
-            type="password"
-            value={passwordForm.newPassword}
-            onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-            placeholder="New password"
-            required
-          />
-          <FormInput
-            label="Confirm Password"
-            icon={FiLock}
-            type="password"
-            value={passwordForm.confirmPassword}
-            onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-            placeholder="Confirm password"
-            required
-          />
-          <div className="form-actions">
-            <button type="submit" className="btn btn-primary">Update Password</button>
-            <button type="button" className="btn btn-secondary" onClick={() => setChangingPasswordUser(null)}>Cancel</button>
+      {changingPasswordUser && (
+        <div className="modal-overlay">
+          <div className="modal-container">
+            <div className="modal-header">
+              <h3>Change Password</h3>
+              <button className="close-btn" onClick={() => setChangingPasswordUser(null)}><FiX /></button>
+            </div>
+            <form onSubmit={handlePasswordSubmit}>
+              <div className="input-group">
+                <label><FiLock /> New Password</label>
+                <input
+                  type="password"
+                  className="input-field"
+                  placeholder="New password"
+                  value={passwordForm.newPassword}
+                  onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="input-group">
+                <label><FiLock /> Confirm Password</label>
+                <input
+                  type="password"
+                  className="input-field"
+                  placeholder="Confirm password"
+                  value={passwordForm.confirmPassword}
+                  onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="form-actions">
+                <button type="submit" className="btn btn-primary">Update Password</button>
+                <button type="button" className="btn btn-secondary" onClick={() => setChangingPasswordUser(null)}>Cancel</button>
+              </div>
+            </form>
           </div>
-        </form>
-      </Modal>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,7 +1,6 @@
-// Ton Sidebar actuel (avec chemins complets pour la route)
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import './Sidebar.css';
+import './Sidebar.css'; // Import du fichier de style
 
 export default function Sidebar() {
   return (
@@ -10,26 +9,27 @@ export default function Sidebar() {
         <h2 className="brand-title">AL CRISTAL</h2>
         <p className="brand-sub">Inventory Manager</p>
       </div>
-      
-      <nav className="sidebar-nav">
-        <NavLink to="/user/reporting" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+             <NavLink to="/reporting" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Reporting
         </NavLink>
-        <NavLink to="/user/purchases" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+      <nav className="sidebar-nav">
+        <NavLink to="/purchases" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Purchases
         </NavLink>
-        <NavLink to="/user/orders" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+        <NavLink to="/orders" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Orders
         </NavLink>
-        <NavLink to="/user/products" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+     
+             <NavLink to="/products" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Products
         </NavLink>
-        <NavLink to="/user/customers" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+        <NavLink to="/customers" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Customers
         </NavLink>
-        <NavLink to="/user/suppliers" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+        <NavLink to="/suppliers" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Suppliers
         </NavLink>
+
       </nav>
     </div>
   );

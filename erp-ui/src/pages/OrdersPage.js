@@ -1,19 +1,15 @@
-// src/pages/OrdersPage.js (version finale)
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   getOrders, createOrder, updateOrder, deleteOrder, getTotalOrderAmount 
 } from '../api/ordersService';
 import { getProducts } from '../api/productsService';
 import { getCustomers } from '../api/customersService';
-import { FiShoppingCart, FiDollarSign } from 'react-icons/fi';
+import { 
+  FiPackage, FiUser, FiShoppingCart, FiPlus, FiTrash2, FiX, 
+  FiDollarSign, FiEdit2, FiDownload, FiCheckCircle 
+} from 'react-icons/fi';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import KPICard from '../components/KPICard';
-import SuccessPopup from '../components/SuccessPopup';
-import OrderForm from '../components/OrderForm';
-import OrdersTable from '../components/OrdersTable';
-import ErrorMessage from '../components/ErrorMessage';
-import LoadingSpinner from '../components/LoadingSpinner';
 import '../styles/OrdersPage.css';
 
 // Helper functions
@@ -49,12 +45,14 @@ export default function OrdersPage({ token }) {
   const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState('');
 
+  // Form state
   const [form, setForm] = useState({
     _id: null,
     customerId: '',
     items: [{ id: Date.now(), productId: '', quantity: 1 }]
   });
 
+  // Load data
   const loadData = useCallback(async () => {
     if (!token) return;
     try {
@@ -89,6 +87,7 @@ export default function OrdersPage({ token }) {
     loadTotalAmount();
   }, [loadData, loadTotalAmount]);
 
+  // Form handlers
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
@@ -187,6 +186,7 @@ export default function OrdersPage({ token }) {
     }
   };
 
+  // PDF Generation
   const generateInvoicePDF = (order) => {
     try {
       const doc = new jsPDF();
@@ -194,6 +194,7 @@ export default function OrdersPage({ token }) {
       const margin = 15;
       let y = 20;
 
+      // Header
       doc.setFontSize(20);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(10, 43, 78);
@@ -209,6 +210,7 @@ export default function OrdersPage({ token }) {
       doc.text(`Order ID: ${order._id.slice(-8)}`, margin, y);
       doc.text(`Date: ${new Date(order.createdAt).toLocaleDateString()}`, margin, y + 6);
       
+      // Customer info
       const customer = customers.find(c => c._id === (order.customerId?._id || order.customerId));
       if (customer) {
         doc.text(`Customer: ${customer.name}`, margin, y + 18);
@@ -218,6 +220,7 @@ export default function OrdersPage({ token }) {
 
       y += 45;
       
+      // Items table
       const tableColumn = ['Product', 'Quantity', 'Unit Price', 'Total'];
       const tableRows = order.items.map(item => {
         const product = products.find(p => p._id === (item.productId?._id || item.productId));
@@ -243,6 +246,7 @@ export default function OrdersPage({ token }) {
       doc.setFont('helvetica', 'bold');
       doc.text(`Total Amount: ${formatMoney(total)}`, pageWidth - margin, finalY, { align: 'right' });
       
+      // Footer
       const footerY = doc.internal.pageSize.getHeight() - 10;
       doc.setFontSize(8);
       doc.setTextColor(150, 150, 150);
@@ -255,7 +259,7 @@ export default function OrdersPage({ token }) {
     }
   };
 
-  if (loading) return <LoadingSpinner message="Loading orders…" />;
+  if (loading) return <div className="orders-page"><div className="loading">Loading orders…</div></div>;
 
   return (
     <div className="orders-page">
@@ -264,37 +268,158 @@ export default function OrdersPage({ token }) {
         <p>Manage customer orders</p>
       </div>
 
-      <ErrorMessage message={error} onDismiss={() => setError('')} />
-      <SuccessPopup show={showPopup} message={popupMessage} onClose={() => setShowPopup(false)} />
+      {error && <div className="error-message">{error}</div>}
 
+      {/* Success Popup */}
+      {showPopup && (
+        <div className="popup-overlay">
+          <div className="popup-content">
+            <FiCheckCircle className="popup-icon" />
+            <h3>Success!</h3>
+            <p>{popupMessage}</p>
+            <button className="popup-close" onClick={() => setShowPopup(false)}>OK</button>
+          </div>
+        </div>
+      )}
+
+      {/* KPI Cards */}
       <div className="kpi-grid">
-        <KPICard icon={FiShoppingCart} title="Total Orders" value={orders.length} />
-        <KPICard icon={FiDollarSign} title="Total Revenue" value={formatMoney(totalOrderAmount)} />
+        <div className="kpi-card">
+          <FiShoppingCart className="kpi-icon" />
+          <div>
+            <h3>Total Orders</h3>
+            <p>{orders.length}</p>
+          </div>
+        </div>
+        <div className="kpi-card">
+          <FiDollarSign className="kpi-icon" />
+          <div>
+            <h3>Total Revenue</h3>
+            <p>{formatMoney(totalOrderAmount)}</p>
+          </div>
+        </div>
       </div>
 
-      <OrderForm
-        form={form}
-        customers={customers}
-        products={products}
-        onFormChange={handleChange}
-        onItemChange={handleItemChange}
-        onAddItem={addItem}
-        onRemoveItem={removeItem}
-        onSubmit={handleSubmit}
-        onCancel={resetForm}
-        formatMoney={formatMoney}
-      />
+      {/* Form Card */}
+      <div className="form-card">
+        <h3><FiShoppingCart /> {form._id ? 'Edit Order' : 'New Order'}</h3>
+        <form onSubmit={handleSubmit}>
+          <div className="form-grid">
+            <div className="input-group">
+              <label><FiUser /> Customer *</label>
+              <select
+                name="customerId"
+                value={form.customerId}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Select a customer</option>
+                {customers.map(c => (
+                  <option key={c._id} value={c._id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
 
-      <OrdersTable
-        orders={orders}
-        customers={customers}
-        products={products}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onDownload={generateInvoicePDF}
-        formatMoney={formatMoney}
-        calculateOrderTotal={calculateOrderTotal}
-      />
+          <div className="items-section">
+            <label><FiPackage /> Products *</label>
+            <div className="item-row-header">
+              <span>Product</span>
+              <span>Quantity</span>
+              <span></span>
+            </div>
+            {form.items.map((item, index) => (
+              <div key={item.id} className="item-row">
+                <select
+                  value={item.productId}
+                  onChange={e => handleItemChange(item.id, 'productId', e.target.value)}
+                  required
+                >
+                  <option value="">Select product</option>
+                  {products.map(p => (
+                    <option key={p._id} value={p._id}>
+                      {p.name} - {formatMoney(p.price)}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  min="1"
+                  value={item.quantity}
+                  onChange={e => handleItemChange(item.id, 'quantity', Number(e.target.value))}
+                  required
+                />
+                {form.items.length > 1 && (
+                  <button type="button" className="remove-btn" onClick={() => removeItem(item.id)}>
+                    <FiX />
+                  </button>
+                )}
+              </div>
+            ))}
+            <button type="button" className="add-item-btn" onClick={addItem}>
+              <FiPlus /> Add Product
+            </button>
+          </div>
+
+          <div className="form-actions">
+            <button type="submit" className="btn btn-primary">
+              {form._id ? <><FiEdit2 /> Update Order</> : <><FiPlus /> Create Order</>}
+            </button>
+            {form._id && (
+              <button type="button" className="btn btn-secondary" onClick={resetForm}>
+                <FiX /> Cancel
+              </button>
+            )}
+          </div>
+        </form>
+      </div>
+
+      {/* Orders Table */}
+      <div className="table-container">
+        <h3><FiShoppingCart /> Order List</h3>
+        <table className="orders-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Customer</th>
+              <th>Items</th>
+              <th>Total</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {orders.length === 0 ? (
+              <tr><td colSpan="6" className="empty-message">No orders found.</td></tr>
+            ) : (
+              orders.map(order => {
+                const customer = customers.find(c => c._id === (order.customerId?._id || order.customerId));
+                const total = order.totalAmount || calculateOrderTotal(order.items, products);
+                return (
+                  <tr key={order._id}>
+                    <td>{order._id.slice(-6)}</td>
+                    <td>{customer?.name || '—'}</td>
+                    <td>{order.items?.length || 0}</td>
+                    <td>{formatMoney(total)}</td>
+                    <td>{new Date(order.createdAt).toLocaleDateString()}</td>
+                    <td className="actions">
+                      <button className="icon-btn" onClick={() => handleEdit(order)} title="Edit">
+                        <FiEdit2 />
+                      </button>
+                      <button className="icon-btn delete-btn" onClick={() => handleDelete(order._id)} title="Delete">
+                        <FiTrash2 />
+                      </button>
+                      <button className="icon-btn" onClick={() => generateInvoicePDF(order)} title="Download PDF">
+                        <FiDownload />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

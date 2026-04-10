@@ -1,4 +1,4 @@
-// src/pages/PurchasesPage.js (version finale)
+// src/pages/PurchasesPage.js
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   getPurchases,
@@ -11,14 +11,8 @@ import { getProducts } from '../api/productsService';
 import { getSuppliers } from '../api/suppliersService';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { FiDollarSign, FiShoppingBag } from 'react-icons/fi';
-import KPICard from '../components/KPICard';
-import SuccessPopup from '../components/SuccessPopup';
-import EditPurchaseModal from '../components/EditPurchaseModal';
-import PurchaseForm from '../components/PurchaseForm';
-import PurchasesTable from '../components/PurchasesTable';
-import ErrorMessage from '../components/ErrorMessage';
-import LoadingSpinner from '../components/LoadingSpinner';
+import logo from '../assets/logo.png';
+import { FiTrash2, FiDownload, FiPlus, FiX, FiDollarSign, FiShoppingBag, FiEdit, FiCheckCircle } from 'react-icons/fi';
 import '../styles/PurchasesPage.css';
 
 export default function PurchasesPage({ token }) {
@@ -26,14 +20,14 @@ export default function PurchasesPage({ token }) {
   const [products, setProducts] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [totalPurchaseAmount, setTotalPurchaseAmount] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
+  // États pour le formulaire d'ajout
   const [form, setForm] = useState({
     supplierId: '',
     items: [{ productId: '', quantity: 1, price: 0 }]
   });
 
+  // États pour le modal d'édition
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingPurchaseId, setEditingPurchaseId] = useState(null);
   const [editForm, setEditForm] = useState({
@@ -41,8 +35,10 @@ export default function PurchasesPage({ token }) {
     items: [{ productId: '', quantity: 1, price: 0 }]
   });
 
+  // État pour le popup de succès (création)
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
+  // Auto-fermeture du popup après 5 secondes
   useEffect(() => {
     if (showSuccessPopup) {
       const timer = setTimeout(() => setShowSuccessPopup(false), 5000);
@@ -50,13 +46,13 @@ export default function PurchasesPage({ token }) {
     }
   }, [showSuccessPopup]);
 
-  // Load Data
+  // ---------------- Load Data ----------------
   const loadPurchases = useCallback(async () => {
     try {
       const data = await getPurchases(token);
       setPurchases(data);
     } catch (err) {
-      setError(err.message || 'Failed to load purchases');
+      console.error('Failed to load purchases:', err.message);
     }
   }, [token]);
 
@@ -65,7 +61,7 @@ export default function PurchasesPage({ token }) {
       const data = await getProducts(token);
       setProducts(data);
     } catch (err) {
-      setError(err.message || 'Failed to load products');
+      console.error('Failed to load products:', err.message);
     }
   }, [token]);
 
@@ -74,7 +70,7 @@ export default function PurchasesPage({ token }) {
       const data = await getSuppliers(token);
       setSuppliers(data);
     } catch (err) {
-      setError(err.message || 'Failed to load suppliers');
+      console.error('Failed to load suppliers:', err.message);
     }
   }, [token]);
 
@@ -87,25 +83,17 @@ export default function PurchasesPage({ token }) {
     }
   }, [token]);
 
-  const loadAllData = useCallback(async () => {
-    if (!token) return;
-    setLoading(true);
-    await Promise.all([
-      loadPurchases(),
-      loadProducts(),
-      loadSuppliers(),
-      loadTotalAmount()
-    ]);
-    setLoading(false);
-  }, [token, loadPurchases, loadProducts, loadSuppliers, loadTotalAmount]);
-
   useEffect(() => {
-    loadAllData();
-  }, [loadAllData]);
+    loadPurchases();
+    loadProducts();
+    loadSuppliers();
+    loadTotalAmount();
+  }, [loadPurchases, loadProducts, loadSuppliers, loadTotalAmount]);
 
-  // Form Handlers (Add)
-  const handleSupplierChange = (e) => {
-    setForm(prev => ({ ...prev, supplierId: e.target.value }));
+  // ---------------- Form Handlers (Add) ----------------
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
   };
 
   const handleItemChange = (index, field, value) => {
@@ -146,11 +134,11 @@ export default function PurchasesPage({ token }) {
 
   const handleSubmit = async () => {
     if (!form.supplierId) {
-      setError('Supplier is required');
+      alert('Supplier is required');
       return;
     }
     if (form.items.some(item => !item.productId || item.quantity < 1 || item.price < 0)) {
-      setError('All items must have a product, positive quantity, and non-negative price');
+      alert('All items must have a product, positive quantity, and non-negative price');
       return;
     }
 
@@ -165,16 +153,17 @@ export default function PurchasesPage({ token }) {
 
     try {
       await createPurchase(payload, token);
-      setShowSuccessPopup(true);
+      setShowSuccessPopup(true);   // 👈 Affiche le popup après création
       resetForm();
-      loadAllData();
-      setError('');
+      loadPurchases();
+      loadTotalAmount();
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Error saving purchase');
+      console.error('Failed to save purchase:', err.message);
+      alert(err.response?.data?.message || err.message || 'Error saving purchase');
     }
   };
 
-  // Edit Handlers
+  // ---------------- Update Handlers ----------------
   const openEditModal = (purchase) => {
     const supplierId = purchase.supplierId?._id || purchase.supplierId;
     const items = purchase.items.map(item => ({
@@ -191,10 +180,6 @@ export default function PurchasesPage({ token }) {
     setIsEditModalOpen(false);
     setEditingPurchaseId(null);
     setEditForm({ supplierId: '', items: [{ productId: '', quantity: 1, price: 0 }] });
-  };
-
-  const handleEditSupplierChange = (e) => {
-    setEditForm(prev => ({ ...prev, supplierId: e.target.value }));
   };
 
   const handleEditItemChange = (index, field, value) => {
@@ -224,11 +209,11 @@ export default function PurchasesPage({ token }) {
 
   const handleUpdateSubmit = async () => {
     if (!editForm.supplierId) {
-      setError('Supplier is required');
+      alert('Supplier is required');
       return;
     }
     if (editForm.items.some(item => !item.productId || item.quantity < 1 || item.price < 0)) {
-      setError('All items must have a product, positive quantity, and non-negative price');
+      alert('All items must have a product, positive quantity, and non-negative price');
       return;
     }
 
@@ -244,31 +229,39 @@ export default function PurchasesPage({ token }) {
     try {
       await updatePurchase(editingPurchaseId, payload, token);
       closeEditModal();
-      loadAllData();
-      setError('');
+      loadPurchases();
+      loadTotalAmount();
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Error updating purchase');
+      console.error('Failed to update purchase:', err.message);
+      alert(err.response?.data?.message || err.message || 'Error updating purchase');
     }
   };
 
-  // Delete Handler
+  // ---------------- Delete ----------------
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this purchase?')) return;
     try {
       await deletePurchase(id, token);
-      loadAllData();
-      setError('');
+      loadPurchases();
+      loadTotalAmount();
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Error deleting purchase');
+      console.error('Failed to delete purchase:', err.message);
+      alert(err.response?.data?.message || err.message || 'Error deleting purchase');
     }
   };
 
-  // PDF Generation
+  // ---------------- Generate Invoice PDF ----------------
   const generateInvoicePDF = (purchase) => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 15;
     let y = 20;
+
+    try {
+      doc.addImage(logo, 'PNG', margin, y, 40, 20);
+    } catch (e) {
+      console.warn('Logo could not be loaded', e);
+    }
 
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
@@ -353,62 +346,247 @@ export default function PurchasesPage({ token }) {
     doc.save(`purchase_invoice_${purchase._id}.pdf`);
   };
 
-  if (loading) return <LoadingSpinner message="Loading purchases..." />;
-
   return (
     <div className="purchases-page">
-      <SuccessPopup 
-        show={showSuccessPopup} 
-        message="Invoice sent by email to the supplier." 
-        onClose={() => setShowSuccessPopup(false)} 
-      />
+      {/* Popup de succès après création */}
+      {showSuccessPopup && (
+        <div className="popup-overlay" onClick={() => setShowSuccessPopup(false)}>
+          <div className="popup-content" onClick={e => e.stopPropagation()}>
+            <div className="popup-icon">
+              <FiCheckCircle size={40} />
+            </div>
+            <h3>Purchase Created!</h3>
+            <p>Invoice sent by email to the supplier.</p>
+            <button className="popup-close-btn" onClick={() => setShowSuccessPopup(false)}>
+              OK
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="page-header">
         <h1>Purchases</h1>
         <p>Manage all purchases</p>
       </div>
 
-      <ErrorMessage message={error} onDismiss={() => setError('')} />
-
-      <div className="kpi-grid">
-        <KPICard icon={FiShoppingBag} title="Total Purchases" value={purchases.length} />
-        <KPICard icon={FiDollarSign} title="Total Amount" value={`$${totalPurchaseAmount.toFixed(2)}`} />
+      {/* KPI */}
+      <div className="kpi-grid" style={{ marginBottom: '2rem' }}>
+        <div className="kpi-card">
+          <FiShoppingBag className="kpi-icon" />
+          <div>
+            <h3>Total Purchases</h3>
+            <p>{purchases.length}</p>
+          </div>
+        </div>
+        <div className="kpi-card">
+          <FiDollarSign className="kpi-icon" />
+          <div>
+            <h3>Total Amount</h3>
+            <p>${totalPurchaseAmount.toFixed(2)}</p>
+          </div>
+        </div>
       </div>
 
-      <PurchaseForm
-        form={form}
-        suppliers={suppliers}
-        products={products}
-        onSupplierChange={handleSupplierChange}
-        onItemChange={handleItemChange}
-        onAddItem={addItem}
-        onRemoveItem={removeItem}
-        onSubmit={handleSubmit}
-        calculateTotal={calculateTotal}
-      />
+      {/* Formulaire d'ajout */}
+      <div className="form-card">
+        <h3>Add New Purchase</h3>
+        <div className="form-grid">
+          <div className="input-group">
+            <label>Supplier</label>
+            <select name="supplierId" value={form.supplierId} onChange={handleChange}>
+              <option value="">Select supplier</option>
+              {suppliers.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
+            </select>
+          </div>
+        </div>
 
-      <PurchasesTable
-        purchases={purchases}
-        suppliers={suppliers}
-        products={products}
-        onEdit={openEditModal}
-        onDelete={handleDelete}
-        onDownload={generateInvoicePDF}
-      />
+        <div className="items-section">
+          <label>Products</label>
+          <div className="item-row-header">
+            <span>Product</span>
+            <span>Quantity</span>
+            <span>Unit Price</span>
+            <span></span>
+          </div>
+          {form.items.map((item, index) => (
+            <div key={index} className="item-row">
+              <select
+                value={item.productId}
+                onChange={(e) => handleItemChange(index, 'productId', e.target.value)}
+              >
+                <option value="">Select product</option>
+                {products.map(p => (
+                  <option key={p._id} value={p._id}>
+                    {p.name} (Stock: {p.stock ?? 0})
+                  </option>
+                ))}
+              </select>
+              <input
+                type="number"
+                min="1"
+                placeholder="Qty"
+                value={item.quantity}
+                onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+              />
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="Price"
+                value={item.price}
+                onChange={(e) => handleItemChange(index, 'price', e.target.value)}
+              />
+              {form.items.length > 1 && (
+                <button className="icon-btn remove-btn" onClick={() => removeItem(index)}>
+                  <FiX />
+                </button>
+              )}
+            </div>
+          ))}
+          <button type="button" className="add-item-btn" onClick={addItem}>
+            <FiPlus /> Add Product
+          </button>
+          <div className="total-preview">
+            Total: ${calculateTotal(form.items).toFixed(2)}
+          </div>
+        </div>
 
-      <EditPurchaseModal
-        isOpen={isEditModalOpen}
-        onClose={closeEditModal}
-        editForm={editForm}
-        suppliers={suppliers}
-        products={products}
-        onSupplierChange={handleEditSupplierChange}
-        onItemChange={handleEditItemChange}
-        onAddItem={addEditItem}
-        onRemoveItem={removeEditItem}
-        onSubmit={handleUpdateSubmit}
-        calculateTotal={calculateTotal}
-      />
+        <div className="form-actions">
+          <button onClick={handleSubmit}>
+            <FiPlus /> Add Purchase
+          </button>
+        </div>
+      </div>
+
+      {/* Tableau des achats */}
+      <div className="table-container">
+        <h3>Purchase List</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Supplier</th>
+              <th>Products</th>
+              <th>Total Amount</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {purchases.map(p => {
+              const supplier = suppliers.find(s => s._id === (p.supplierId?._id || p.supplierId));
+              return (
+                <tr key={p._id}>
+                  <td>{supplier?.name || 'Unknown'}</td>
+                  <td className="products-cell">
+                    {p.items.map(item => {
+                      const product = products.find(pr => pr._id === (item.productId?._id || item.productId));
+                      return (
+                        <div key={item.productId?._id || item.productId} className="product-line">
+                          • {product?.name}
+                        </div>
+                      );
+                    })}
+                    {p.items.length === 0 && '—'}
+                  </td>
+                  <td>${p.totalAmount?.toFixed(2) ?? '0.00'}</td>
+                  <td className="actions">
+                    <button className="icon-btn" onClick={() => openEditModal(p)} aria-label="Edit">
+                      <FiEdit />
+                    </button>
+                    <button className="icon-btn delete-btn" onClick={() => handleDelete(p._id)} aria-label="Delete">
+                      <FiTrash2 />
+                    </button>
+                    <button className="icon-btn" onClick={() => generateInvoicePDF(p)} aria-label="Download PDF">
+                      <FiDownload />
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+            {purchases.length === 0 && <tr><td colSpan="4" className="empty-message">No purchases found.</td></tr>}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Modal d'édition */}
+      {isEditModalOpen && (
+        <div className="modal-overlay" onClick={closeEditModal}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Edit Purchase</h2>
+              <button className="close-btn" onClick={closeEditModal}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="form-grid">
+                <div className="input-group">
+                  <label>Supplier</label>
+                  <select
+                    value={editForm.supplierId}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, supplierId: e.target.value }))}
+                  >
+                    <option value="">Select supplier</option>
+                    {suppliers.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className="items-section">
+                <label>Products</label>
+                <div className="item-row-header">
+                  <span>Product</span>
+                  <span>Quantity</span>
+                  <span>Unit Price</span>
+                  <span></span>
+                </div>
+                {editForm.items.map((item, index) => (
+                  <div key={index} className="item-row">
+                    <select
+                      value={item.productId}
+                      onChange={(e) => handleEditItemChange(index, 'productId', e.target.value)}
+                    >
+                      <option value="">Select product</option>
+                      {products.map(p => (
+                        <option key={p._id} value={p._id}>
+                          {p.name} (Stock: {p.stock ?? 0})
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="number"
+                      min="1"
+                      placeholder="Qty"
+                      value={item.quantity}
+                      onChange={(e) => handleEditItemChange(index, 'quantity', e.target.value)}
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="Price"
+                      value={item.price}
+                      onChange={(e) => handleEditItemChange(index, 'price', e.target.value)}
+                    />
+                    {editForm.items.length > 1 && (
+                      <button className="icon-btn remove-btn" onClick={() => removeEditItem(index)}>
+                        <FiX />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button type="button" className="add-item-btn" onClick={addEditItem}>
+                  <FiPlus /> Add Product
+                </button>
+                <div className="total-preview">
+                  Total: ${calculateTotal(editForm.items).toFixed(2)}
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="cancel-btn" onClick={closeEditModal}>Cancel</button>
+              <button className="save-btn" onClick={handleUpdateSubmit}>Update Purchase</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

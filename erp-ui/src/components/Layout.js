@@ -1,30 +1,35 @@
-// components/Layout.jsx (version simple mais avec nos composants)
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { 
-  FiShoppingCart, FiPackage, FiUsers, FiTruck, FiShoppingBag, FiBarChart2 
-} from 'react-icons/fi';
-import TopBar from './TopBar';
-import Footer from './Footer';
+import { FiPackage, FiShoppingCart, FiTag, FiUsers, FiTruck, FiBarChart } from 'react-icons/fi';
 import '../styles/Layout.css';
-
-const menuItems = [
-  { path: '/user/orders', label: 'Orders', icon: FiShoppingCart },
-  { path: '/user/products', label: 'Products', icon: FiPackage },
-  { path: '/user/customers', label: 'Customers', icon: FiUsers },
-  { path: '/user/suppliers', label: 'Suppliers', icon: FiTruck },
-  { path: '/user/purchases', label: 'Purchases', icon: FiShoppingBag },
-  { path: '/user/reporting', label: 'Reporting', icon: FiBarChart2 },
-];
+import logo from '../assets/logo.png';
 
 const Layout = ({ children, user, onLogout }) => {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
 
+  const menuItems = [
+    { path: '/user/reporting', label: 'Reporting', icon: FiBarChart },
+    { path: '/user/orders', label: 'Orders', icon: FiShoppingCart },
+    { path: '/user/purchases', label: 'Purchases', icon: FiTag },
+    { path: '/user/customers', label: 'Customers', icon: FiUsers },
+    { path: '/user/suppliers', label: 'Suppliers', icon: FiTruck },
+    { path: '/user/products', label: 'Products', icon: FiPackage },
+  ];
+
   return (
     <div className="layout">
-      <TopBar user={user} onLogout={onLogout} />
-      
+      <header className="topbar">
+        <div className="topbar-logo">
+          <img src={logo} alt="Al Rubai United Al Cristal" />
+          <span className="company-name">AL RUBAI UNITED AL CRISTAL</span>
+        </div>
+        <div className="topbar-user">
+          <span className="user-email">{user?.email}</span>
+          <button onClick={onLogout} className="logout-button">Log out</button>
+        </div>
+      </header>
+
       <div className={`main-container ${isAdminRoute ? 'no-sidebar' : ''}`}>
         {!isAdminRoute && (
           <aside className="sidebar">
@@ -34,10 +39,7 @@ const Layout = ({ children, user, onLogout }) => {
                   const Icon = item.icon;
                   return (
                     <li key={item.path}>
-                      <Link
-                        to={item.path}
-                        className={location.pathname === item.path ? 'active' : ''}
-                      >
+                      <Link to={item.path} className={location.pathname === item.path ? 'active' : ''}>
                         <span className="menu-icon"><Icon /></span>
                         <span className="menu-label">{item.label}</span>
                       </Link>
@@ -48,13 +50,13 @@ const Layout = ({ children, user, onLogout }) => {
             </nav>
           </aside>
         )}
-        
-        <main className="main-content">
-          {children}
-        </main>
+
+        <main className="main-content">{children}</main>
       </div>
-      
-      <Footer />
+
+      <footer className="app-footer">
+        <p>© 2026 AL RUBAI UNITED AL CRISTAL. All rights reserved.</p>
+      </footer>
     </div>
   );
 };
