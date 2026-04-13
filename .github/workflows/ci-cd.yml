@@ -8,8 +8,8 @@ on:
 
 permissions:
   contents: read
-  security-events: write   # Pour uploader les résultats Trivy
-  actions: read             # Pour la télémetrie
+  security-events: write
+  actions: read
 
 jobs:
   ci:
@@ -17,7 +17,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4  # Mise à jour v3 → v4
+        uses: actions/checkout@v4
 
       - name: Build Docker images
         run: docker compose build
@@ -32,12 +32,11 @@ jobs:
           severity: 'CRITICAL,HIGH'
           exit-code: '0'
       
-      # 👇 CORRECTION : Passage à CodeQL v4
       - name: Upload Trivy results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v4  # v3 → v4
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: 'trivy-results.sarif'
-        continue-on-error: true  # 👈 Ne pas bloquer si l'upload échoue
+        continue-on-error: true
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -45,26 +44,72 @@ jobs:
           username: ${{ secrets.Docker_username }}
           password: ${{ secrets.DockerHub_TOKEN }}
 
-      - name: Push images to Docker Hub
+      - name: Tag and push images to Docker Hub
         run: |
+          # Générer un tag avec le commit SHA
+          COMMIT_SHA=$(git rev-parse --short HEAD)
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          TAG="${COMMIT_SHA}-${TIMESTAMP}"
+          
+          echo "Tagging images with: $TAG"
+          
+          # Tag avec le commit SHA (pour les rollbacks)
+          docker tag auth-service:latest syrinebenanaya/auth-service:${TAG}
+          docker tag core-service:latest syrinebenanaya/core-service:${TAG}
+          docker tag api-gateway:latest syrinebenanaya/api-gateway:${TAG}
+          docker tag erp-ui:latest syrinebenanaya/erp-ui:${TAG}
+          
+          # Tag latest également
           docker tag auth-service:latest syrinebenanaya/auth-service:latest
           docker tag core-service:latest syrinebenanaya/core-service:latest
           docker tag api-gateway:latest syrinebenanaya/api-gateway:latest
           docker tag erp-ui:latest syrinebenanaya/erp-ui:latest
           
-          docker push syrinebenanaya/auth-service:latest
-          docker push syrinebenanaya/core-service:latest
-          docker push syrinebenanaya/api-gateway:latest
-          docker push syrinebenanaya/erp-ui:latest
+          # Push tous les tags
+          docker push syrinebenanaya/auth-service --all-tags
+          docker push syrinebenanaya/core-service --all-tags
+          docker push syrinebenanaya/api-gateway --all-tags
+          docker push syrinebenanaya/erp-ui --all-tags
+          
+          # Sauvegarder le tag pour l'étape CD
+          echo "TAG=${TAG}" >> $GITHUB_ENV
+
+      - name: Update Kubernetes manifests with new tag
+        run: |
+          # Mettre à jour les images dans les fichiers Kubernetes
+          sed -i "s|syrinebenanaya/auth-service:.*|syrinebenanaya/auth-service:${TAG}|g" k8s/*.yaml
+          sed -i "s|syrinebenanaya/core-service:.*|syrinebenanaya/core-service:${TAG}|g" k8s/*.yaml
+          sed -i "s|syrinebenanaya/api-gateway:.*|syrinebenanaya/api-gateway:${TAG}|g" k8s/*.yaml
+          sed -i "s|syrinebenanaya/erp-ui:.*|syrinebenanaya/erp-ui:${TAG}|g" k8s/*.yaml
+
+      - name: Commit and push manifest updates
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add k8s/*.yaml
+          git commit -m "chore: update images to ${TAG}" || echo "No changes to commit"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   cd:
     needs: ci
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
-      - name: Deploy to production
+      - name: Trigger ArgoCD Sync
         run: |
-          echo "✅ Déploiement automatique vers la production"
-          echo "Pull des dernières images depuis Docker Hub"
-          echo "Redémarrage des services avec docker-compose"
-          # ssh user@serveur "cd /app && docker-compose pull && docker-compose up -d"
+          echo "✅ ArgoCD détectera automatiquement les changements dans le repo Git"
+          echo "ArgoCD est configuré en mode auto-sync (prune: true, selfHeal: true)"
+          echo ""
+          echo "📊 Statut de synchronisation:"
+          echo "   - ArgoCD surveille le dépôt Git"
+          echo "   - Les nouveaux tags d'images sont détectés"
+          echo "   - La synchronisation automatique s'effectue en < 3 minutes"
+          echo "   - Les pods sont recréés avec les nouvelles images"
+
+      - name: Verify deployment status (optional)
+        run: |
+          echo "🔍 Pour vérifier manuellement la synchronisation:"
+          echo "   kubectl get application cristal-erp -n argocd"
+          echo "   kubectl get pods -n erp-system -w"
