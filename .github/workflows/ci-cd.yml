@@ -68,3 +68,4 @@ jobs:
           echo "Pull des dernières images depuis Docker Hub"
           echo "Redémarrage des services avec docker-compose"
           # ssh user@serveur "cd /app && docker-compose pull && docker-compose up -d"
+          # .github/workflows/ci-cd.yml (ajout après push Docker Hub)
