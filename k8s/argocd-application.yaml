@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cristal-erp
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    # Pour l'instant, pointez vers votre repo local ou GitHub
+    repoURL: https://github.com/votre-org/cristal-erp-gitops.git  # À changer
+    targetRevision: main
+    path: k8s  
+    kustomize: {}
+    directory:
+      recurse: true  # Pour inclure tous les sous-dossiers si nécessaire
+      exclude: 'node_modules|.git|services|erp-ui|monitoring'  # Exclure les dossiers inutiles
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: erp-system
+  syncPolicy:
+    automated:
+      prune: true          # Supprime les ressources qui ne sont plus dans Git
+      selfHeal: true       # Corrige les modifications manuelles
+      allowEmpty: false    # N'autorise pas l'application vide
+    syncOptions:
+      - CreateNamespace=true                    # Crée le namespace s'il n'existe pas
+      - PrunePropagationPolicy=foreground       # Supprime les dépendances en premier
+      - PruneLast=true                          # Nettoie après la synchronisation
+      - ApplyOutOfSyncOnly=true                 # Applique uniquement les ressources modifiées
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
