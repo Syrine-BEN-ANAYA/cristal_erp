@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cristal-erp
+  name: test-app
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: cristal-erp
+      app: test-app
   template:
     metadata:
       labels:
-        app: cristal-erp
+        app: test-app
     spec:
       containers:
       - name: nginx
