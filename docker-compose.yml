@@ -1,4 +1,3 @@
-
 services:
   mongo:
     image: mongo:6.0
@@ -29,18 +28,18 @@ services:
       - mongo
 
   auth-service:
-   build: ./services/auth-service
-   image: auth-service:latest
-   ports:
-    - "3201:3101"  # Correct : c'est un tableau
-   restart: unless-stopped
-   environment:
-     MONGO_URI: mongodb://mongo:27017/auth-service
-   depends_on:
-     mongo:
-      condition: service_healthy
-   networks:
-    - erp-network
+    build: ./services/auth-service
+    image: auth-service:latest
+    ports:
+      - "3201:3101"
+    restart: unless-stopped
+    environment:
+      MONGO_URI: mongodb://mongo:27017/auth-service
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - erp-network
 
   core-service:
     build: ./services/core-service
@@ -123,9 +122,14 @@ services:
     networks:
       - erp-network
 
+  # ============================================
+  # SonarQube avec PostgreSQL
+  # ============================================
+  
   sonarqube-db:
     image: postgres:15
     container_name: cristal_erp-sonarqube-db
+    restart: unless-stopped
     environment:
       POSTGRES_USER: sonarqube
       POSTGRES_PASSWORD: sonarqube
@@ -134,24 +138,49 @@ services:
       - erp-network
     volumes:
       - sonarqube-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sonarqube"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   sonarqube:
-    image: sonarqube:latest
+    image: sonarqube:10.6.0-community
     container_name: cristal_erp-sonarqube
+    restart: unless-stopped
     ports:
-      - "127.0.0.1:9000:9000"
+      - "9000:9000"
     environment:
+      # Configuration PostgreSQL
+      SONAR_JDBC_URL: jdbc:postgresql://sonarqube-db:5432/sonarqube
+      SONAR_JDBC_USERNAME: sonarqube
+      SONAR_JDBC_PASSWORD: sonarqube
+      # Désactive les vérifications Elasticsearch pour Docker
       SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+      # Configuration mémoire (optionnel, pour les petites machines)
+      SONAR_CE_JAVAOPTS: "-Xmx512m"
+      SONAR_WEB_JAVAOPTS: "-Xmx512m"
+      SONAR_SEARCH_JAVAOPTS: "-Xmx512m"
     depends_on:
-      - sonarqube-db
+      sonarqube-db:
+        condition: service_healthy
     networks:
       - erp-network
+    volumes:
+      - sonarqube-data:/opt/sonarqube/data
+      - sonarqube-extensions:/opt/sonarqube/extensions
+      - sonarqube-logs:/opt/sonarqube/logs
 
 networks:
   erp-network:
     driver: bridge
 
 volumes:
+  # Volumes existants
   mongo-data:
   n8n-data:
+  # Nouveaux volumes pour SonarQube
   sonarqube-db-data:
+  sonarqube-data:
+  sonarqube-extensions:
+  sonarqube-logs:

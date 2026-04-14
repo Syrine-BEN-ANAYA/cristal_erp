@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cristal-erp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cristal-erp
+  template:
+    metadata:
+      labels:
+        app: cristal-erp
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
