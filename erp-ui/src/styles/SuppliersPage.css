@@ -19,7 +19,135 @@
   color: #5f6b7a;
   font-size: 1rem;
 }
+/* Floating Language Button - comme dans Orders */
+.btn-language-floating {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #1a4b7a 0%, #0f3a5e 100%);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+  z-index: 9999;
+  transition: all 0.3s ease;
+}
 
+.btn-language-floating:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, #0f3a5e 0%, #0a2b4e 100%);
+}
+
+.btn-language-floating:active {
+  transform: translateY(0);
+}
+
+/* RTL support - bouton à gauche pour l'arabe */
+[dir="rtl"] .btn-language-floating {
+  right: auto;
+  left: 30px;
+}
+
+/* Table responsive */
+.table-responsive {
+  overflow-x: auto;
+}
+
+/* Data labels for mobile */
+@media (max-width: 768px) {
+  .btn-language-floating {
+    bottom: 20px;
+    right: 20px;
+    padding: 10px 18px;
+    font-size: 0.85rem;
+  }
+  
+  [dir="rtl"] .btn-language-floating {
+    right: auto;
+    left: 20px;
+  }
+  
+  .suppliers-table thead {
+    display: none;
+  }
+  
+  .suppliers-table tbody tr {
+    display: block;
+    margin-bottom: 1rem;
+    border: 1px solid #eef2f6;
+    border-radius: 0.5rem;
+  }
+  
+  .suppliers-table tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    border-bottom: 1px solid #eef2f6;
+  }
+  
+  .suppliers-table tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    width: 40%;
+    color: #2d3e50;
+  }
+  
+  .suppliers-table tbody td:last-child {
+    border-bottom: none;
+  }
+  
+  .actions-cell {
+    justify-content: flex-end;
+  }
+}
+
+/* RTL actions cell */
+[dir="rtl"] .actions-cell {
+  justify-content: flex-start;
+}
+
+/* Page header RTL */
+[dir="rtl"] .page-header {
+  text-align: right;
+}
+/* Au début de chaque fichier CSS */
+*:focus,
+*:focus-visible,
+*:focus-within {
+  outline: none !important;
+  outline-color: transparent !important;
+  outline-style: none !important;
+  box-shadow: none !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus,
+button:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.input-field:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+[dir="rtl"] .form-title {
+  text-align: right;
+}
+
+[dir="rtl"] .table-title {
+  text-align: right;
+}
 .form-card {
   background: white;
   border-radius: 1.5rem;

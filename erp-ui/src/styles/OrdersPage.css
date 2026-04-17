@@ -23,7 +23,28 @@
   width: 90%;
   animation: slideDown 0.3s ease-out;
 }
+/* Au début de chaque fichier CSS */
+*:focus,
+*:focus-visible,
+*:focus-within {
+  outline: none !important;
+  outline-color: transparent !important;
+  outline-style: none !important;
+  box-shadow: none !important;
+}
 
+input:focus,
+textarea:focus,
+select:focus,
+button:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.input-field:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
 .popup-icon {
   background-color: #e8f5e9;
   color: #4caf50;

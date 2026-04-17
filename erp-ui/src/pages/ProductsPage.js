@@ -8,7 +8,7 @@ import {
   removeStock
 } from '../api/productsService';
 import { getSuppliers } from '../api/suppliersService';
-import { FiPlus, FiEdit2, FiTrash2, FiX, FiPackage, FiAlertTriangle } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiX, FiPackage, FiAlertTriangle, FiGlobe } from 'react-icons/fi';
 import '../styles/ProductsPage.css';
 
 export default function ProductsPage({ token }) {
@@ -16,6 +16,77 @@ export default function ProductsPage({ token }) {
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [language, setLanguage] = useState('en'); // 'en' or 'ar'
+
+  // Translations
+  const t = {
+    en: {
+      products: 'Products',
+      manageProducts: 'Manage your product catalog',
+      addNewProduct: 'Add New Product',
+      editProduct: 'Edit Product',
+      name: 'Name',
+      price: 'Price ($)',
+      initialQuantity: 'Initial Quantity',
+      currentStock: 'Current Stock',
+      alertThreshold: 'Alert Threshold',
+      supplier: 'Supplier',
+      noSupplier: '-- No supplier --',
+      nameRequired: 'Name is required',
+      valuesCannotBeNegative: 'Values cannot be negative',
+      updateProduct: 'Update Product',
+      addProduct: 'Add Product',
+      cancel: 'Cancel',
+      productList: 'Product List',
+      actions: 'Actions',
+      noProducts: 'No products found.',
+      deleteConfirm: 'Delete this product?',
+      failedToDelete: 'Failed to delete product',
+      errorSavingProduct: 'Error saving product',
+      enterQuantityToAdd: 'Enter quantity to add:',
+      enterQuantityToRemove: 'Enter quantity to remove:',
+      enterPositiveNumber: 'Please enter a positive number',
+      insufficientStock: 'Insufficient stock',
+      lowStock: 'Low stock',
+      stock: 'Stock',
+      threshold: 'Threshold',
+      loading: 'Loading products…'
+    },
+    ar: {
+      products: 'المنتجات',
+      manageProducts: 'إدارة كتالوج المنتجات',
+      addNewProduct: 'إضافة منتج جديد',
+      editProduct: 'تعديل المنتج',
+      name: 'الاسم',
+      price: 'السعر ($)',
+      initialQuantity: 'الكمية الأولية',
+      currentStock: 'المخزون الحالي',
+      alertThreshold: 'حد التنبيه',
+      supplier: 'المورد',
+      noSupplier: '-- لا يوجد مورد --',
+      nameRequired: 'الاسم مطلوب',
+      valuesCannotBeNegative: 'القيم لا يمكن أن تكون سالبة',
+      updateProduct: 'تحديث المنتج',
+      addProduct: 'إضافة منتج',
+      cancel: 'إلغاء',
+      productList: 'قائمة المنتجات',
+      actions: 'إجراءات',
+      noProducts: 'لا توجد منتجات.',
+      deleteConfirm: 'هل تريد حذف هذا المنتج؟',
+      failedToDelete: 'فشل حذف المنتج',
+      errorSavingProduct: 'خطأ في حفظ المنتج',
+      enterQuantityToAdd: 'أدخل الكمية للإضافة:',
+      enterQuantityToRemove: 'أدخل الكمية للإزالة:',
+      enterPositiveNumber: 'الرجاء إدخال رقم موجب',
+      insufficientStock: 'المخزون غير كاف',
+      lowStock: 'مخزون منخفض',
+      stock: 'المخزون',
+      threshold: 'الحد الأدنى',
+      loading: 'جاري تحميل المنتجات…'
+    }
+  };
+
+  const currentLang = t[language];
 
   // Form state
   const [form, setForm] = useState({
@@ -72,9 +143,10 @@ export default function ProductsPage({ token }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name) { setError('Name is required'); return; }
+    if (!form.name) { setError(currentLang.nameRequired); return; }
     if (form.price < 0 || form.initialQuantity < 0 || form.threshold < 0) {
-      setError('Values cannot be negative'); return;
+      setError(currentLang.valuesCannotBeNegative); 
+      return;
     }
 
     try {
@@ -96,7 +168,7 @@ export default function ProductsPage({ token }) {
       loadData();
       setError('');
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Error saving product');
+      setError(err.response?.data?.message || err.message || currentLang.errorSavingProduct);
     }
   };
 
@@ -113,22 +185,22 @@ export default function ProductsPage({ token }) {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this product?')) return;
+    if (!window.confirm(currentLang.deleteConfirm)) return;
     try {
       await deleteProduct(id, token);
       loadData();
     } catch (err) {
-      alert(err.response?.data?.message || err.message || 'Failed to delete product');
+      alert(err.response?.data?.message || err.message || currentLang.failedToDelete);
     }
   };
 
   // Stock adjustment
   const handleAddStock = async (id, currentStock) => {
-    const qty = prompt('Enter quantity to add:', '1');
+    const qty = prompt(currentLang.enterQuantityToAdd, '1');
     if (!qty) return;
     const quantity = parseInt(qty);
     if (isNaN(quantity) || quantity <= 0) {
-      alert('Please enter a positive number');
+      alert(currentLang.enterPositiveNumber);
       return;
     }
     try {
@@ -140,15 +212,15 @@ export default function ProductsPage({ token }) {
   };
 
   const handleRemoveStock = async (id, currentStock) => {
-    const qty = prompt('Enter quantity to remove:', '1');
+    const qty = prompt(currentLang.enterQuantityToRemove, '1');
     if (!qty) return;
     const quantity = parseInt(qty);
     if (isNaN(quantity) || quantity <= 0) {
-      alert('Please enter a positive number');
+      alert(currentLang.enterPositiveNumber);
       return;
     }
     if (quantity > currentStock) {
-      alert('Insufficient stock');
+      alert(currentLang.insufficientStock);
       return;
     }
     try {
@@ -159,35 +231,45 @@ export default function ProductsPage({ token }) {
     }
   };
 
-  if (loading) return <div className="products-page"><div className="loading">Loading products…</div></div>;
+  if (loading) return <div className="products-page" dir={language === 'ar' ? 'rtl' : 'ltr'}><div className="loading">{currentLang.loading}</div></div>;
 
   return (
-    <div className="products-page">
+    <div className="products-page" dir={language === 'ar' ? 'rtl' : 'ltr'}>
       <div className="page-header">
-        <h1>Products</h1>
-        <p>Manage your product catalog</p>
+        <div>
+          <h1>{currentLang.products}</h1>
+          <p>{currentLang.manageProducts}</p>
+        </div>
       </div>
+
+      {/* Language Toggle Button - FLOATING */}
+      <button 
+        className="btn-language-floating" 
+        onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
+      >
+        <FiGlobe size={18} /> {language === 'en' ? 'العربية' : 'English'}
+      </button>
 
       {error && <div className="error-message">{error}</div>}
 
       {/* Form Card */}
       <div className="form-card">
-        <h3><FiPackage /> {form._id ? 'Edit Product' : 'Add New Product'}</h3>
+        <h3><FiPackage /> {form._id ? currentLang.editProduct : currentLang.addNewProduct}</h3>
         <form onSubmit={handleSubmit}>
           <div className="form-grid">
             <div className="input-group">
-              <label>Name *</label>
+              <label>{currentLang.name} *</label>
               <input
                 type="text"
                 name="name"
                 value={form.name}
                 onChange={handleChange}
-                placeholder="Product name"
+                placeholder={currentLang.name}
                 required
               />
             </div>
             <div className="input-group">
-              <label>Price ($)</label>
+              <label>{currentLang.price}</label>
               <input
                 type="number"
                 name="price"
@@ -199,7 +281,7 @@ export default function ProductsPage({ token }) {
               />
             </div>
             <div className="input-group">
-              <label>Initial Quantity</label>
+              <label>{currentLang.initialQuantity}</label>
               <input
                 type="number"
                 name="initialQuantity"
@@ -210,7 +292,7 @@ export default function ProductsPage({ token }) {
               />
             </div>
             <div className="input-group">
-              <label>Current Stock</label>
+              <label>{currentLang.currentStock}</label>
               <input
                 type="number"
                 name="stock"
@@ -221,7 +303,7 @@ export default function ProductsPage({ token }) {
               />
             </div>
             <div className="input-group">
-              <label>Alert Threshold</label>
+              <label>{currentLang.alertThreshold}</label>
               <input
                 type="number"
                 name="threshold"
@@ -232,9 +314,9 @@ export default function ProductsPage({ token }) {
               />
             </div>
             <div className="input-group">
-              <label>Supplier</label>
+              <label>{currentLang.supplier}</label>
               <select name="supplierId" value={form.supplierId} onChange={handleChange}>
-                <option value="">-- No supplier --</option>
+                <option value="">{currentLang.noSupplier}</option>
                 {suppliers.map(s => (
                   <option key={s._id} value={s._id}>{s.name}</option>
                 ))}
@@ -243,11 +325,11 @@ export default function ProductsPage({ token }) {
           </div>
           <div className="form-actions">
             <button type="submit" className="btn btn-primary">
-              {form._id ? <><FiEdit2 /> Update Product</> : <><FiPlus /> Add Product</>}
+              {form._id ? <><FiEdit2 /> {currentLang.updateProduct}</> : <><FiPlus /> {currentLang.addProduct}</>}
             </button>
             {form._id && (
               <button type="button" className="btn btn-secondary" onClick={resetForm}>
-                <FiX /> Cancel
+                <FiX /> {currentLang.cancel}
               </button>
             )}
           </div>
@@ -256,57 +338,57 @@ export default function ProductsPage({ token }) {
 
       {/* Products Table */}
       <div className="table-container">
-        <h3><FiPackage /> Product List</h3>
-        <table className="products-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Price</th>
-              <th>Stock</th>
-              <th>Threshold</th>
-              <th>Supplier</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.length === 0 ? (
-              <tr><td colSpan="6" className="empty-message">No products found.</td></tr>
-            ) : (
-              products.map(p => {
-                const supplier = suppliers.find(s => s._id === p.supplierId);
-                const isLowStock = p.stock <= p.threshold;
-                return (
-                  <tr key={p._id}>
-                    <td>{p.name}</td>
-                    <td>${p.price?.toFixed(2) ?? '0.00'}</td>
-                    <td>
-                      <div className="stock-control">
-                      
-                        <span className="stock-value">{p.stock ?? 0}</span>
-                       
-                        {isLowStock && (
-                          <span className="low-stock-indicator" title="Low stock">
-                            <FiAlertTriangle color="#b91c1c" />
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td>{p.threshold ?? 0}</td>
-                    <td>{supplier?.name || '—'}</td>
-                    <td className="actions">
-                      <button className="icon-btn" onClick={() => handleEdit(p)} title="Edit">
-                        <FiEdit2 />
-                      </button>
-                      <button className="icon-btn delete-btn" onClick={() => handleDelete(p._id)} title="Delete">
-                        <FiTrash2 />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+        <h3><FiPackage /> {currentLang.productList}</h3>
+        <div className="table-responsive">
+          <table className="products-table">
+            <thead>
+              <tr>
+                <th>{currentLang.name}</th>
+                <th>{currentLang.price}</th>
+                <th>{currentLang.stock}</th>
+                <th>{currentLang.threshold}</th>
+                <th>{currentLang.supplier}</th>
+                <th>{currentLang.actions}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {products.length === 0 ? (
+                <tr><td colSpan="6" className="empty-message">{currentLang.noProducts}</td></tr>
+              ) : (
+                products.map(p => {
+                  const supplier = suppliers.find(s => s._id === p.supplierId);
+                  const isLowStock = p.stock <= p.threshold;
+                  return (
+                    <tr key={p._id}>
+                      <td data-label={currentLang.name}>{p.name}</td>
+                      <td data-label={currentLang.price}>${p.price?.toFixed(2) ?? '0.00'}</td>
+                      <td data-label={currentLang.stock}>
+                        <div className="stock-control">
+                          <span className="stock-value">{p.stock ?? 0}</span>
+                          {isLowStock && (
+                            <span className="low-stock-indicator" title={currentLang.lowStock}>
+                              <FiAlertTriangle color="#b91c1c" />
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td data-label={currentLang.threshold}>{p.threshold ?? 0}</td>
+                      <td data-label={currentLang.supplier}>{supplier?.name || '—'}</td>
+                      <td className="actions" data-label={currentLang.actions}>
+                        <button className="icon-btn" onClick={() => handleEdit(p)} title={currentLang.editProduct}>
+                          <FiEdit2 />
+                        </button>
+                        <button className="icon-btn delete-btn" onClick={() => handleDelete(p._id)} title={currentLang.deleteConfirm}>
+                          <FiTrash2 />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

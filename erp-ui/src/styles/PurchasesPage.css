@@ -11,7 +11,75 @@
 .page-header {
   margin-bottom: 2rem;
 }
+/* Floating Language Button */
+.btn-language-floating {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #1a4b7a 0%, #0f3a5e 100%);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+  z-index: 9999;
+  transition: all 0.3s ease;
+}
 
+.btn-language-floating:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, #0f3a5e 0%, #0a2b4e 100%);
+}
+
+/* RTL support */
+[dir="rtl"] .btn-language-floating {
+  right: auto;
+  left: 30px;
+}
+
+/* Table responsive */
+.table-responsive {
+  overflow-x: auto;
+}
+
+/* RTL table adjustments */
+[dir="rtl"] .actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 8px;
+}
+/* Au début de chaque fichier CSS */
+*:focus,
+*:focus-visible,
+*:focus-within {
+  outline: none !important;
+  outline-color: transparent !important;
+  outline-style: none !important;
+  box-shadow: none !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus,
+button:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.input-field:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+[dir="rtl"] .total-preview {
+  text-align: left;
+}
 .page-header h1 {
   font-size: 2rem;
   font-weight: 600;

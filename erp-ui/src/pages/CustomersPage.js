@@ -5,19 +5,78 @@ import {
   updateCustomer,
   deleteCustomer
 } from '../api/customersService';
-import { FiUser, FiMail, FiPhone, FiMapPin, FiPlus, FiEdit2, FiTrash2, FiX } from 'react-icons/fi';
+import { FiUser, FiMail, FiPhone, FiMapPin, FiPlus, FiEdit2, FiTrash2, FiX, FiGlobe } from 'react-icons/fi';
 import '../styles/CustomersPage.css';
 
 export default function CustomersPage({ token }) {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [language, setLanguage] = useState('en'); // 'en' or 'ar'
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [editingId, setEditingId] = useState(null);
+
+  // Translations
+  const t = {
+    en: {
+      customers: 'Customers',
+      manageCustomers: 'Manage your customers',
+      addNewCustomer: 'Add New Customer',
+      editCustomer: 'Edit Customer',
+      name: 'Name',
+      email: 'Email',
+      phone: 'Phone',
+      address: 'Address',
+      nameRequired: 'Name is required',
+      update: 'Update',
+      add: 'Add',
+      cancel: 'Cancel',
+      customersList: 'Customers List',
+      actions: 'Actions',
+      noCustomers: 'No customers found.',
+      deleteConfirm: 'Are you sure you want to delete this customer?',
+      updateFailed: 'Update failed',
+      creationFailed: 'Creation failed',
+      deleteFailed: 'Delete failed',
+      loading: 'Loading...',
+      customerName: 'Customer name',
+      emailPlaceholder: 'customer@example.com',
+      phonePlaceholder: '+968 123 456 789',
+      addressPlaceholder: 'Full address'
+    },
+    ar: {
+      customers: 'العملاء',
+      manageCustomers: 'إدارة عملائك',
+      addNewCustomer: 'إضافة عميل جديد',
+      editCustomer: 'تعديل العميل',
+      name: 'الاسم',
+      email: 'البريد الإلكتروني',
+      phone: 'الهاتف',
+      address: 'العنوان',
+      nameRequired: 'الاسم مطلوب',
+      update: 'تحديث',
+      add: 'إضافة',
+      cancel: 'إلغاء',
+      customersList: 'قائمة العملاء',
+      actions: 'إجراءات',
+      noCustomers: 'لا يوجد عملاء.',
+      deleteConfirm: 'هل أنت متأكد من حذف هذا العميل؟',
+      updateFailed: 'فشل التحديث',
+      creationFailed: 'فشل الإنشاء',
+      deleteFailed: 'فشل الحذف',
+      loading: 'جاري التحميل...',
+      customerName: 'اسم العميل',
+      emailPlaceholder: 'customer@example.com',
+      phonePlaceholder: '+968 123 456 789',
+      addressPlaceholder: 'العنوان الكامل'
+    }
+  };
+
+  const currentLang = t[language];
 
   useEffect(() => {
     const loadCustomers = async () => {
@@ -47,7 +106,7 @@ export default function CustomersPage({ token }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name) {
-      setError('Name is required');
+      setError(currentLang.nameRequired);
       return;
     }
 
@@ -64,7 +123,7 @@ export default function CustomersPage({ token }) {
       resetForm();
       setError('');
     } catch (err) {
-      setError(err.message || (editingId ? 'Update failed' : 'Creation failed'));
+      setError(err.message || (editingId ? currentLang.updateFailed : currentLang.creationFailed));
     }
   };
 
@@ -77,34 +136,44 @@ export default function CustomersPage({ token }) {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this customer?')) return;
+    if (!window.confirm(currentLang.deleteConfirm)) return;
     try {
       await deleteCustomer(id, token);
       setCustomers(customers.filter(c => c._id !== id));
       setError('');
     } catch (err) {
-      setError(err.message || 'Delete failed');
+      setError(err.message || currentLang.deleteFailed);
     }
   };
 
   if (loading) {
     return (
-      <div className="customers-page">
-        <div className="loading-spinner">Loading...</div>
+      <div className="customers-page" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+        <div className="loading-spinner">{currentLang.loading}</div>
       </div>
     );
   }
 
   return (
-    <div className="customers-page">
+    <div className="customers-page" dir={language === 'ar' ? 'rtl' : 'ltr'}>
       <div className="page-header">
-        <h2 className="page-title">Customers</h2>
-        <p className="page-subtitle">Manage your customers</p>
+        <div>
+          <h2 className="page-title">{currentLang.customers}</h2>
+          <p className="page-subtitle">{currentLang.manageCustomers}</p>
+        </div>
       </div>
+
+      {/* Language Toggle Button - FLOATING comme dans Orders */}
+      <button 
+        className="btn-language-floating" 
+        onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
+      >
+        <FiGlobe size={18} /> {language === 'en' ? 'العربية' : 'English'}
+      </button>
 
       <div className="form-card">
         <h3 className="form-title">
-          {editingId ? 'Edit Customer' : 'Add New Customer'}
+          {editingId ? currentLang.editCustomer : currentLang.addNewCustomer}
         </h3>
 
         {error && <div className="error-message">{error}</div>}
@@ -112,14 +181,14 @@ export default function CustomersPage({ token }) {
         <form onSubmit={handleSubmit}>
           <div className="form-grid">
             <div className="input-group">
-              <label className="input-label">Name *</label>
+              <label className="input-label">{currentLang.name} *</label>
               <div className="input-wrapper">
                 <FiUser className="input-icon" />
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Customer name"
+                  placeholder={currentLang.customerName}
                   className="input-field"
                   required
                 />
@@ -127,42 +196,42 @@ export default function CustomersPage({ token }) {
             </div>
 
             <div className="input-group">
-              <label className="input-label">Email</label>
+              <label className="input-label">{currentLang.email}</label>
               <div className="input-wrapper">
                 <FiMail className="input-icon" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="customer@example.com"
+                  placeholder={currentLang.emailPlaceholder}
                   className="input-field"
                 />
               </div>
             </div>
 
             <div className="input-group">
-              <label className="input-label">Phone</label>
+              <label className="input-label">{currentLang.phone}</label>
               <div className="input-wrapper">
                 <FiPhone className="input-icon" />
                 <input
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+968 123 456 789"
+                  placeholder={currentLang.phonePlaceholder}
                   className="input-field"
                 />
               </div>
             </div>
 
             <div className="input-group">
-              <label className="input-label">Address</label>
+              <label className="input-label">{currentLang.address}</label>
               <div className="input-wrapper">
                 <FiMapPin className="input-icon" />
                 <input
                   type="text"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  placeholder="Full address"
+                  placeholder={currentLang.addressPlaceholder}
                   className="input-field"
                 />
               </div>
@@ -172,11 +241,11 @@ export default function CustomersPage({ token }) {
           <div className="form-actions">
             <button type="submit" className="btn btn-primary">
               {editingId ? <FiEdit2 /> : <FiPlus />}
-              {editingId ? 'Update' : 'Add'}
+              {editingId ? currentLang.update : currentLang.add}
             </button>
             {editingId && (
               <button type="button" onClick={resetForm} className="btn btn-secondary">
-                <FiX /> Cancel
+                <FiX /> {currentLang.cancel}
               </button>
             )}
           </div>
@@ -184,41 +253,43 @@ export default function CustomersPage({ token }) {
       </div>
 
       <div className="table-container">
-        <h3 className="table-title">Customers List</h3>
-        <table className="customers-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Phone</th>
-              <th>Address</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {customers.map((c) => (
-              <tr key={c._id}>
-                <td>{c.name}</td>
-                <td>{c.email || '—'}</td>
-                <td>{c.phone || '—'}</td>
-                <td>{c.address || '—'}</td>
-                <td className="actions-cell">
-                  <button onClick={() => handleEdit(c)} className="icon-btn edit-btn" title="Edit">
-                    <FiEdit2 />
-                  </button>
-                  <button onClick={() => handleDelete(c._id)} className="icon-btn delete-btn" title="Delete">
-                    <FiTrash2 />
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {customers.length === 0 && (
+        <h3 className="table-title">{currentLang.customersList}</h3>
+        <div className="table-responsive">
+          <table className="customers-table">
+            <thead>
               <tr>
-                <td colSpan="5" className="empty-message">No customers found.</td>
+                <th>{currentLang.name}</th>
+                <th>{currentLang.email}</th>
+                <th>{currentLang.phone}</th>
+                <th>{currentLang.address}</th>
+                <th>{currentLang.actions}</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {customers.map((c) => (
+                <tr key={c._id}>
+                  <td data-label={currentLang.name}>{c.name}</td>
+                  <td data-label={currentLang.email}>{c.email || '—'}</td>
+                  <td data-label={currentLang.phone}>{c.phone || '—'}</td>
+                  <td data-label={currentLang.address}>{c.address || '—'}</td>
+                  <td className="actions-cell" data-label={currentLang.actions}>
+                    <button onClick={() => handleEdit(c)} className="icon-btn edit-btn" title={currentLang.editCustomer}>
+                      <FiEdit2 />
+                    </button>
+                    <button onClick={() => handleDelete(c._id)} className="icon-btn delete-btn" title={currentLang.deleteConfirm}>
+                      <FiTrash2 />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {customers.length === 0 && (
+                <tr>
+                  <td colSpan="5" className="empty-message">{currentLang.noCustomers}</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

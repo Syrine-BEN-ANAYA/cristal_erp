@@ -12,19 +12,19 @@ import AdminPage from "./pages/AdminPage";
 import { getMe } from "./api/authService";
 import PurchasesPage from "./pages/PurchasesPage";
 import ReportingPage from "./pages/ReportingPage";
-
+import UnderConstructionPage from "./pages/UnderConstructionPage";
+import FirstPage from "./pages/FirstPage";
 
 function App() {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
-  // 🔹 Vérifie si un token existe au chargement
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
 
     if (savedToken) {
       setToken(savedToken);
-
       getMe(savedToken)
         .then((data) => {
           setUser(data);
@@ -33,82 +33,124 @@ function App() {
           localStorage.removeItem("token");
           setUser(null);
           setToken("");
+        })
+        .finally(() => {
+          setIsLoading(false);
         });
+    } else {
+      setIsLoading(false);
     }
   }, []);
 
-  // 🔹 Après login
+  if (isLoading) {
+    return <div className="loading-screen">Loading...</div>;
+  }
+
   const handleLogin = (loggedUser, accessToken) => {
     setUser(loggedUser);
     setToken(accessToken);
     localStorage.setItem("token", accessToken);
   };
 
-  // 🔹 Après changement de mot de passe → logout forcé
   const handlePasswordChanged = () => {
     localStorage.removeItem("token");
     setUser(null);
     setToken("");
   };
 
-  // 🔹 Logout normal
   const handleLogout = () => {
     localStorage.removeItem("token");
     setUser(null);
     setToken("");
   };
 
-  // 🔹 Pas connecté → login
-  if (!user) {
-    return <LoginPage onLogin={handleLogin} />;
-  }
-
-  // 🔹 Premier login → changer mot de passe
-  if (user.mustChangePassword) {
-    return (
-      <ChangePasswordPage
-        user={user}
-        token={token}
-        onPasswordChanged={handlePasswordChanged}
-      />
-    );
-  }
-
-  // 🔹 route par défaut selon rôle
-  const defaultRoute =
-    user.role === "ADMIN" || user.role === "SUPER_ADMIN"
-      ? "/admin"
-      : "/user/reporting";
-
   return (
-  <Layout user={user} onLogout={handleLogout}>
-    <Routes key={user.role}>
-
-      {/* pages user */}
-      <Route path="/user/reporting" element={<ReportingPage token={token} />} />
-      <Route path="/user/products" element={<ProductsPage token={token} />} />
-      <Route path="/user/orders" element={<OrdersPage token={token} />} />
-      <Route path="/user/customers" element={<CustomersPage token={token} />} />
-      <Route path="/user/suppliers" element={<SuppliersPage token={token} />} />
-      <Route path="/user/purchases" element={<PurchasesPage token={token} />} />
-      <Route path="/user/reporting" element={<ReportingPage token={token} />} />
-
-
-
-      {/* page admin */}
-      {(user.role === "ADMIN" || user.role === "SUPER_ADMIN") && (
-        <Route
-          path="/admin"
-          element={<AdminPage user={user} token={token} />}
-        />
-      )}
-
-      <Route path="*" element={<Navigate to={defaultRoute} replace />} />
-
+    <Routes>
+      <Route path="/" element={<FirstPage onLogout={handleLogout} />} />
+      <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
+      <Route path="/under-construction" element={<UnderConstructionPage />} />
+      
+      <Route path="/change-password" element={
+        user?.mustChangePassword ? (
+          <ChangePasswordPage user={user} token={token} onPasswordChanged={handlePasswordChanged} />
+        ) : (
+          <Navigate to="/" />
+        )
+      } />
+      
+      <Route path="/admin" element={
+        user && (user.role === "ADMIN" || user.role === "SUPER_ADMIN") ? (
+          <Layout user={user} onLogout={handleLogout}>
+            <AdminPage user={user} token={token} />
+          </Layout>
+        ) : (
+          <Navigate to="/" />
+        )
+      } />
+      
+      <Route path="/user/reporting" element={
+        user ? (
+          <Layout user={user} onLogout={handleLogout}>
+            <ReportingPage token={token} />
+          </Layout>
+        ) : (
+          <Navigate to="/" />
+        )
+      } />
+      
+      <Route path="/user/products" element={
+        user ? (
+          <Layout user={user} onLogout={handleLogout}>
+            <ProductsPage token={token} />
+          </Layout>
+        ) : (
+          <Navigate to="/" />
+        )
+      } />
+      
+      <Route path="/user/orders" element={
+        user ? (
+          <Layout user={user} onLogout={handleLogout}>
+            <OrdersPage token={token} />
+          </Layout>
+        ) : (
+          <Navigate to="/" />
+        )
+      } />
+      
+      <Route path="/user/customers" element={
+        user ? (
+          <Layout user={user} onLogout={handleLogout}>
+            <CustomersPage token={token} />
+          </Layout>
+        ) : (
+          <Navigate to="/" />
+        )
+      } />
+      
+      <Route path="/user/suppliers" element={
+        user ? (
+          <Layout user={user} onLogout={handleLogout}>
+            <SuppliersPage token={token} />
+          </Layout>
+        ) : (
+          <Navigate to="/" />
+        )
+      } />
+      
+      <Route path="/user/purchases" element={
+        user ? (
+          <Layout user={user} onLogout={handleLogout}>
+            <PurchasesPage token={token} />
+          </Layout>
+        ) : (
+          <Navigate to="/" />
+        )
+      } />
+      
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
-  </Layout>
-);
-        
+  );
 }
 
 export default App;

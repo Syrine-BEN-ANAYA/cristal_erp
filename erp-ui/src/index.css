@@ -1,6 +1,4 @@
-/* src/index.css */
 
-/* Import de la police Inter (déjà chargée dans index.html, mais on peut ajouter un fallback) */
 body {
   margin: 0;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',

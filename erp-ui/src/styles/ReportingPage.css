@@ -18,7 +18,66 @@
   flex-wrap: wrap;
   gap: 1rem;
 }
+/* Language Toggle Button */
+.btn-language {
+  padding: 0.5rem 1rem;
+  background: #1a4b7a;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
 
+.btn-language:hover {
+  background: #0f3a5e;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;  /* Changé de 'center' à 'flex-end' pour aligner en bas */
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+/* Au début de chaque fichier CSS */
+*:focus,
+*:focus-visible,
+*:focus-within {
+  outline: none !important;
+  outline-color: transparent !important;
+  outline-style: none !important;
+  box-shadow: none !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus,
+button:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.input-field:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+.orders-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  padding-top: 20px; /* Ajoute un espace en haut */
+}
+/* Ou si vous voulez que le bouton soit tout en bas du conteneur */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 1.5rem;
+  min-height: 80px; /* Ajoute une hauteur minimale */
+}
 .page-header h1 {
   font-size: 2rem;
   font-weight: 600;

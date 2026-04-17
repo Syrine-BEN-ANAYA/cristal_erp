@@ -1,3 +1,4 @@
+// LoginPage.js - Version corrigée pour Sales & Purchases
 import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { login } from '../api/authService';
@@ -9,29 +10,74 @@ const LoginPage = ({ onLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
 
     try {
+      const selectedDeptType = localStorage.getItem('selectedDepartmentType');
+      const selectedDeptName = localStorage.getItem('selectedDepartmentName') || 'this department';
+      
       const res = await login(username, password);
       const { user, access_token } = res;
+      
+      const isSuperAdmin = user.role === "SUPER_ADMIN";
+      const isAdmin = user.role === "ADMIN";
+      const isUser = user.role === "USER";
+      
+      console.log("Role:", user.role);
+      console.log("selectedDeptType:", selectedDeptType);
+      
+      // === RÈGLES D'ACCÈS ===
+      
+      // 1. Département ADMIN : seulement ADMIN et SUPER_ADMIN
+      if (selectedDeptType === 'admin' && !isAdmin && !isSuperAdmin) {
+        setError(`⛔ Access Denied: "${selectedDeptName}" department is restricted to Administrators only.`);
+        setIsLoading(false);
+        return;
+      }
+      
+      // 2. Département USER : USER et SUPER_ADMIN (pas ADMIN normal)
+      if (selectedDeptType === 'user' && !isUser && !isSuperAdmin) {
+        setError(`⛔ Access Denied: "${selectedDeptName}" department is restricted to regular users and Super Administrators only.`);
+        setIsLoading(false);
+        return;
+      }
+      
+      // 3. Département ALL : tout le monde
+      if (selectedDeptType === 'all') {
+        // Tout le monde peut accéder
+      }
+      
       localStorage.setItem('token', access_token);
       onLogin(user, access_token);
+      
+      localStorage.removeItem('selectedDepartment');
+      localStorage.removeItem('selectedDepartmentType');
+      localStorage.removeItem('selectedDepartmentPath');
+      localStorage.removeItem('selectedDepartmentName');
+      localStorage.removeItem('isUnderDevelopment');
 
       if (user.mustChangePassword) {
         navigate("/change-password");
         return;
       }
 
-      if (user.role === "ADMIN" || user.role === "SUPER_ADMIN") {
+      // Redirection
+      if (selectedDeptType === 'admin') {
         navigate("/admin");
       } else {
         navigate("/user/reporting");
       }
+      
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      const errorMessage = err.response?.data?.message || err.message || 'Login failed';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -40,12 +86,15 @@ const LoginPage = ({ onLogin }) => {
       <div className="login-grid">
         <div className="login-brand">
           <div className="brand-content">
-            <h1 className="brand-title">AL RUBAI UNITED AL CRISTAL</h1>
+            <h1 className="brand-title">
+              AL RUBAI<span className="brand-separator"> | </span>UNITED CRISTAL
+            </h1>
             <h1 className="brand-title-ar">الكريستال الرباعي المتحدة</h1>
             <div className="brand-divider"></div>
-            <p className="brand-description">Premium Olive Oil · زيت زيتون فاخر</p>
+            <p className="brand-description">Enterprise Resource Planning</p>
             <div className="brand-decoration">
               <span className="olive-branch">🌿</span>
+              <span className="olive-branch">✨</span>
               <span className="olive-branch">🌿</span>
             </div>
           </div>
@@ -68,6 +117,8 @@ const LoginPage = ({ onLogin }) => {
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     required
+                    disabled={isLoading}
+                    autoComplete="off"
                   />
                 </div>
               </div>
@@ -84,11 +135,23 @@ const LoginPage = ({ onLogin }) => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    disabled={isLoading}
+                    autoComplete="off"
                   />
                 </div>
               </div>
 
-              <button type="submit" className="login-button">Log in</button>
+              <div className="form-options">
+                <label className="checkbox-label">
+                  <input type="checkbox" />
+                  <span>Remember me</span>
+                </label>
+                <a href="/forgot-password" className="forgot-link">Forgot password?</a>
+              </div>
+
+              <button type="submit" className="login-button" disabled={isLoading}>
+                {isLoading ? 'Checking...' : 'Log in'}
+              </button>
               {error && <div className="error-message">{error}</div>}
             </form>
             <p className="signup-prompt">Don't have an account? <a href="/contact">Contact support</a></p>
