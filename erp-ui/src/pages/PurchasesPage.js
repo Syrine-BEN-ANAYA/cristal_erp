@@ -12,7 +12,7 @@ import { getSuppliers } from '../api/suppliersService';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import logo from '../assets/logo.png';
-import { FiTrash2, FiDownload, FiPlus, FiX, FiDollarSign, FiShoppingBag, FiEdit, FiCheckCircle, FiGlobe } from 'react-icons/fi';
+import { FiTrash2, FiDownload, FiPlus, FiX, FiDollarSign, FiShoppingBag, FiEdit, FiCheckCircle, FiGlobe, FiAlertCircle } from 'react-icons/fi';
 import '../styles/PurchasesPage.css';
 
 export default function PurchasesPage({ token }) {
@@ -20,7 +20,8 @@ export default function PurchasesPage({ token }) {
   const [products, setProducts] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [totalPurchaseAmount, setTotalPurchaseAmount] = useState(0);
-  const [language, setLanguage] = useState('en'); // 'en' or 'ar'
+  const [language, setLanguage] = useState('en');
+  const [error, setError] = useState('');
 
   // Translations
   const t = {
@@ -58,11 +59,14 @@ export default function PurchasesPage({ token }) {
       total: 'Total',
       stock: 'Stock',
       selectProduct: 'Select product',
-      pleaseSelectSupplier: 'Please select a supplier',
+      pleaseSelectSupplier: 'Supplier is automatically set when you select a product',
       fillItemsCorrectly: 'All items must have a product, positive quantity, and non-negative price',
       errorSavingPurchase: 'Error saving purchase',
       failedToDelete: 'Failed to delete purchase',
-      failedToGeneratePDF: 'Failed to generate PDF'
+      failedToGeneratePDF: 'Failed to generate PDF',
+      supplierAutoFilled: 'Automatically fullfiled',
+      multipleSuppliersWarning: 'Products from different suppliers cannot be mixed in the same purchase',
+      productNotFound: 'Product not found'
     },
     ar: {
       purchases: 'المشتريات',
@@ -98,15 +102,19 @@ export default function PurchasesPage({ token }) {
       total: 'المجموع',
       stock: 'المخزون',
       selectProduct: 'اختر منتج',
-      pleaseSelectSupplier: 'الرجاء اختيار المورد',
+      pleaseSelectSupplier: 'يتم تعيين المورد تلقائياً عند اختيار المنتج',
       fillItemsCorrectly: 'يجب أن تحتوي جميع العناصر على منتج وكمية موجبة وسعر غير سالب',
       errorSavingPurchase: 'خطأ في حفظ عملية الشراء',
       failedToDelete: 'فشل حذف عملية الشراء',
-      failedToGeneratePDF: 'فشل إنشاء PDF'
+      failedToGeneratePDF: 'فشل إنشاء PDF',
+      supplierAutoFilled: 'تم تعيين المورد تلقائياً من المنتج',
+      multipleSuppliersWarning: 'لا يمكن خلط منتجات من موردين مختلفين في نفس عملية الشراء',
+      productNotFound: 'المنتج غير موجود'
     }
   };
 
   const currentLang = t[language];
+  const isRTL = language === 'ar';
 
   // États pour le formulaire d'ajout
   const [form, setForm] = useState({
@@ -122,7 +130,7 @@ export default function PurchasesPage({ token }) {
     items: [{ productId: '', quantity: 1, price: 0 }]
   });
 
-  // État pour le popup de succès (création)
+  // État pour le popup de succès
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
   // Auto-fermeture du popup après 5 secondes
@@ -132,6 +140,50 @@ export default function PurchasesPage({ token }) {
       return () => clearTimeout(timer);
     }
   }, [showSuccessPopup]);
+
+  // Effacer l'erreur après 5 secondes
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(''), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
+  // ---------------- Helper: Get supplier from product ----------------
+  const getSupplierFromProduct = (productId) => {
+    const product = products.find(p => p._id === productId);
+    return product?.supplierId?._id || product?.supplierId || null;
+  };
+
+  // ---------------- Helper: Check if all products have same supplier ----------------
+  const getUniqueSupplierFromItems = (items) => {
+    const supplierIds = items
+      .map(item => getSupplierFromProduct(item.productId))
+      .filter(id => id && id !== '');
+    
+    if (supplierIds.length === 0) return null;
+    
+    const uniqueSuppliers = [...new Set(supplierIds)];
+    return uniqueSuppliers.length === 1 ? uniqueSuppliers[0] : 'multiple';
+  };
+
+  // ---------------- Update supplier based on items ----------------
+  const updateSupplierFromItems = (items, setFormFunc) => {
+    const supplierId = getUniqueSupplierFromItems(items);
+    
+    if (supplierId === 'multiple') {
+      setError(currentLang.multipleSuppliersWarning);
+      setFormFunc(prev => ({ ...prev, supplierId: '' }));
+      return false;
+    } else if (supplierId) {
+      setError('');
+      setFormFunc(prev => ({ ...prev, supplierId }));
+      return true;
+    } else {
+      setFormFunc(prev => ({ ...prev, supplierId: '' }));
+      return false;
+    }
+  };
 
   // ---------------- Load Data ----------------
   const loadPurchases = useCallback(async () => {
@@ -178,11 +230,6 @@ export default function PurchasesPage({ token }) {
   }, [loadPurchases, loadProducts, loadSuppliers, loadTotalAmount]);
 
   // ---------------- Form Handlers (Add) ----------------
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
-  };
-
   const handleItemChange = (index, field, value) => {
     const newItems = [...form.items];
     if (field === 'quantity' || field === 'price') {
@@ -191,21 +238,22 @@ export default function PurchasesPage({ token }) {
       newItems[index][field] = value;
     }
     setForm(prev => ({ ...prev, items: newItems }));
+    
+    // Update supplier based on new items
+    updateSupplierFromItems(newItems, setForm);
   };
 
   const addItem = () => {
-    setForm(prev => ({
-      ...prev,
-      items: [...prev.items, { productId: '', quantity: 1, price: 0 }]
-    }));
+    const newItems = [...form.items, { productId: '', quantity: 1, price: 0 }];
+    setForm(prev => ({ ...prev, items: newItems }));
+    updateSupplierFromItems(newItems, setForm);
   };
 
   const removeItem = (index) => {
     if (form.items.length <= 1) return;
-    setForm(prev => ({
-      ...prev,
-      items: prev.items.filter((_, i) => i !== index)
-    }));
+    const newItems = form.items.filter((_, i) => i !== index);
+    setForm(prev => ({ ...prev, items: newItems }));
+    updateSupplierFromItems(newItems, setForm);
   };
 
   const resetForm = () => {
@@ -213,6 +261,7 @@ export default function PurchasesPage({ token }) {
       supplierId: '',
       items: [{ productId: '', quantity: 1, price: 0 }]
     });
+    setError('');
   };
 
   const calculateTotal = (items) => {
@@ -221,7 +270,7 @@ export default function PurchasesPage({ token }) {
 
   const handleSubmit = async () => {
     if (!form.supplierId) {
-      alert(currentLang.pleaseSelectSupplier);
+      alert(currentLang.multipleSuppliersWarning);
       return;
     }
     if (form.items.some(item => !item.productId || item.quantity < 1 || item.price < 0)) {
@@ -261,12 +310,14 @@ export default function PurchasesPage({ token }) {
     setEditForm({ supplierId, items });
     setEditingPurchaseId(purchase._id);
     setIsEditModalOpen(true);
+    setError('');
   };
 
   const closeEditModal = () => {
     setIsEditModalOpen(false);
     setEditingPurchaseId(null);
     setEditForm({ supplierId: '', items: [{ productId: '', quantity: 1, price: 0 }] });
+    setError('');
   };
 
   const handleEditItemChange = (index, field, value) => {
@@ -277,26 +328,25 @@ export default function PurchasesPage({ token }) {
       newItems[index][field] = value;
     }
     setEditForm(prev => ({ ...prev, items: newItems }));
+    updateSupplierFromItems(newItems, setEditForm);
   };
 
   const addEditItem = () => {
-    setEditForm(prev => ({
-      ...prev,
-      items: [...prev.items, { productId: '', quantity: 1, price: 0 }]
-    }));
+    const newItems = [...editForm.items, { productId: '', quantity: 1, price: 0 }];
+    setEditForm(prev => ({ ...prev, items: newItems }));
+    updateSupplierFromItems(newItems, setEditForm);
   };
 
   const removeEditItem = (index) => {
     if (editForm.items.length <= 1) return;
-    setEditForm(prev => ({
-      ...prev,
-      items: prev.items.filter((_, i) => i !== index)
-    }));
+    const newItems = editForm.items.filter((_, i) => i !== index);
+    setEditForm(prev => ({ ...prev, items: newItems }));
+    updateSupplierFromItems(newItems, setEditForm);
   };
 
   const handleUpdateSubmit = async () => {
     if (!editForm.supplierId) {
-      alert(currentLang.pleaseSelectSupplier);
+      alert(currentLang.multipleSuppliersWarning);
       return;
     }
     if (editForm.items.some(item => !item.productId || item.quantity < 1 || item.price < 0)) {
@@ -437,8 +487,14 @@ export default function PurchasesPage({ token }) {
     doc.save(`purchase_invoice_${purchase._id}_${language}.pdf`);
   };
 
+  // Get supplier name for display
+  const getSupplierName = (supplierId) => {
+    const supplier = suppliers.find(s => s._id === supplierId);
+    return supplier?.name || '—';
+  };
+
   return (
-    <div className="purchases-page" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="purchases-page" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Popup de succès après création */}
       {showSuccessPopup && (
         <div className="popup-overlay" onClick={() => setShowSuccessPopup(false)}>
@@ -462,13 +518,20 @@ export default function PurchasesPage({ token }) {
         </div>
       </div>
 
-      {/* Language Toggle Button - Floating */}
+      {/* Language Toggle Button */}
       <button 
         className="btn-language-floating" 
         onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
       >
         <FiGlobe size={18} /> {language === 'en' ? 'العربية' : 'English'}
       </button>
+
+      {/* Error Message */}
+      {error && (
+        <div className="error-message" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <FiAlertCircle /> {error}
+        </div>
+      )}
 
       {/* KPI */}
       <div className="kpi-grid" style={{ marginBottom: '2rem' }}>
@@ -491,13 +554,19 @@ export default function PurchasesPage({ token }) {
       {/* Formulaire d'ajout */}
       <div className="form-card">
         <h3>{currentLang.addNewPurchase}</h3>
+        
+        {/* Supplier field - Read only, auto-filled */}
         <div className="form-grid">
           <div className="input-group">
-            <label>{currentLang.supplier}</label>
-            <select name="supplierId" value={form.supplierId} onChange={handleChange}>
-              <option value="">{currentLang.selectSupplier}</option>
-              {suppliers.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
-            </select>
+            <label>{currentLang.supplier} <span className="required">*</span></label>
+            <input
+              type="text"
+              value={form.supplierId ? getSupplierName(form.supplierId) : currentLang.supplierAutoFilled}
+              readOnly
+              className="supplier-auto-field"
+              placeholder={currentLang.supplierAutoFilled}
+            />
+            <small className="field-hint">{currentLang.supplierAutoFilled}</small>
           </div>
         </div>
 
@@ -563,7 +632,7 @@ export default function PurchasesPage({ token }) {
       <div className="table-container">
         <h3>{currentLang.purchaseList}</h3>
         <div className="table-responsive">
-          <table>
+          <table className="purchases-table">
             <thead>
               <tr>
                 <th>{currentLang.supplier}</th>
@@ -583,7 +652,7 @@ export default function PurchasesPage({ token }) {
                         const product = products.find(pr => pr._id === (item.productId?._id || item.productId));
                         return (
                           <div key={item.productId?._id || item.productId} className="product-line">
-                            • {product?.name}
+                            • {product?.name} (x{item.quantity})
                           </div>
                         );
                       })}
@@ -626,13 +695,13 @@ export default function PurchasesPage({ token }) {
               <div className="form-grid">
                 <div className="input-group">
                   <label>{currentLang.supplier}</label>
-                  <select
-                    value={editForm.supplierId}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, supplierId: e.target.value }))}
-                  >
-                    <option value="">{currentLang.selectSupplier}</option>
-                    {suppliers.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
-                  </select>
+                  <input
+                    type="text"
+                    value={editForm.supplierId ? getSupplierName(editForm.supplierId) : currentLang.supplierAutoFilled}
+                    readOnly
+                    className="supplier-auto-field"
+                  />
+                  <small className="field-hint">{currentLang.supplierAutoFilled}</small>
                 </div>
               </div>
 

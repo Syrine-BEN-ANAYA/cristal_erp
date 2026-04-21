@@ -74,7 +74,57 @@ const LoginPage = ({ onLogin }) => {
       }
       
     } catch (err) {
-      const errorMessage = err.response?.data?.message || err.message || 'Login failed';
+      // === IMPROVED ERROR HANDLING ===
+      let errorMessage = 'Login failed';
+      
+      if (err.response) {
+        // Server responded with error status
+        const status = err.response.status;
+        const backendMessage = err.response?.data?.message || err.response?.data?.error || '';
+        
+        switch (status) {
+          case 400:
+            errorMessage = 'Invalid request. Please check your credentials.';
+            break;
+          case 401:
+            errorMessage = 'User does not exist';
+            break;
+          case 403:
+            errorMessage = 'Access forbidden. Please contact your administrator.';
+            break;
+          case 404:
+            errorMessage = 'User does not exist';
+            break;
+          case 429:
+            errorMessage = 'Too many attempts. Please try again later.';
+            break;
+          case 500:
+            errorMessage = 'Server error. Please try again later.';
+            break;
+          default:
+            // Check backend message for invalid credentials patterns
+            if (backendMessage && (
+              backendMessage.toLowerCase().includes('invalid') ||
+              backendMessage.toLowerCase().includes('credentials') ||
+              backendMessage.toLowerCase().includes('not found') ||
+              backendMessage.toLowerCase().includes('exist') ||
+              backendMessage.toLowerCase().includes('incorrect')
+            )) {
+              errorMessage = 'User does not exist';
+            } else if (backendMessage) {
+              errorMessage = backendMessage;
+            } else {
+              errorMessage = `Login failed (${status})`;
+            }
+        }
+      } else if (err.request) {
+        // Request was made but no response received
+        errorMessage = 'Network error. Please check your connection.';
+      } else {
+        // Something else happened
+        errorMessage = err.message || 'Login failed';
+      }
+      
       setError(errorMessage);
     } finally {
       setIsLoading(false);

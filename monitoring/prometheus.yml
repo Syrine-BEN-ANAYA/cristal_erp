@@ -1,19 +1,28 @@
 global:
-  scrape_interval: 15s
+  scrape_interval: 15s  # Collecte les métriques toutes les 15 secondes
 
 scrape_configs:
-  - job_name: 'auth-service'
+  # Surveillance de Prometheus lui-même
+  - job_name: 'prometheus'
     static_configs:
-      - targets: ['auth-service:3101'] 
+      - targets: ['localhost:9090']
 
-  - job_name: 'core-service'
-    static_configs:
-      - targets: ['core-service:3102']  
-
-  - job_name: 'api-gateway'
-    static_configs:
-      - targets: ['api-gateway:3104']  
-
+  # Surveillance de MongoDB (via l'exporter)
   - job_name: 'mongodb'
     static_configs:
-      - targets: ['mongodb-exporter:9216'] 
+      - targets: ['mongodb-exporter:9216']
+
+  # Surveillance de auth-service (si il expose /metrics)
+  - job_name: 'auth-service'
+    static_configs:
+      - targets: ['auth-service:3101']
+
+  # Surveillance de core-service
+  - job_name: 'core-service'
+    static_configs:
+      - targets: ['core-service:3102']
+
+  # Surveillance de api-gateway
+  - job_name: 'api-gateway'
+    static_configs:
+      - targets: ['api-gateway:3104']

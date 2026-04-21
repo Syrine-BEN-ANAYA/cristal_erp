@@ -13,6 +13,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      
 
   mongodb-exporter:
     image: bitnami/mongodb-exporter:latest
@@ -110,17 +111,24 @@ services:
       - mongodb-exporter
 
   grafana:
-    image: grafana/grafana:latest
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin
-    depends_on:
-      - prometheus
-    networks:
-      - erp-network
+   image: grafana/grafana:latest
+   ports:
+    - "3000:3000"
+   environment:
+    - GF_AUTH_ANONYMOUS_ENABLED=true
+    - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    - GF_SERVER_ALLOW_EMBEDDING=true
+    - GF_SECURITY_ALLOW_EMBEDDING=true
+    - GF_SERVER_SERVE_FROM_SUB_PATH=true
+    # VOICI LA LIGNE CRUCIALE POUR DÉSACTIVER X-FRAME-OPTIONS
+    - GF_SECURITY_X_FRAME_OPTIONS=allow-from http://localhost:3105
+    # OU utilisez cette ligne pour autoriser toutes les origines (développement uniquement)
+    - GF_SECURITY_X_FRAME_OPTIONS=
+   volumes:
+    - grafana-data:/var/lib/grafana
+    - ./monitoring/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+   networks:
+    - erp-network
 
   # ============================================
   # SonarQube avec PostgreSQL
@@ -179,7 +187,7 @@ volumes:
   # Volumes existants
   mongo-data:
   n8n-data:
-  # Nouveaux volumes pour SonarQube
+  grafana-data:
   sonarqube-db-data:
   sonarqube-data:
   sonarqube-extensions:

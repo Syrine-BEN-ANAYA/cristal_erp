@@ -1,11 +1,13 @@
-// AdminPage.js - Version bilingue avec tous les rôles
+// AdminPage.js - Version bilingue avec tous les rôles et recherche
 import React, { useEffect, useState, useCallback } from 'react';
 import { getUsers, createUser, updateUser, deleteUser, changePassword } from '../api/authService';
-import { FiPlus, FiEdit2, FiTrash2, FiLock, FiUser, FiShield, FiSave, FiRefreshCw, FiGlobe } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiLock, FiUser, FiShield, FiSave, FiRefreshCw, FiGlobe, FiSearch } from 'react-icons/fi';
 import '../styles/AdminPage.css';
 
 const AdminPage = ({ user, token }) => {
   const [users, setUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -31,7 +33,7 @@ const AdminPage = ({ user, token }) => {
       create: 'Create User',
       refresh: 'Refresh',
       confirmDelete: 'Delete user',
-      deleteConfirm: 'This action cannot be undone.',
+      deleteConfirm: 'Are you sure to delete ?.',
       allFieldsRequired: 'All fields required',
       passwordMinLength: 'Password must be at least 6 characters',
       passwordsDontMatch: "Passwords don't match",
@@ -46,7 +48,11 @@ const AdminPage = ({ user, token }) => {
       superAdminRole: 'Super Admin',
       editUser: 'Edit User',
       newPassword: 'New Password',
-      confirmPassword: 'Confirm Password'
+      confirmPassword: 'Confirm Password',
+      search: 'Search users...',
+      searchPlaceholder: 'Search by username or role...',
+      noSearchResults: 'No users match your search criteria.',
+      clearSearch: 'Clear search'
     },
     AR: {
       title: 'إدارة المستخدمين',
@@ -81,7 +87,11 @@ const AdminPage = ({ user, token }) => {
       superAdminRole: 'مدير عام',
       editUser: 'تعديل المستخدم',
       newPassword: 'كلمة المرور الجديدة',
-      confirmPassword: 'تأكيد كلمة المرور'
+      confirmPassword: 'تأكيد كلمة المرور',
+      search: 'البحث عن مستخدمين...',
+      searchPlaceholder: 'البحث باسم المستخدم أو الدور...',
+      noSearchResults: 'لا يوجد مستخدمون مطابقون لمعايير البحث',
+      clearSearch: 'مسح البحث'
     }
   };
 
@@ -101,6 +111,38 @@ const AdminPage = ({ user, token }) => {
   const [changingPasswordUser, setChangingPasswordUser] = useState(null);
   const [passwordForm, setPasswordForm] = useState({ newPassword: '', confirmPassword: '' });
 
+  // Search function
+  const handleSearch = useCallback((term) => {
+    setSearchTerm(term);
+    if (!term.trim()) {
+      setFilteredUsers(users);
+      return;
+    }
+    
+    const lowercasedTerm = term.toLowerCase();
+    const filtered = users.filter(user => {
+      // Search by username
+      const usernameMatch = user.username.toLowerCase().includes(lowercasedTerm);
+      
+      // Search by role (in current language)
+      const roleDisplayName = getRoleDisplayName(user.role);
+      const roleMatch = roleDisplayName.toLowerCase().includes(lowercasedTerm);
+      
+      // Search by role value (USER, ADMIN, SUPER_ADMIN)
+      const roleValueMatch = user.role.toLowerCase().includes(lowercasedTerm);
+      
+      return usernameMatch || roleMatch || roleValueMatch;
+    });
+    
+    setFilteredUsers(filtered);
+  }, [users]);
+
+  // Clear search
+  const clearSearch = () => {
+    setSearchTerm('');
+    setFilteredUsers(users);
+  };
+
   // Role options based on current user's role
   const getRoleOptions = () => {
     const options = [{ value: 'USER', label: t.userRole }];
@@ -118,7 +160,9 @@ const AdminPage = ({ user, token }) => {
     try {
       setLoading(true);
       const data = await getUsers(token);
-      setUsers(data.map(u => ({ ...u, id: u._id })));
+      const usersWithId = data.map(u => ({ ...u, id: u._id }));
+      setUsers(usersWithId);
+      setFilteredUsers(usersWithId);
       setError('');
     } catch (err) {
       setError(err.message || 'Failed to fetch users');
@@ -131,20 +175,43 @@ const AdminPage = ({ user, token }) => {
     if (token) fetchUsers();
   }, [token, fetchUsers]);
 
-  // Delete
-  const handleDelete = async (id, username) => {
-    if (!window.confirm(`${t.confirmDelete} "${username}"? ${t.deleteConfirm}`)) return;
-    try {
-      await deleteUser(id, token);
-      setUsers(users.filter(u => u.id !== id));
-      setSuccess(`${t.userDeleted}: "${username}"`);
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (err) {
-      setError(err.message);
-      setTimeout(() => setError(''), 3000);
+  // Update filtered users when users change
+  useEffect(() => {
+    if (searchTerm) {
+      handleSearch(searchTerm);
+    } else {
+      setFilteredUsers(users);
     }
-  };
+  }, [users, searchTerm, handleSearch]);
 
+  // Delete
+ const handleDelete = async (id, username) => {
+  // Check if user exists
+  const userExists = users.find(u => u.id === id);
+  if (!userExists) {
+    setError("User does not exist");
+    setTimeout(() => setError(''), 3000);
+    return;
+  }
+
+  // Confirmation
+  const confirmed = window.confirm(`${t.confirmDelete} "${username}"? ${t.deleteConfirm}`);
+  if (!confirmed) return;
+
+  try {
+    await deleteUser(id, token);
+
+    const updatedUsers = users.filter(u => u.id !== id);
+    setUsers(updatedUsers);
+
+    setSuccess(`${t.userDeleted}: "${username}"`);
+    setTimeout(() => setSuccess(''), 3000);
+
+  } catch (err) {
+    setError(err.message || "Delete failed");
+    setTimeout(() => setError(''), 3000);
+  }
+};
   // Edit
   const openEditModal = (u) => {
     setEditingUser(u);
@@ -161,7 +228,8 @@ const AdminPage = ({ user, token }) => {
     }
     try {
       const updated = await updateUser(editingUser.id, editForm, token);
-      setUsers(users.map(u => (u.id === editingUser.id ? { ...updated, id: updated._id } : u)));
+      const updatedUsers = users.map(u => (u.id === editingUser.id ? { ...updated, id: updated._id } : u));
+      setUsers(updatedUsers);
       setEditingUser(null);
       setSuccess(`${t.userUpdated}: "${editForm.username}"`);
       setTimeout(() => setSuccess(''), 3000);
@@ -203,11 +271,11 @@ const AdminPage = ({ user, token }) => {
   // Create user
   const handleCreate = async (e) => {
     e.preventDefault();
-    if (!newUsername || !newPassword) {
-      setError(t.allFieldsRequired);
-      setTimeout(() => setError(''), 3000);
-      return;
-    }
+  if (!newUsername.trim() || !newPassword.trim() || !newRole) {
+  setError(t.allFieldsRequired);
+  setTimeout(() => setError(''), 3000);
+  return;
+}
     if (newPassword.length < 6) {
       setError(t.passwordMinLength);
       setTimeout(() => setError(''), 3000);
@@ -224,7 +292,8 @@ const AdminPage = ({ user, token }) => {
         { username: newUsername, password: newPassword, role: newRole },
         token
       );
-      setUsers([...users, { ...created, id: created._id }]);
+      const newUser = { ...created, id: created._id };
+      setUsers([...users, newUser]);
       setNewUsername('');
       setNewPassword('');
       setNewRole('USER');
@@ -287,6 +356,29 @@ const AdminPage = ({ user, token }) => {
           </div>
         </div>
       </div>
+  
+{/* System Metrics Dashboard */}
+<div className="dashboard-card">
+  <div className="dashboard-header">
+    <h3>
+      <span role="img" aria-label="dashboard">📈</span>
+      System Metrics & Monitoring
+    </h3>
+    <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', marginTop: '0.5rem' }}>
+      Real-time system performance metrics
+    </p>
+  </div>
+  <div className="dashboard-container">
+    <iframe
+      src="http://localhost:3000/goto/afjshjythmg3ke?orgId=1&kiosk=1&refresh=10s&theme=dark"
+      className="grafana-iframe"
+      title="Grafana Dashboard"
+      allow="fullscreen"
+      loading="lazy"
+    ></iframe>
+  </div>
+</div>
+
 
       {/* Messages */}
       {error && <div className="error-message">{error}</div>}
@@ -347,10 +439,24 @@ const AdminPage = ({ user, token }) => {
         </form>
       </div>
 
-      {/* Users Table */}
+      {/* Users Table with Search */}
       <div className="table-card">
         <div className="card-header">
           <h3>{t.userList}</h3>
+          <div className="search-container">
+            <div className="search-wrapper">
+              <FiSearch className="search-icon" />
+              <input
+                type="text"
+                className="search-input"
+                placeholder={t.searchPlaceholder}
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+              />
+           
+            </div>
+           
+          </div>
         </div>
         <div className="table-wrapper">
           <table className="data-table">
@@ -362,12 +468,14 @@ const AdminPage = ({ user, token }) => {
               </tr>
             </thead>
             <tbody>
-              {users.length === 0 ? (
+              {filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan="3" className="empty-message">{t.noUsers}</td>
+                  <td colSpan="3" className="empty-message">
+                    {searchTerm ? t.noSearchResults : t.noUsers}
+                  </td>
                 </tr>
               ) : (
-                users.map(u => (
+                filteredUsers.map(u => (
                   <tr key={u.id}>
                     <td className="username-cell">
                       <span>{u.username}</span>

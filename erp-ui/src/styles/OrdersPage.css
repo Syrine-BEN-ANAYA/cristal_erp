@@ -40,7 +40,87 @@ button:focus {
   outline: none !important;
   box-shadow: none !important;
 }
+/* Customer info in table */
+.customer-info {
+  display: flex;
+  flex-direction: column;
+}
 
+.customer-info strong {
+  font-size: 14px;
+  color: #1f2937;
+}
+
+.customer-info small {
+  font-size: 11px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+/* Items list badges */
+.items-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.item-badge {
+  background-color: #f3f4f6;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  color: #374151;
+  white-space: nowrap;
+}
+
+/* Total cell */
+.total-cell {
+  font-weight: 600;
+  color: #10b981;
+}
+
+/* RTL support */
+.rtl .item-badge {
+  direction: rtl;
+}
+
+.rtl .customer-info {
+  text-align: right;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .orders-table thead {
+    display: none;
+  }
+  
+  .orders-table tbody tr {
+    display: block;
+    margin-bottom: 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+  }
+  
+  .orders-table tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  
+  .orders-table tbody td:before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #6b7280;
+    margin-right: 10px;
+  }
+  
+  .rtl .orders-table tbody td:before {
+    margin-right: 0;
+    margin-left: 10px;
+  }
+}
 .input-field:focus {
   outline: none !important;
   box-shadow: none !important;

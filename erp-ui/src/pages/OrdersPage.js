@@ -44,7 +44,7 @@ export default function OrdersPage({ token }) {
   const [error, setError] = useState('');
   const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState('');
-  const [language, setLanguage] = useState('en'); // 'en' or 'ar'
+  const [language, setLanguage] = useState('en');
 
   // Translations
   const t = {
@@ -65,7 +65,7 @@ export default function OrdersPage({ token }) {
       updateOrder: 'Update Order',
       cancel: 'Cancel',
       orderList: 'Order List',
-      id: 'ID',
+      customerName: 'Customer',
       items: 'Items',
       total: 'Total',
       date: 'Date',
@@ -106,7 +106,7 @@ export default function OrdersPage({ token }) {
       updateOrder: 'تحديث الطلب',
       cancel: 'إلغاء',
       orderList: 'قائمة الطلبات',
-      id: 'رقم',
+      customerName: 'العميل',
       items: 'المنتجات',
       total: 'المجموع',
       date: 'التاريخ',
@@ -133,6 +133,7 @@ export default function OrdersPage({ token }) {
   };
 
   const currentLang = t[language];
+  const isRTL = language === 'ar';
 
   // Form state
   const [form, setForm] = useState({
@@ -352,23 +353,22 @@ export default function OrdersPage({ token }) {
     }
   };
 
-  if (loading) return <div className="orders-page"><div className="loading">{currentLang.loading}</div></div>;
+  if (loading) return <div className="orders-page" dir={isRTL ? 'rtl' : 'ltr'}><div className="loading">{currentLang.loading}</div></div>;
 
   return (
-    <div className="orders-page" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="orders-page" dir={isRTL ? 'rtl' : 'ltr'}>
+      {/* Language Toggle Button - Floating */}
+      <button 
+        className="btn-language-floating" 
+        onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
+      >
+        <FiGlobe size={18} /> {language === 'en' ? 'العربية' : 'English'}
+      </button>
+
       <div className="page-header">
         <div>
           <h1>{currentLang.orders}</h1>
           <p>{currentLang.manageOrders}</p>
-        </div>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          {/* Language Toggle Button */}
-          <button 
-            className="btn-language" 
-            onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
-          >
-            <FiGlobe /> {language === 'en' ? 'العربية' : 'English'}
-          </button>
         </div>
       </div>
 
@@ -478,51 +478,71 @@ export default function OrdersPage({ token }) {
         </form>
       </div>
 
-      {/* Orders Table */}
+      {/* Orders Table - Without ID column */}
       <div className="table-container">
         <h3><FiShoppingCart /> {currentLang.orderList}</h3>
-        <table className="orders-table">
-          <thead>
-            <tr>
-              <th>{currentLang.id}</th>
-              <th>{currentLang.customer}</th>
-              <th>{currentLang.items}</th>
-              <th>{currentLang.total}</th>
-              <th>{currentLang.date}</th>
-              <th>{currentLang.actions}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.length === 0 ? (
-              <tr><td colSpan="6" className="empty-message">{currentLang.noOrders}</td></tr>
-            ) : (
-              orders.map(order => {
-                const customer = customers.find(c => c._id === (order.customerId?._id || order.customerId));
-                const total = order.totalAmount || calculateOrderTotal(order.items, products);
-                return (
-                  <tr key={order._id}>
-                    <td>{order._id.slice(-6)}</td>
-                    <td>{customer?.name || '—'}</td>
-                    <td>{order.items?.length || 0}</td>
-                    <td>{formatMoney(total)}</td>
-                    <td>{new Date(order.createdAt).toLocaleDateString(language === 'en' ? 'en-US' : 'ar-EG')}</td>
-                    <td className="actions">
-                      <button className="icon-btn" onClick={() => handleEdit(order)} title={currentLang.editOrder}>
-                        <FiEdit2 />
-                      </button>
-                      <button className="icon-btn delete-btn" onClick={() => handleDelete(order._id)} title={currentLang.deleteConfirm}>
-                        <FiTrash2 />
-                      </button>
-                      <button className="icon-btn" onClick={() => generateInvoicePDF(order)} title="Download PDF">
-                        <FiDownload />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+        <div className="table-responsive">
+          <table className="orders-table">
+            <thead>
+              <tr>
+                <th>{currentLang.customerName}</th>
+                <th>{currentLang.items}</th>
+                <th>{currentLang.total}</th>
+                <th>{currentLang.date}</th>
+                <th>{currentLang.actions}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {orders.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="empty-message">{currentLang.noOrders}</td>
+                </tr>
+              ) : (
+                orders.map(order => {
+                  const customer = customers.find(c => c._id === (order.customerId?._id || order.customerId));
+                  const total = order.totalAmount || calculateOrderTotal(order.items, products);
+                  return (
+                    <tr key={order._id}>
+                      <td data-label={currentLang.customerName}>
+                        <div className="customer-info">
+                          <strong>{customer?.name || '—'}</strong>
+                          {customer?.email && <small>{customer.email}</small>}
+                        </div>
+                      </td>
+                      <td data-label={currentLang.items}>
+                        <div className="items-list">
+                          {order.items.map((item, idx) => {
+                            const product = products.find(p => p._id === (item.productId?._id || item.productId));
+                            return (
+                              <div key={idx} className="item-badge">
+                                {product?.name} x{item.quantity}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </td>
+                      <td data-label={currentLang.total} className="total-cell">{formatMoney(total)}</td>
+                      <td data-label={currentLang.date}>
+                        {new Date(order.createdAt).toLocaleDateString(language === 'en' ? 'en-US' : 'ar-EG')}
+                      </td>
+                      <td data-label={currentLang.actions} className="actions">
+                        <button className="icon-btn edit-btn" onClick={() => handleEdit(order)} title={currentLang.editOrder}>
+                          <FiEdit2 />
+                        </button>
+                        <button className="icon-btn delete-btn" onClick={() => handleDelete(order._id)} title={currentLang.deleteConfirm}>
+                          <FiTrash2 />
+                        </button>
+                        <button className="icon-btn download-btn" onClick={() => generateInvoicePDF(order)} title="Download PDF">
+                          <FiDownload />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+           </table>
+        </div>
       </div>
     </div>
   );

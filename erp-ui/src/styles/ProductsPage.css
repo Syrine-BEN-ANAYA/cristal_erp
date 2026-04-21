@@ -137,7 +137,113 @@ button:focus {
   outline: none !important;
   box-shadow: none !important;
 }
+/* Input error styling */
+.input-error {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2 !important;
+}
 
+.input-error:focus {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+}
+
+/* Field error message */
+.field-error {
+  color: #dc2626;
+  font-size: 12px;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.field-error::before {
+  content: "⚠️";
+  font-size: 10px;
+}
+.required {
+  color: #ef4444;
+  margin-left: 4px;
+}
+
+.input-error {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2 !important;
+}
+
+.field-error {
+  color: #dc2626;
+  font-size: 12px;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.field-hint {
+  font-size: 11px;
+  color: #6b7280;
+  margin-top: 4px;
+  display: block;
+}
+/* Supplier auto field */
+.supplier-auto-field {
+  background-color: #f3f4f6;
+  cursor: not-allowed;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 12px;
+  width: 100%;
+  font-size: 14px;
+  color: #374151;
+}
+
+.supplier-auto-field:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.field-hint {
+  font-size: 11px;
+  color: #6b7280;
+  margin-top: 4px;
+  display: block;
+}
+
+.required {
+  color: #ef4444;
+  margin-left: 4px;
+}
+
+.error-message {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+/* RTL Support */
+.rtl .required {
+  margin-left: 0;
+  margin-right: 4px;
+}
+.input-group input:read-only {
+  background-color: #f3f4f6;
+  cursor: not-allowed;
+}
+.field-error::before {
+  content: "⚠️";
+  font-size: 10px;
+}
+/* Required field indicator */
+.input-group label span.required {
+  color: #ef4444;
+  margin-left: 4px;
+}
 .input-field:focus {
   outline: none !important;
   box-shadow: none !important;
