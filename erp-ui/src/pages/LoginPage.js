@@ -11,6 +11,103 @@ const LoginPage = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+
+  // Helper function to safely set localStorage
+  const safeSetLocalStorage = (key, value) => {
+    try {
+      localStorage.setItem(key, value);
+      return true;
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn(`Failed to save to localStorage: ${key}`, err);
+      return false;
+    }
+  };
+
+  // Helper function to safely remove from localStorage
+  const safeRemoveLocalStorage = (key) => {
+    try {
+      localStorage.removeItem(key);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn(`Failed to remove from localStorage: ${key}`, err);
+    }
+  };
+
+  // Helper function to check department access
+  const checkDepartmentAccess = (selectedDeptType, userRole) => {
+    const isSuperAdmin = userRole === "SUPER_ADMIN";
+    const isAdmin = userRole === "ADMIN";
+    const isUser = userRole === "USER";
+
+    switch (selectedDeptType) {
+      case 'admin':
+        return isAdmin || isSuperAdmin;
+      case 'user':
+        return isUser || isSuperAdmin;
+      case 'all':
+        return true;
+      default:
+        return true;
+    }
+  };
+
+  // Helper function to get access denied message
+  const getAccessDeniedMessage = (selectedDeptType, selectedDeptName) => {
+    if (selectedDeptType === 'admin') {
+      return `⛔ Access Denied: "${selectedDeptName}" department is restricted to Administrators only.`;
+    }
+    if (selectedDeptType === 'user') {
+      return `⛔ Access Denied: "${selectedDeptName}" department is restricted to regular users and Super Administrators only.`;
+    }
+    return `⛔ Access Denied: You don't have permission for "${selectedDeptName}" department.`;
+  };
+
+  // Helper function to get error message from response
+  const getErrorMessage = (err) => {
+    if (!err.response) {
+      if (err.request) {
+        return 'Network error. Please check your connection.';
+      }
+      return err.message || 'Login failed';
+    }
+
+    const status = err.response.status;
+    const backendMessage = err.response?.data?.message || err.response?.data?.error || '';
+
+    switch (status) {
+      case 400:
+        return 'Invalid request. Please check your credentials.';
+      case 401:
+      case 404:
+        return 'User does not exist';
+      case 403:
+        return 'Access forbidden. Please contact your administrator.';
+      case 429:
+        return 'Too many attempts. Please try again later.';
+      case 500:
+        return 'Server error. Please try again later.';
+      default:
+        // Check backend message for invalid credentials patterns
+        if (backendMessage && /invalid|credentials|not found|exist|incorrect/i.test(backendMessage)) {
+          return 'User does not exist';
+        }
+        return backendMessage || `Login failed (${status})`;
+    }
+  };
+
+  // Helper function to clear department storage
+  const clearDepartmentStorage = () => {
+    const keysToRemove = [
+      'selectedDepartment',
+      'selectedDepartmentType',
+      'selectedDepartmentPath',
+      'selectedDepartmentName',
+      'isUnderDevelopment'
+    ];
+    keysToRemove.forEach(key => safeRemoveLocalStorage(key));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,110 +121,74 @@ const LoginPage = ({ onLogin }) => {
       const res = await login(username, password);
       const { user, access_token } = res;
       
-      const isSuperAdmin = user.role === "SUPER_ADMIN";
-      const isAdmin = user.role === "ADMIN";
-      const isUser = user.role === "USER";
-      
-      console.log("Role:", user.role);
-      console.log("selectedDeptType:", selectedDeptType);
-      
-      // === RÈGLES D'ACCÈS ===
-      
-      // 1. Département ADMIN : seulement ADMIN et SUPER_ADMIN
-      if (selectedDeptType === 'admin' && !isAdmin && !isSuperAdmin) {
-        setError(`⛔ Access Denied: "${selectedDeptName}" department is restricted to Administrators only.`);
+      // Check department access
+      const hasAccess = checkDepartmentAccess(selectedDeptType, user.role);
+      if (!hasAccess) {
+        const errorMsg = getAccessDeniedMessage(selectedDeptType, selectedDeptName);
+        setError(errorMsg);
         setIsLoading(false);
         return;
       }
       
-      // 2. Département USER : USER et SUPER_ADMIN (pas ADMIN normal)
-      if (selectedDeptType === 'user' && !isUser && !isSuperAdmin) {
-        setError(`⛔ Access Denied: "${selectedDeptName}" department is restricted to regular users and Super Administrators only.`);
-        setIsLoading(false);
-        return;
+      // Save token with remember me option
+      if (rememberMe) {
+        safeSetLocalStorage('token', access_token);
+      } else {
+        safeSetLocalStorage('token', access_token);
+        // For session-only storage, we could use sessionStorage
+        // sessionStorage.setItem('token', access_token);
       }
       
-      // 3. Département ALL : tout le monde
-      if (selectedDeptType === 'all') {
-        // Tout le monde peut accéder
-      }
-      
-      localStorage.setItem('token', access_token);
       onLogin(user, access_token);
-      
-      localStorage.removeItem('selectedDepartment');
-      localStorage.removeItem('selectedDepartmentType');
-      localStorage.removeItem('selectedDepartmentPath');
-      localStorage.removeItem('selectedDepartmentName');
-      localStorage.removeItem('isUnderDevelopment');
+      clearDepartmentStorage();
 
       if (user.mustChangePassword) {
         navigate("/change-password");
         return;
       }
 
-      // Redirection
-      if (selectedDeptType === 'admin') {
-        navigate("/admin");
-      } else {
-        navigate("/user/reporting");
-      }
+      // Redirection based on department
+      const redirectPath = selectedDeptType === 'admin' ? "/admin" : "/user/reporting";
+      navigate(redirectPath);
       
     } catch (err) {
-      // === IMPROVED ERROR HANDLING ===
-      let errorMessage = 'Login failed';
-      
-      if (err.response) {
-        // Server responded with error status
-        const status = err.response.status;
-        const backendMessage = err.response?.data?.message || err.response?.data?.error || '';
-        
-        switch (status) {
-          case 400:
-            errorMessage = 'Invalid request. Please check your credentials.';
-            break;
-          case 401:
-            errorMessage = 'User does not exist';
-            break;
-          case 403:
-            errorMessage = 'Access forbidden. Please contact your administrator.';
-            break;
-          case 404:
-            errorMessage = 'User does not exist';
-            break;
-          case 429:
-            errorMessage = 'Too many attempts. Please try again later.';
-            break;
-          case 500:
-            errorMessage = 'Server error. Please try again later.';
-            break;
-          default:
-            // Check backend message for invalid credentials patterns
-            if (backendMessage && (
-              backendMessage.toLowerCase().includes('invalid') ||
-              backendMessage.toLowerCase().includes('credentials') ||
-              backendMessage.toLowerCase().includes('not found') ||
-              backendMessage.toLowerCase().includes('exist') ||
-              backendMessage.toLowerCase().includes('incorrect')
-            )) {
-              errorMessage = 'User does not exist';
-            } else if (backendMessage) {
-              errorMessage = backendMessage;
-            } else {
-              errorMessage = `Login failed (${status})`;
-            }
-        }
-      } else if (err.request) {
-        // Request was made but no response received
-        errorMessage = 'Network error. Please check your connection.';
-      } else {
-        // Something else happened
-        errorMessage = err.message || 'Login failed';
-      }
-      
+      const errorMessage = getErrorMessage(err);
       setError(errorMessage);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Load saved credentials if remember me was checked
+  React.useEffect(() => {
+    try {
+      const savedUsername = localStorage.getItem('rememberedUsername');
+      if (savedUsername) {
+        setUsername(savedUsername);
+        setRememberMe(true);
+      }
+    } catch (err) {
+      // Silent fail for localStorage issues
+    }
+  }, []);
+
+  // Save username if remember me is checked
+  const handleRememberMeChange = (e) => {
+    const isChecked = e.target.checked;
+    setRememberMe(isChecked);
+    
+    if (!isChecked) {
+      try {
+        localStorage.removeItem('rememberedUsername');
+      } catch (err) {
+        // Silent fail
+      }
+    } else if (username) {
+      try {
+        localStorage.setItem('rememberedUsername', username);
+      } catch (err) {
+        // Silent fail
+      }
     }
   };
 
@@ -193,7 +254,12 @@ const LoginPage = ({ onLogin }) => {
 
               <div className="form-options">
                 <label className="checkbox-label">
-                  <input type="checkbox" />
+                  <input 
+                    type="checkbox" 
+                    checked={rememberMe}
+                    onChange={handleRememberMeChange}
+                    disabled={isLoading}
+                  />
                   <span>Remember me</span>
                 </label>
                 <a href="/forgot-password" className="forgot-link">Forgot password?</a>

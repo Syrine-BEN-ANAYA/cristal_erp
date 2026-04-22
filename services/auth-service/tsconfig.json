@@ -2,22 +2,51 @@
   "compilerOptions": {
     "module": "commonjs",
     "declaration": true,
-     "esModuleInterop": true,
+    "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "target": "es2020",
     "sourceMap": true,
-    "outDir": "./dist",
+    "outDir": "dist",
     "incremental": true,
     "strict": true,
     "skipLibCheck": true,
-    "strictPropertyInitialization": false,
-    "baseUrl": "./",
-    "paths": {
-      "*": ["node_modules/*"]
-    }
+    "strictPropertyInitialization": false
   },
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    "./src/app.controller.ts",
+        "./src/app.module.ts",
+        "./src/app.service.ts",
+        "./src/health.controller.ts",
+        "./src/main.ts",
+        "./src/audit/audit.controller.ts",
+        "./src/audit/audit.module.ts",
+        "./src/audit/audit.service.ts",
+        "./src/audit/schemas/audit.schema.ts",
+        "./src/auth/auth.controller.ts",
+        "./src/auth/auth.module.ts",
+        "./src/auth/auth.service.ts",
+        "./src/auth/decorators/roles.decorator.ts",
+        "./src/auth/decorators/user.decorator.ts",
+        "./src/auth/dto/change-password.dto.ts",
+        "./src/auth/dto/login.dto.ts",
+        "./src/auth/dto/register.dto.ts",
+        "./src/auth/guards/jwt-auth.guard.ts",
+        "./src/auth/guards/must-change-password.guard.ts",
+        "./src/auth/guards/roles.guard.ts",
+        "./src/auth/strategies/jwt.strategy.ts",
+        "./src/users/users.controller.ts",
+        "./src/users/users.module.ts",
+        "./src/users/users.service.ts",
+        "./src/users/dto/change-password.dto.ts",
+        "./src/users/dto/create-user.dto.ts",
+        "./src/users/dto/update-user.dto.ts",
+        "./src/users/schemas/user.schema.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }
