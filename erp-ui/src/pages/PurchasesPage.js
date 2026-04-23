@@ -1,5 +1,5 @@
-// src/pages/PurchasesPage.js
-import React, { useState, useEffect, useCallback } from 'react';
+// PurchasesPage.js - Version modernisée avec thème bleu & doré
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   getPurchases,
   createPurchase,
@@ -12,7 +12,11 @@ import { getSuppliers } from '../api/suppliersService';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import logo from '../assets/logo.png';
-import { FiTrash2, FiDownload, FiPlus, FiX, FiDollarSign, FiShoppingBag, FiEdit, FiCheckCircle, FiGlobe, FiAlertCircle } from 'react-icons/fi';
+import { 
+  FiTrash2, FiDownload, FiPlus, FiX, FiDollarSign, FiShoppingBag, 
+  FiEdit, FiCheckCircle, FiGlobe, FiAlertCircle, FiRefreshCw,
+  FiPackage, FiTruck, FiCalendar, FiTrendingUp
+} from 'react-icons/fi';
 import '../styles/PurchasesPage.css';
 
 export default function PurchasesPage({ token }) {
@@ -22,16 +26,18 @@ export default function PurchasesPage({ token }) {
   const [totalPurchaseAmount, setTotalPurchaseAmount] = useState(0);
   const [language, setLanguage] = useState('en');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Translations
-  const t = {
+  const translations = {
     en: {
-      purchases: 'Purchases',
-      managePurchases: 'Manage all purchases',
+      purchases: 'Purchases Management',
+      managePurchases: 'Manage purchase orders and track expenses',
       totalPurchases: 'Total Purchases',
       totalAmount: 'Total Amount',
-      addNewPurchase: 'Add New Purchase',
-      editPurchase: 'Edit Purchase',
+      addNewPurchase: 'Create New Purchase Order',
+      editPurchase: 'Edit Purchase Order',
       supplier: 'Supplier',
       selectSupplier: 'Select supplier',
       products: 'Products',
@@ -39,16 +45,19 @@ export default function PurchasesPage({ token }) {
       quantity: 'Quantity',
       unitPrice: 'Unit Price',
       addProduct: 'Add Product',
-      addPurchase: 'Add Purchase',
+      addPurchase: 'Create Purchase',
       updatePurchase: 'Update Purchase',
       cancel: 'Cancel',
-      purchaseList: 'Purchase List',
+      purchaseList: 'Purchase Orders',
       actions: 'Actions',
-      noPurchases: 'No purchases found.',
+      noPurchases: 'No purchase orders found.',
       success: 'Purchase Created!',
-      invoiceSent: 'Invoice sent by email to the supplier.',
+      purchaseCreated: 'Purchase order created successfully!',
+      purchaseUpdated: 'Purchase order updated successfully!',
+      invoiceSent: 'Invoice sent to supplier.',
       deleteConfirm: 'Are you sure you want to delete this purchase?',
       loading: 'Loading purchases...',
+      refreshing: 'Refreshing...',
       purchaseInvoice: 'PURCHASE INVOICE',
       invoiceNumber: 'Invoice #',
       invoiceDate: 'Invoice Date',
@@ -64,17 +73,19 @@ export default function PurchasesPage({ token }) {
       errorSavingPurchase: 'Error saving purchase',
       failedToDelete: 'Failed to delete purchase',
       failedToGeneratePDF: 'Failed to generate PDF',
-      supplierAutoFilled: 'Automatically fullfiled',
-      multipleSuppliersWarning: 'Products from different suppliers cannot be mixed in the same purchase',
-      productNotFound: 'Product not found'
+      supplierAutoFilled: 'Auto-filled from product',
+      multipleSuppliersWarning: 'Products from different suppliers cannot be mixed',
+      productNotFound: 'Product not found',
+      avgPurchaseValue: 'Avg Purchase Value',
+      thisMonth: 'This Month'
     },
     ar: {
-      purchases: 'المشتريات',
-      managePurchases: 'إدارة جميع المشتريات',
+      purchases: 'إدارة المشتريات',
+      managePurchases: 'إدارة أوامر الشراء وتتبع المصروفات',
       totalPurchases: 'إجمالي المشتريات',
       totalAmount: 'المبلغ الإجمالي',
-      addNewPurchase: 'إضافة عملية شراء جديدة',
-      editPurchase: 'تعديل عملية الشراء',
+      addNewPurchase: 'إنشاء أمر شراء جديد',
+      editPurchase: 'تعديل أمر الشراء',
       supplier: 'المورد',
       selectSupplier: 'اختر المورد',
       products: 'المنتجات',
@@ -82,16 +93,19 @@ export default function PurchasesPage({ token }) {
       quantity: 'الكمية',
       unitPrice: 'سعر الوحدة',
       addProduct: 'إضافة منتج',
-      addPurchase: 'إضافة شراء',
+      addPurchase: 'إنشاء شراء',
       updatePurchase: 'تحديث الشراء',
       cancel: 'إلغاء',
-      purchaseList: 'قائمة المشتريات',
+      purchaseList: 'أوامر الشراء',
       actions: 'إجراءات',
-      noPurchases: 'لا توجد مشتريات.',
+      noPurchases: 'لا توجد أوامر شراء',
       success: 'تم إنشاء عملية الشراء!',
-      invoiceSent: 'تم إرسال الفاتورة بالبريد الإلكتروني إلى المورد.',
+      purchaseCreated: 'تم إنشاء أمر الشراء بنجاح!',
+      purchaseUpdated: 'تم تحديث أمر الشراء بنجاح!',
+      invoiceSent: 'تم إرسال الفاتورة إلى المورد',
       deleteConfirm: 'هل أنت متأكد من حذف عملية الشراء هذه؟',
       loading: 'جاري تحميل المشتريات...',
+      refreshing: 'جاري التحديث...',
       purchaseInvoice: 'فاتورة الشراء',
       invoiceNumber: 'رقم الفاتورة',
       invoiceDate: 'تاريخ الفاتورة',
@@ -107,41 +121,39 @@ export default function PurchasesPage({ token }) {
       errorSavingPurchase: 'خطأ في حفظ عملية الشراء',
       failedToDelete: 'فشل حذف عملية الشراء',
       failedToGeneratePDF: 'فشل إنشاء PDF',
-      supplierAutoFilled: 'تم تعيين المورد تلقائياً من المنتج',
-      multipleSuppliersWarning: 'لا يمكن خلط منتجات من موردين مختلفين في نفس عملية الشراء',
-      productNotFound: 'المنتج غير موجود'
+      supplierAutoFilled: 'تم التعيين تلقائياً من المنتج',
+      multipleSuppliersWarning: 'لا يمكن خلط منتجات من موردين مختلفين',
+      productNotFound: 'المنتج غير موجود',
+      avgPurchaseValue: 'متوسط قيمة الشراء',
+      thisMonth: 'هذا الشهر'
     }
   };
 
-  const currentLang = t[language];
+  const currentLang = translations[language];
   const isRTL = language === 'ar';
 
-  // États pour le formulaire d'ajout
   const [form, setForm] = useState({
     supplierId: '',
-    items: [{ productId: '', quantity: 1, price: 0 }]
+    items: [{ id: Date.now(), productId: '', quantity: 1, price: 0 }]
   });
 
-  // États pour le modal d'édition
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingPurchaseId, setEditingPurchaseId] = useState(null);
   const [editForm, setEditForm] = useState({
     supplierId: '',
-    items: [{ productId: '', quantity: 1, price: 0 }]
+    items: [{ id: Date.now(), productId: '', quantity: 1, price: 0 }]
   });
 
-  // État pour le popup de succès
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
-  // Auto-fermeture du popup après 5 secondes
   useEffect(() => {
     if (showSuccessPopup) {
-      const timer = setTimeout(() => setShowSuccessPopup(false), 5000);
+      const timer = setTimeout(() => setShowSuccessPopup(false), 4000);
       return () => clearTimeout(timer);
     }
   }, [showSuccessPopup]);
 
-  // Effacer l'erreur après 5 secondes
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => setError(''), 5000);
@@ -149,25 +161,28 @@ export default function PurchasesPage({ token }) {
     }
   }, [error]);
 
-  // ---------------- Helper: Get supplier from product ----------------
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => setSuccess(''), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
+
   const getSupplierFromProduct = (productId) => {
     const product = products.find(p => p._id === productId);
     return product?.supplierId?._id || product?.supplierId || null;
   };
 
-  // ---------------- Helper: Check if all products have same supplier ----------------
   const getUniqueSupplierFromItems = (items) => {
     const supplierIds = items
       .map(item => getSupplierFromProduct(item.productId))
       .filter(id => id && id !== '');
     
     if (supplierIds.length === 0) return null;
-    
     const uniqueSuppliers = [...new Set(supplierIds)];
     return uniqueSuppliers.length === 1 ? uniqueSuppliers[0] : 'multiple';
   };
 
-  // ---------------- Update supplier based on items ----------------
   const updateSupplierFromItems = (items, setFormFunc) => {
     const supplierId = getUniqueSupplierFromItems(items);
     
@@ -185,11 +200,10 @@ export default function PurchasesPage({ token }) {
     }
   };
 
-  // ---------------- Load Data ----------------
   const loadPurchases = useCallback(async () => {
     try {
       const data = await getPurchases(token);
-      setPurchases(data);
+      setPurchases(data || []);
     } catch (err) {
       console.error('Failed to load purchases:', err.message);
     }
@@ -198,7 +212,7 @@ export default function PurchasesPage({ token }) {
   const loadProducts = useCallback(async () => {
     try {
       const data = await getProducts(token);
-      setProducts(data);
+      setProducts(data || []);
     } catch (err) {
       console.error('Failed to load products:', err.message);
     }
@@ -207,7 +221,7 @@ export default function PurchasesPage({ token }) {
   const loadSuppliers = useCallback(async () => {
     try {
       const data = await getSuppliers(token);
-      setSuppliers(data);
+      setSuppliers(data || []);
     } catch (err) {
       console.error('Failed to load suppliers:', err.message);
     }
@@ -222,14 +236,49 @@ export default function PurchasesPage({ token }) {
     }
   }, [token]);
 
-  useEffect(() => {
-    loadPurchases();
-    loadProducts();
-    loadSuppliers();
-    loadTotalAmount();
-  }, [loadPurchases, loadProducts, loadSuppliers, loadTotalAmount]);
+  const loadAllData = useCallback(async (showRefresh = false) => {
+    if (!token) return;
+    try {
+      if (showRefresh) setRefreshing(true);
+      else setLoading(true);
+      
+      await Promise.all([
+        loadPurchases(),
+        loadProducts(),
+        loadSuppliers(),
+        loadTotalAmount()
+      ]);
+    } catch (err) {
+      console.error('Failed to load data:', err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [token, loadPurchases, loadProducts, loadSuppliers, loadTotalAmount]);
 
-  // ---------------- Form Handlers (Add) ----------------
+  useEffect(() => {
+    loadAllData();
+  }, [loadAllData]);
+
+  const metrics = useMemo(() => {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    const thisMonthPurchases = purchases.filter(purchase => {
+      const date = new Date(purchase.createdAt);
+      return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+    });
+    const thisMonthAmount = thisMonthPurchases.reduce((sum, p) => sum + (p.totalAmount || 0), 0);
+    const avgPurchaseValue = purchases.length > 0 ? totalPurchaseAmount / purchases.length : 0;
+    
+    return {
+      totalPurchases: purchases.length,
+      totalAmount: totalPurchaseAmount,
+      avgPurchaseValue,
+      thisMonthCount: thisMonthPurchases.length,
+      thisMonthAmount
+    };
+  }, [purchases, totalPurchaseAmount]);
+
   const handleItemChange = (index, field, value) => {
     const newItems = [...form.items];
     if (field === 'quantity' || field === 'price') {
@@ -238,13 +287,11 @@ export default function PurchasesPage({ token }) {
       newItems[index][field] = value;
     }
     setForm(prev => ({ ...prev, items: newItems }));
-    
-    // Update supplier based on new items
     updateSupplierFromItems(newItems, setForm);
   };
 
   const addItem = () => {
-    const newItems = [...form.items, { productId: '', quantity: 1, price: 0 }];
+    const newItems = [...form.items, { id: Date.now(), productId: '', quantity: 1, price: 0 }];
     setForm(prev => ({ ...prev, items: newItems }));
     updateSupplierFromItems(newItems, setForm);
   };
@@ -259,7 +306,7 @@ export default function PurchasesPage({ token }) {
   const resetForm = () => {
     setForm({
       supplierId: '',
-      items: [{ productId: '', quantity: 1, price: 0 }]
+      items: [{ id: Date.now(), productId: '', quantity: 1, price: 0 }]
     });
     setError('');
   };
@@ -268,13 +315,18 @@ export default function PurchasesPage({ token }) {
     return items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
   };
 
+  const showSuccessMessage = (msg) => {
+    setSuccessMessage(msg);
+    setShowSuccessPopup(true);
+  };
+
   const handleSubmit = async () => {
     if (!form.supplierId) {
-      alert(currentLang.multipleSuppliersWarning);
+      setError(currentLang.multipleSuppliersWarning);
       return;
     }
     if (form.items.some(item => !item.productId || item.quantity < 1 || item.price < 0)) {
-      alert(currentLang.fillItemsCorrectly);
+      setError(currentLang.fillItemsCorrectly);
       return;
     }
 
@@ -289,20 +341,18 @@ export default function PurchasesPage({ token }) {
 
     try {
       await createPurchase(payload, token);
-      setShowSuccessPopup(true);
+      showSuccessMessage(`${currentLang.purchaseCreated} ${currentLang.invoiceSent}`);
       resetForm();
-      loadPurchases();
-      loadTotalAmount();
+      loadAllData();
     } catch (err) {
-      console.error('Failed to save purchase:', err.message);
-      alert(err.response?.data?.message || err.message || currentLang.errorSavingPurchase);
+      setError(err.response?.data?.message || err.message || currentLang.errorSavingPurchase);
     }
   };
 
-  // ---------------- Update Handlers ----------------
   const openEditModal = (purchase) => {
     const supplierId = purchase.supplierId?._id || purchase.supplierId;
-    const items = purchase.items.map(item => ({
+    const items = purchase.items.map((item, idx) => ({
+      id: Date.now() + idx,
       productId: item.productId?._id || item.productId,
       quantity: item.quantity,
       price: item.price
@@ -316,7 +366,7 @@ export default function PurchasesPage({ token }) {
   const closeEditModal = () => {
     setIsEditModalOpen(false);
     setEditingPurchaseId(null);
-    setEditForm({ supplierId: '', items: [{ productId: '', quantity: 1, price: 0 }] });
+    setEditForm({ supplierId: '', items: [{ id: Date.now(), productId: '', quantity: 1, price: 0 }] });
     setError('');
   };
 
@@ -332,7 +382,7 @@ export default function PurchasesPage({ token }) {
   };
 
   const addEditItem = () => {
-    const newItems = [...editForm.items, { productId: '', quantity: 1, price: 0 }];
+    const newItems = [...editForm.items, { id: Date.now(), productId: '', quantity: 1, price: 0 }];
     setEditForm(prev => ({ ...prev, items: newItems }));
     updateSupplierFromItems(newItems, setEditForm);
   };
@@ -346,11 +396,11 @@ export default function PurchasesPage({ token }) {
 
   const handleUpdateSubmit = async () => {
     if (!editForm.supplierId) {
-      alert(currentLang.multipleSuppliersWarning);
+      setError(currentLang.multipleSuppliersWarning);
       return;
     }
     if (editForm.items.some(item => !item.productId || item.quantity < 1 || item.price < 0)) {
-      alert(currentLang.fillItemsCorrectly);
+      setError(currentLang.fillItemsCorrectly);
       return;
     }
 
@@ -365,274 +415,329 @@ export default function PurchasesPage({ token }) {
 
     try {
       await updatePurchase(editingPurchaseId, payload, token);
+      setSuccess(currentLang.purchaseUpdated);
       closeEditModal();
-      loadPurchases();
-      loadTotalAmount();
+      loadAllData();
     } catch (err) {
-      console.error('Failed to update purchase:', err.message);
-      alert(err.response?.data?.message || err.message || currentLang.errorSavingPurchase);
+      setError(err.response?.data?.message || err.message || currentLang.errorSavingPurchase);
     }
   };
 
-  // ---------------- Delete ----------------
   const handleDelete = async (id) => {
     if (!window.confirm(currentLang.deleteConfirm)) return;
     try {
       await deletePurchase(id, token);
-      loadPurchases();
-      loadTotalAmount();
+      setSuccess('Purchase deleted successfully');
+      loadAllData();
     } catch (err) {
-      console.error('Failed to delete purchase:', err.message);
-      alert(err.response?.data?.message || err.message || currentLang.failedToDelete);
+      setError(err.response?.data?.message || err.message || currentLang.failedToDelete);
     }
   };
 
-  // ---------------- Generate Invoice PDF (Bilingual) ----------------
-  const generateInvoicePDF = (purchase) => {
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 15;
-    let y = 20;
-
-    try {
-      doc.addImage(logo, 'PNG', margin, y, 40, 20);
-    } catch (e) {
-      console.warn('Logo could not be loaded', e);
-    }
-
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(10, 43, 78);
-    doc.text('AL RUBAI UNITED AL CRISTAL', pageWidth / 2, y + 10, { align: 'center' });
-    
-    y += 8;
-    doc.setFontSize(12);
-    doc.text('الكريستال الرباعي المتحدة', pageWidth / 2, y + 10, { align: 'center' });
-
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(60, 60, 60);
-    doc.text('Muscat, Oman', pageWidth - margin, y + 18, { align: 'right' });
-    doc.text('Email: info@cristal.om', pageWidth - margin, y + 23, { align: 'right' });
-
-    y += 30;
-
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text(currentLang.purchaseInvoice, margin, y);
-
-    y += 10;
-
-    doc.setFontSize(10);
-    doc.setTextColor(80, 80, 80);
-    doc.setFont('helvetica', 'normal');
-
-    const invoiceNumber = `PUR-${purchase._id.slice(-8)}`;
-    doc.text(`${currentLang.invoiceNumber}: ${invoiceNumber}`, margin, y);
-    doc.text(`${currentLang.invoiceDate}: ${new Date().toLocaleDateString(language === 'en' ? 'en-GB' : 'ar-EG')}`, margin, y + 5);
-
-    const supplier = suppliers.find(s => s._id === (purchase.supplierId?._id || purchase.supplierId));
-    if (supplier) {
-      doc.text(`${currentLang.supplier}:`, pageWidth - margin - 60, y);
-      doc.setFont('helvetica', 'bold');
-      doc.text(supplier.name || 'N/A', pageWidth - margin - 60, y + 5);
-      doc.setFont('helvetica', 'normal');
-      if (supplier.address) doc.text(supplier.address, pageWidth - margin - 60, y + 10);
-      if (supplier.phone) doc.text(`Phone: ${supplier.phone}`, pageWidth - margin - 60, y + 15);
-    }
-
-    y += 25;
-
-    const tableColumn = [currentLang.product, currentLang.quantity, `${currentLang.unitPrice} (USD)`, `${currentLang.total} (USD)`];
-    const tableRows = purchase.items.map(item => {
-      const product = products.find(p => p._id === (item.productId?._id || item.productId));
-      const productName = product?.name || 'Unknown';
-      const quantity = item.quantity;
-      const price = item.price;
-      const total = price * quantity;
-      return [productName, quantity, price.toFixed(2), total.toFixed(2)];
-    });
-
-    autoTable(doc, {
-      startY: y,
-      head: [tableColumn],
-      body: tableRows,
-      theme: 'striped',
-      headStyles: { fillColor: [10, 43, 78], textColor: 255, fontStyle: 'bold' },
-      alternateRowStyles: { fillColor: [245, 245, 245] },
-      margin: { left: margin, right: margin },
-      columnStyles: { 0: { cellWidth: 'auto' }, 1: { halign: 'center' }, 2: { halign: 'right' }, 3: { halign: 'right' } }
-    });
-
-    const finalY = doc.lastAutoTable.finalY + 10;
-    const total = purchase.totalAmount || tableRows.reduce((sum, row) => sum + parseFloat(row[3]), 0);
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(0, 0, 0);
-    doc.text(`${currentLang.total}: $${total.toFixed(2)}`, pageWidth - margin - 50, finalY);
-
-    const bankY = finalY + 10;
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(60, 60, 60);
-    doc.text(currentLang.bankMuscat, margin, bankY + 5);
-    doc.text(`${currentLang.accountNumber}: 0123 4567 8901 2345`, margin, bankY + 10);
-    doc.text(`${currentLang.iban}: OM12 3456 7890 1234 5678 9012`, margin, bankY + 15);
-
-    const footerY = doc.internal.pageSize.getHeight() - 20;
-    doc.setFontSize(9);
-    doc.setTextColor(150, 150, 150);
-    doc.text(currentLang.thankYou, pageWidth / 2, footerY, { align: 'center' });
-
-    doc.save(`purchase_invoice_${purchase._id}_${language}.pdf`);
-  };
-
-  // Get supplier name for display
   const getSupplierName = (supplierId) => {
     const supplier = suppliers.find(s => s._id === supplierId);
     return supplier?.name || '—';
   };
 
+  const generateInvoicePDF = (purchase) => {
+    try {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 15;
+      let y = 20;
+
+      // Header with gradient
+      doc.setFillColor(10, 43, 78);
+      doc.rect(0, 0, pageWidth, 50, 'F');
+      
+      doc.setFontSize(20);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(255, 255, 255);
+      doc.text('AL RUBAI UNITED AL CRISTAL', pageWidth / 2, y + 15, { align: 'center' });
+      
+      doc.setFontSize(12);
+      
+      y += 45;
+      doc.setTextColor(10, 43, 78);
+      doc.setFontSize(18);
+      doc.text(currentLang.purchaseInvoice, pageWidth / 2, y, { align: 'center' });
+      
+      y += 15;
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      const invoiceNumber = `PUR-${purchase._id.slice(-8)}`;
+      doc.text(`${currentLang.invoiceNumber}: ${invoiceNumber}`, margin, y);
+      doc.text(`${currentLang.invoiceDate}: ${new Date().toLocaleDateString(language === 'en' ? 'en-US' : 'ar-EG')}`, margin, y + 6);
+      
+      const supplier = suppliers.find(s => s._id === (purchase.supplierId?._id || purchase.supplierId));
+      if (supplier) {
+        y += 20;
+        doc.setFontSize(11);
+        doc.text(`${currentLang.supplier}: ${supplier.name}`, margin, y);
+        if (supplier.email) doc.text(`Email: ${supplier.email}`, margin, y + 6);
+        if (supplier.phone) doc.text(`Phone: ${supplier.phone}`, margin, y + 12);
+        y += 20;
+      } else {
+        y += 15;
+      }
+
+      const tableColumn = [currentLang.product, currentLang.quantity, currentLang.unitPrice, currentLang.total];
+      const tableRows = purchase.items.map(item => {
+        const product = products.find(p => p._id === (item.productId?._id || item.productId));
+        const productName = product?.name || 'Unknown';
+        const quantity = item.quantity;
+        const price = item.price;
+        const total = price * quantity;
+        return [productName, quantity.toString(), `$${price.toFixed(2)}`, `$${total.toFixed(2)}`];
+      });
+      
+      autoTable(doc, {
+        startY: y,
+        head: [tableColumn],
+        body: tableRows,
+        theme: 'striped',
+        headStyles: { fillColor: [26, 75, 122], textColor: 255, fontSize: 10 },
+        bodyStyles: { fontSize: 9 },
+        margin: { left: margin, right: margin }
+      });
+      
+      const finalY = doc.lastAutoTable.finalY + 10;
+      const total = purchase.totalAmount || tableRows.reduce((sum, row) => sum + parseFloat(row[3].replace('$', '')), 0);
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(10, 43, 78);
+      doc.text(`${currentLang.total}: $${total.toFixed(2)}`, pageWidth - margin, finalY, { align: 'right' });
+      
+      const footerY = doc.internal.pageSize.getHeight() - 15;
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.text(currentLang.thankYou, pageWidth / 2, footerY, { align: 'center' });
+      
+      doc.save(`purchase_invoice_${purchase._id}_${language}.pdf`);
+    } catch (err) {
+      console.error('Error generating PDF:', err);
+      setError(currentLang.failedToGeneratePDF);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="purchases-page-modern" dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className="loading-screen-premium">
+          <div className="premium-spinner"></div>
+          <p>{currentLang.loading}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="purchases-page" dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Popup de succès après création */}
+    <div className={`purchases-page-modern ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+      {/* Animated Background */}
+      <div className="purchases-bg-animation">
+        <div className="bg-orb orb-1"></div>
+        <div className="bg-orb orb-2"></div>
+        <div className="bg-orb orb-3"></div>
+      </div>
+
+      {/* Language Toggle */}
+      <button className="language-toggle-premium" onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}>
+        <FiGlobe /> {language === 'en' ? 'العربية' : 'English'}
+      </button>
+
+      {/* Success Popup */}
       {showSuccessPopup && (
-        <div className="popup-overlay" onClick={() => setShowSuccessPopup(false)}>
-          <div className="popup-content" onClick={e => e.stopPropagation()}>
-            <div className="popup-icon">
+        <div className="popup-overlay-premium" onClick={() => setShowSuccessPopup(false)}>
+          <div className="popup-content-premium" onClick={e => e.stopPropagation()}>
+            <div className="popup-icon-premium">
               <FiCheckCircle size={40} />
             </div>
             <h3>{currentLang.success}</h3>
-            <p>{currentLang.invoiceSent}</p>
-            <button className="popup-close-btn" onClick={() => setShowSuccessPopup(false)}>
-              OK
+            <p>{successMessage}</p>
+            <button className="popup-close-premium" onClick={() => setShowSuccessPopup(false)}>OK</button>
+          </div>
+        </div>
+      )}
+
+      {/* Header */}
+      <div className="page-header-premium">
+        <div className="header-content">
+          <div className="header-icon">
+            <FiShoppingBag size={32} />
+          </div>
+          <div>
+            <h1>{currentLang.purchases}</h1>
+            <p>{currentLang.managePurchases}</p>
+          </div>
+        </div>
+        <button className="refresh-btn" onClick={() => loadAllData(true)} disabled={refreshing}>
+          <FiRefreshCw className={refreshing ? 'spinning' : ''} />
+          {refreshing ? currentLang.refreshing : 'Refresh'}
+        </button>
+      </div>
+
+      {/* Alerts */}
+      {error && (
+        <div className="alert-premium error">
+          <FiAlertCircle />
+          <span>{error}</span>
+          <button onClick={() => setError('')}>×</button>
+        </div>
+      )}
+      {success && (
+        <div className="alert-premium success">
+          <FiCheckCircle />
+          <span>{success}</span>
+          <div className="progress-bar"></div>
+        </div>
+      )}
+
+      {/* KPI Cards */}
+      <div className="kpi-grid-premium">
+        <div className="kpi-card-premium">
+          <div className="kpi-icon-bg" style={{ background: 'linear-gradient(135deg, #1a4b7a, #0a2b4e)' }}>
+            <FiShoppingBag />
+          </div>
+          <div className="kpi-info">
+            <h3>{currentLang.totalPurchases}</h3>
+            <div className="kpi-value">{metrics.totalPurchases}</div>
+            <div className="kpi-trend">
+              <FiTrendingUp />
+              <span>{metrics.thisMonthCount} {currentLang.thisMonth}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="kpi-card-premium">
+          <div className="kpi-icon-bg" style={{ background: 'linear-gradient(135deg, #1a4b7a, #0a2b4e)' }}>
+            <FiDollarSign />
+          </div>
+          <div className="kpi-info">
+            <h3>{currentLang.totalAmount}</h3>
+            <div className="kpi-value">${metrics.totalAmount.toFixed(2)}</div>
+            <div className="kpi-sub">${metrics.thisMonthAmount.toFixed(2)} this month</div>
+          </div>
+        </div>
+
+        <div className="kpi-card-premium">
+          <div className="kpi-icon-bg" style={{ background: 'linear-gradient(135deg, #1a4b7a, #0a2b4e)' }}>
+            <FiTrendingUp />
+          </div>
+          <div className="kpi-info">
+            <h3>{currentLang.avgPurchaseValue}</h3>
+            <div className="kpi-value">${metrics.avgPurchaseValue.toFixed(2)}</div>
+            <div className="kpi-sub">per transaction</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Form Card */}
+      <div className="form-card-premium">
+        <div className="form-card-header">
+          <h3><FiPlus /> {currentLang.addNewPurchase}</h3>
+        </div>
+        
+        <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+          <div className="form-group-premium">
+            <label><FiTruck /> {currentLang.supplier} <span className="required">*</span></label>
+            <div className="supplier-auto-field-premium">
+              <input
+                type="text"
+                value={form.supplierId ? getSupplierName(form.supplierId) : currentLang.supplierAutoFilled}
+                readOnly
+                className="premium-input auto-filled"
+              />
+              <span className="auto-badge">{currentLang.supplierAutoFilled}</span>
+            </div>
+          </div>
+
+          <div className="items-section-premium">
+            <label><FiPackage /> {currentLang.products} <span className="required">*</span></label>
+            <div className="items-header">
+              <span>{currentLang.product}</span>
+              <span>{currentLang.quantity}</span>
+              <span>{currentLang.unitPrice}</span>
+              <span></span>
+            </div>
+            
+            {form.items.map((item, index) => {
+              const selectedProduct = products.find(p => p._id === item.productId);
+              const itemTotal = (item.quantity || 0) * (item.price || 0);
+              
+              return (
+                <div key={item.id} className="item-row-premium">
+                  <select
+                    value={item.productId}
+                    onChange={(e) => handleItemChange(index, 'productId', e.target.value)}
+                    className="premium-select"
+                  >
+                    <option value="">{currentLang.selectProduct}</option>
+                    {products.map(p => (
+                      <option key={p._id} value={p._id}>
+                        {p.name} (Stock: {p.stock ?? 0})
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder={currentLang.quantity}
+                    value={item.quantity}
+                    onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+                    className="premium-input"
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder={currentLang.unitPrice}
+                    value={item.price}
+                    onChange={(e) => handleItemChange(index, 'price', e.target.value)}
+                    className="premium-input"
+                  />
+                  <div className="item-total-premium">${itemTotal.toFixed(2)}</div>
+                  {form.items.length > 1 && (
+                    <button type="button" className="remove-item-btn" onClick={() => removeItem(index)}>
+                      <FiTrash2 />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+            
+            <button type="button" className="add-item-btn-premium" onClick={addItem}>
+              <FiPlus /> {currentLang.addProduct}
             </button>
           </div>
-        </div>
-      )}
 
-      <div className="page-header">
-        <div>
-          <h1>{currentLang.purchases}</h1>
-          <p>{currentLang.managePurchases}</p>
-        </div>
-      </div>
-
-      {/* Language Toggle Button */}
-      <button 
-        className="btn-language-floating" 
-        onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
-      >
-        <FiGlobe size={18} /> {language === 'en' ? 'العربية' : 'English'}
-      </button>
-
-      {/* Error Message */}
-      {error && (
-        <div className="error-message" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <FiAlertCircle /> {error}
-        </div>
-      )}
-
-      {/* KPI */}
-      <div className="kpi-grid" style={{ marginBottom: '2rem' }}>
-        <div className="kpi-card">
-          <FiShoppingBag className="kpi-icon" />
-          <div>
-            <h3>{currentLang.totalPurchases}</h3>
-            <p>{purchases.length}</p>
-          </div>
-        </div>
-        <div className="kpi-card">
-          <FiDollarSign className="kpi-icon" />
-          <div>
-            <h3>{currentLang.totalAmount}</h3>
-            <p>${totalPurchaseAmount.toFixed(2)}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Formulaire d'ajout */}
-      <div className="form-card">
-        <h3>{currentLang.addNewPurchase}</h3>
-        
-        {/* Supplier field - Read only, auto-filled */}
-        <div className="form-grid">
-          <div className="input-group">
-            <label>{currentLang.supplier} <span className="required">*</span></label>
-            <input
-              type="text"
-              value={form.supplierId ? getSupplierName(form.supplierId) : currentLang.supplierAutoFilled}
-              readOnly
-              className="supplier-auto-field"
-              placeholder={currentLang.supplierAutoFilled}
-            />
-            <small className="field-hint">{currentLang.supplierAutoFilled}</small>
-          </div>
-        </div>
-
-        <div className="items-section">
-          <label>{currentLang.products}</label>
-          <div className="item-row-header">
-            <span>{currentLang.product}</span>
-            <span>{currentLang.quantity}</span>
-            <span>{currentLang.unitPrice}</span>
-            <span></span>
-          </div>
-          {form.items.map((item, index) => (
-            <div key={index} className="item-row">
-              <select
-                value={item.productId}
-                onChange={(e) => handleItemChange(index, 'productId', e.target.value)}
-              >
-                <option value="">{currentLang.selectProduct}</option>
-                {products.map(p => (
-                  <option key={p._id} value={p._id}>
-                    {p.name} ({currentLang.stock}: {p.stock ?? 0})
-                  </option>
-                ))}
-              </select>
-              <input
-                type="number"
-                min="1"
-                placeholder={currentLang.quantity}
-                value={item.quantity}
-                onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-              />
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder={currentLang.unitPrice}
-                value={item.price}
-                onChange={(e) => handleItemChange(index, 'price', e.target.value)}
-              />
-              {form.items.length > 1 && (
-                <button className="icon-btn remove-btn" onClick={() => removeItem(index)}>
-                  <FiX />
-                </button>
-              )}
+          <div className="order-summary-premium">
+            <div className="summary-line">
+              <span>Subtotal:</span>
+              <span>${calculateTotal(form.items).toFixed(2)}</span>
             </div>
-          ))}
-          <button type="button" className="add-item-btn" onClick={addItem}>
-            <FiPlus /> {currentLang.addProduct}
-          </button>
-          <div className="total-preview">
-            {currentLang.total}: ${calculateTotal(form.items).toFixed(2)}
+            <div className="summary-line total">
+              <span>{currentLang.total}:</span>
+              <span>${calculateTotal(form.items).toFixed(2)}</span>
+            </div>
           </div>
-        </div>
 
-        <div className="form-actions">
-          <button onClick={handleSubmit}>
-            <FiPlus /> {currentLang.addPurchase}
-          </button>
-        </div>
+          <div className="form-actions-premium">
+            <button type="submit" className="btn-submit">
+              <FiPlus /> {currentLang.addPurchase}
+            </button>
+          </div>
+        </form>
       </div>
 
-      {/* Tableau des achats */}
-      <div className="table-container">
-        <h3>{currentLang.purchaseList}</h3>
-        <div className="table-responsive">
-          <table className="purchases-table">
+      {/* Purchases Table */}
+      <div className="table-card-premium">
+        <div className="table-header">
+          <h3><FiShoppingBag /> {currentLang.purchaseList}</h3>
+          <div className="table-stats">{purchases.length} total purchases</div>
+        </div>
+        
+        <div className="table-responsive-premium">
+          <table className="purchases-table-premium">
             <thead>
               <tr>
                 <th>{currentLang.supplier}</th>
@@ -642,123 +747,152 @@ export default function PurchasesPage({ token }) {
               </tr>
             </thead>
             <tbody>
-              {purchases.map(p => {
-                const supplier = suppliers.find(s => s._id === (p.supplierId?._id || p.supplierId));
-                return (
-                  <tr key={p._id}>
-                    <td data-label={currentLang.supplier}>{supplier?.name || 'Unknown'}</td>
-                    <td data-label={currentLang.products} className="products-cell">
-                      {p.items.map(item => {
-                        const product = products.find(pr => pr._id === (item.productId?._id || item.productId));
-                        return (
-                          <div key={item.productId?._id || item.productId} className="product-line">
-                            • {product?.name} (x{item.quantity})
-                          </div>
-                        );
-                      })}
-                      {p.items.length === 0 && '—'}
-                    </td>
-                    <td data-label={currentLang.totalAmount}>${p.totalAmount?.toFixed(2) ?? '0.00'}</td>
-                    <td data-label={currentLang.actions} className="actions">
-                      <button className="icon-btn" onClick={() => openEditModal(p)} aria-label={currentLang.editPurchase}>
-                        <FiEdit />
-                      </button>
-                      <button className="icon-btn delete-btn" onClick={() => handleDelete(p._id)} aria-label={currentLang.deleteConfirm}>
-                        <FiTrash2 />
-                      </button>
-                      <button className="icon-btn" onClick={() => generateInvoicePDF(p)} aria-label={currentLang.failedToGeneratePDF}>
-                        <FiDownload />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-              {purchases.length === 0 && (
+              {purchases.length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="empty-message">{currentLang.noPurchases}</td>
+                  <td colSpan="4" className="empty-state-premium">
+                    <FiShoppingBag size={48} />
+                    <p>{currentLang.noPurchases}</p>
+                  </td>
                 </tr>
+              ) : (
+                purchases.map(purchase => {
+                  const supplier = suppliers.find(s => s._id === (purchase.supplierId?._id || purchase.supplierId));
+                  return (
+                    <tr key={purchase._id} className="purchase-row">
+                      <td data-label={currentLang.supplier}>
+                        <div className="supplier-cell">
+                          <div className="supplier-avatar">
+                            {supplier?.name?.charAt(0).toUpperCase() || '?'}
+                          </div>
+                          <div className="supplier-name">{supplier?.name || '—'}</div>
+                        </div>
+                       </td>
+                      <td data-label={currentLang.products}>
+                        <div className="products-badges">
+                          {purchase.items.slice(0, 3).map((item, idx) => {
+                            const product = products.find(p => p._id === (item.productId?._id || item.productId));
+                            return (
+                              <span key={idx} className="product-badge-premium">
+                                {product?.name || '?'} ×{item.quantity}
+                              </span>
+                            );
+                          })}
+                          {purchase.items.length > 3 && (
+                            <span className="more-badge">+{purchase.items.length - 3} more</span>
+                          )}
+                        </div>
+                       </td>
+                      <td data-label={currentLang.totalAmount} className="total-cell-premium">
+                        ${(purchase.totalAmount || 0).toFixed(2)}
+                       </td>
+                      <td data-label={currentLang.actions} className="actions-cell-premium">
+                        <button className="action-icon edit" onClick={() => openEditModal(purchase)} title={currentLang.editPurchase}>
+                          <FiEdit />
+                        </button>
+                        <button className="action-icon delete" onClick={() => handleDelete(purchase._id)} title={currentLang.deleteConfirm}>
+                          <FiTrash2 />
+                        </button>
+                        <button className="action-icon download" onClick={() => generateInvoicePDF(purchase)} title="Download PDF">
+                          <FiDownload />
+                        </button>
+                       </td>
+                     </tr>
+                  );
+                })
               )}
             </tbody>
-          </table>
+           </table>
         </div>
       </div>
 
-      {/* Modal d'édition */}
+      {/* Edit Modal */}
       {isEditModalOpen && (
-        <div className="modal-overlay" onClick={closeEditModal}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>{currentLang.editPurchase}</h2>
-              <button className="close-btn" onClick={closeEditModal}>×</button>
+        <div className="modal-overlay-premium" onClick={closeEditModal}>
+          <div className="modal-content-premium" onClick={e => e.stopPropagation()}>
+            <div className="modal-header-premium">
+              <h3><FiEdit /> {currentLang.editPurchase}</h3>
+              <button className="modal-close-premium" onClick={closeEditModal}>×</button>
             </div>
-            <div className="modal-body">
-              <div className="form-grid">
-                <div className="input-group">
-                  <label>{currentLang.supplier}</label>
+            <div className="modal-body-premium">
+              <div className="form-group-premium">
+                <label><FiTruck /> {currentLang.supplier}</label>
+                <div className="supplier-auto-field-premium">
                   <input
                     type="text"
                     value={editForm.supplierId ? getSupplierName(editForm.supplierId) : currentLang.supplierAutoFilled}
                     readOnly
-                    className="supplier-auto-field"
+                    className="premium-input auto-filled"
                   />
-                  <small className="field-hint">{currentLang.supplierAutoFilled}</small>
+                  <span className="auto-badge">{currentLang.supplierAutoFilled}</span>
                 </div>
               </div>
 
-              <div className="items-section">
-                <label>{currentLang.products}</label>
-                <div className="item-row-header">
+              <div className="items-section-premium">
+                <label><FiPackage /> {currentLang.products}</label>
+                <div className="items-header">
                   <span>{currentLang.product}</span>
                   <span>{currentLang.quantity}</span>
                   <span>{currentLang.unitPrice}</span>
                   <span></span>
                 </div>
-                {editForm.items.map((item, index) => (
-                  <div key={index} className="item-row">
-                    <select
-                      value={item.productId}
-                      onChange={(e) => handleEditItemChange(index, 'productId', e.target.value)}
-                    >
-                      <option value="">{currentLang.selectProduct}</option>
-                      {products.map(p => (
-                        <option key={p._id} value={p._id}>
-                          {p.name} ({currentLang.stock}: {p.stock ?? 0})
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      type="number"
-                      min="1"
-                      placeholder={currentLang.quantity}
-                      value={item.quantity}
-                      onChange={(e) => handleEditItemChange(index, 'quantity', e.target.value)}
-                    />
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder={currentLang.unitPrice}
-                      value={item.price}
-                      onChange={(e) => handleEditItemChange(index, 'price', e.target.value)}
-                    />
-                    {editForm.items.length > 1 && (
-                      <button className="icon-btn remove-btn" onClick={() => removeEditItem(index)}>
-                        <FiX />
-                      </button>
-                    )}
-                  </div>
-                ))}
-                <button type="button" className="add-item-btn" onClick={addEditItem}>
+                
+                {editForm.items.map((item, index) => {
+                  const itemTotal = (item.quantity || 0) * (item.price || 0);
+                  
+                  return (
+                    <div key={item.id} className="item-row-premium">
+                      <select
+                        value={item.productId}
+                        onChange={(e) => handleEditItemChange(index, 'productId', e.target.value)}
+                        className="premium-select"
+                      >
+                        <option value="">{currentLang.selectProduct}</option>
+                        {products.map(p => (
+                          <option key={p._id} value={p._id}>
+                            {p.name} (Stock: {p.stock ?? 0})
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="number"
+                        min="1"
+                        value={item.quantity}
+                        onChange={(e) => handleEditItemChange(index, 'quantity', e.target.value)}
+                        className="premium-input"
+                      />
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={item.price}
+                        onChange={(e) => handleEditItemChange(index, 'price', e.target.value)}
+                        className="premium-input"
+                      />
+                      <div className="item-total-premium">${itemTotal.toFixed(2)}</div>
+                      {editForm.items.length > 1 && (
+                        <button type="button" className="remove-item-btn" onClick={() => removeEditItem(index)}>
+                          <FiTrash2 />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+                
+                <button type="button" className="add-item-btn-premium" onClick={addEditItem}>
                   <FiPlus /> {currentLang.addProduct}
                 </button>
-                <div className="total-preview">
-                  {currentLang.total}: ${calculateTotal(editForm.items).toFixed(2)}
+              </div>
+
+              <div className="order-summary-premium">
+                <div className="summary-line total">
+                  <span>{currentLang.total}:</span>
+                  <span>${calculateTotal(editForm.items).toFixed(2)}</span>
                 </div>
               </div>
             </div>
-            <div className="modal-footer">
-              <button className="cancel-btn" onClick={closeEditModal}>{currentLang.cancel}</button>
-              <button className="save-btn" onClick={handleUpdateSubmit}>{currentLang.updatePurchase}</button>
+            <div className="modal-footer-premium">
+              <button className="btn-secondary-premium" onClick={closeEditModal}>{currentLang.cancel}</button>
+              <button className="btn-primary-premium" onClick={handleUpdateSubmit}>{currentLang.updatePurchase}</button>
             </div>
           </div>
         </div>

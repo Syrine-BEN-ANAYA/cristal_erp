@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+// OrdersPage.js - Version corrigée (problème de balise JSX résolu)
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   getOrders, createOrder, updateOrder, deleteOrder, getTotalOrderAmount 
 } from '../api/ordersService';
@@ -6,13 +7,13 @@ import { getProducts } from '../api/productsService';
 import { getCustomers } from '../api/customersService';
 import { 
   FiPackage, FiUser, FiShoppingCart, FiPlus, FiTrash2, FiX, 
-  FiDollarSign, FiEdit2, FiDownload, FiCheckCircle, FiGlobe
+  FiDollarSign, FiEdit2, FiDownload, FiCheckCircle, FiGlobe,
+  FiCalendar, FiTrendingUp, FiRefreshCw, FiAlertCircle
 } from 'react-icons/fi';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import '../styles/OrdersPage.css';
 
-// Helper functions
 const normalizeId = (objOrId) => {
   if (!objOrId) return '';
   if (typeof objOrId === 'string') return objOrId;
@@ -21,17 +22,15 @@ const normalizeId = (objOrId) => {
 
 const formatMoney = (value) => {
   const numericValue = Number(value) || 0;
-  return `$${numericValue.toFixed(2)}`;
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(numericValue);
 };
 
 const calculateOrderTotal = (items, products) => {
-  if (!items || !products) return 0;
+  if (!items?.length || !products?.length) return 0;
   return items.reduce((total, item) => {
     const productId = normalizeId(item.productId);
     const product = products.find(p => p._id === productId);
-    const itemPrice = product?.price || 0;
-    const itemQuantity = item.quantity || 0;
-    return total + (itemPrice * itemQuantity);
+    return total + ((product?.price || 0) * (item.quantity || 0));
   }, 0);
 };
 
@@ -41,19 +40,18 @@ export default function OrdersPage({ token }) {
   const [customers, setCustomers] = useState([]);
   const [totalOrderAmount, setTotalOrderAmount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
-  const [showPopup, setShowPopup] = useState(false);
-  const [popupMessage, setPopupMessage] = useState('');
+  const [success, setSuccess] = useState('');
   const [language, setLanguage] = useState('en');
 
-  // Translations
-  const t = {
+  const translations = {
     en: {
-      orders: 'Orders',
-      manageOrders: 'Manage customer orders',
+      orders: 'Orders Management',
+      manageOrders: 'Manage customer orders and track revenue',
       totalOrders: 'Total Orders',
       totalRevenue: 'Total Revenue',
-      newOrder: 'New Order',
+      newOrder: 'Create New Order',
       editOrder: 'Edit Order',
       customer: 'Customer',
       products: 'Products',
@@ -64,18 +62,20 @@ export default function OrdersPage({ token }) {
       createOrder: 'Create Order',
       updateOrder: 'Update Order',
       cancel: 'Cancel',
-      orderList: 'Order List',
+      orderList: 'Recent Orders',
       customerName: 'Customer',
       items: 'Items',
       total: 'Total',
       date: 'Date',
       actions: 'Actions',
-      noOrders: 'No orders found.',
+      noOrders: 'No orders found. Create your first order above.',
       success: 'Success!',
+      orderCreated: 'Order created successfully!',
       orderUpdated: 'Order updated successfully!',
-      invoiceSent: 'Invoice sent by email to the customer.',
+      invoiceSent: 'Invoice has been sent to the customer.',
       deleteConfirm: 'Delete this order?',
-      loading: 'Loading orders…',
+      loading: 'Loading orders...',
+      refreshing: 'Refreshing...',
       orderId: 'Order ID',
       invoice: 'ORDER INVOICE',
       thankYou: 'Thank you for your business!',
@@ -84,17 +84,20 @@ export default function OrdersPage({ token }) {
       email: 'Email',
       phone: 'Phone',
       pleaseSelectCustomer: 'Please select a customer',
-      fillItemsCorrectly: 'Fill all items correctly',
+      fillItemsCorrectly: 'Please fill all items correctly',
       errorSavingOrder: 'Error saving order',
       failedToDelete: 'Failed to delete order',
-      failedToGeneratePDF: 'Failed to generate PDF'
+      failedToGeneratePDF: 'Failed to generate PDF',
+      avgOrderValue: 'Avg Order Value',
+      thisMonth: 'This Month',
+      downloadInvoice: 'Download Invoice'
     },
     ar: {
-      orders: 'الطلبات',
-      manageOrders: 'إدارة طلبات العملاء',
+      orders: 'إدارة الطلبات',
+      manageOrders: 'إدارة طلبات العملاء وتتبع الإيرادات',
       totalOrders: 'إجمالي الطلبات',
       totalRevenue: 'إجمالي الإيرادات',
-      newOrder: 'طلب جديد',
+      newOrder: 'إنشاء طلب جديد',
       editOrder: 'تعديل طلب',
       customer: 'العميل',
       products: 'المنتجات',
@@ -105,18 +108,20 @@ export default function OrdersPage({ token }) {
       createOrder: 'إنشاء طلب',
       updateOrder: 'تحديث الطلب',
       cancel: 'إلغاء',
-      orderList: 'قائمة الطلبات',
+      orderList: 'الطلبات الأخيرة',
       customerName: 'العميل',
       items: 'المنتجات',
       total: 'المجموع',
       date: 'التاريخ',
       actions: 'إجراءات',
-      noOrders: 'لا توجد طلبات.',
+      noOrders: 'لا توجد طلبات. قم بإنشاء طلبك الأول أعلاه',
       success: 'نجاح!',
+      orderCreated: 'تم إنشاء الطلب بنجاح!',
       orderUpdated: 'تم تحديث الطلب بنجاح!',
-      invoiceSent: 'تم إرسال الفاتورة بالبريد الإلكتروني إلى العميل.',
+      invoiceSent: 'تم إرسال الفاتورة إلى العميل',
       deleteConfirm: 'هل تريد حذف هذا الطلب؟',
-      loading: 'جاري تحميل الطلبات…',
+      loading: 'جاري تحميل الطلبات...',
+      refreshing: 'جاري التحديث...',
       orderId: 'رقم الطلب',
       invoice: 'فاتورة الطلب',
       thankYou: 'شكراً لتعاملك معنا!',
@@ -128,38 +133,43 @@ export default function OrdersPage({ token }) {
       fillItemsCorrectly: 'الرجاء تعبئة جميع العناصر بشكل صحيح',
       errorSavingOrder: 'خطأ في حفظ الطلب',
       failedToDelete: 'فشل حذف الطلب',
-      failedToGeneratePDF: 'فشل إنشاء PDF'
+      failedToGeneratePDF: 'فشل إنشاء PDF',
+      avgOrderValue: 'متوسط قيمة الطلب',
+      thisMonth: 'هذا الشهر',
+      downloadInvoice: 'تحميل الفاتورة'
     }
   };
 
-  const currentLang = t[language];
+  const t = translations[language];
   const isRTL = language === 'ar';
 
-  // Form state
   const [form, setForm] = useState({
     _id: null,
     customerId: '',
     items: [{ id: Date.now(), productId: '', quantity: 1 }]
   });
 
-  // Load data
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (showRefresh = false) => {
     if (!token) return;
     try {
-      setLoading(true);
+      if (showRefresh) setRefreshing(true);
+      else setLoading(true);
+      
       const [ordersData, productsData, customersData] = await Promise.all([
         getOrders(token),
         getProducts(token),
         getCustomers(token)
       ]);
-      setOrders(ordersData);
-      setProducts(productsData);
-      setCustomers(customersData);
+      
+      setOrders(ordersData || []);
+      setProducts(productsData || []);
+      setCustomers(customersData || []);
       setError('');
     } catch (err) {
       setError(err.message || 'Failed to load data');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, [token]);
 
@@ -177,7 +187,27 @@ export default function OrdersPage({ token }) {
     loadTotalAmount();
   }, [loadData, loadTotalAmount]);
 
-  // Form handlers
+  const metrics = useMemo(() => {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    const thisMonthOrders = orders.filter(order => {
+      const date = new Date(order.createdAt);
+      return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+    });
+    const thisMonthRevenue = thisMonthOrders.reduce((sum, order) => 
+      sum + (Number(order.totalAmount) || calculateOrderTotal(order.items, products)), 0
+    );
+    const avgOrderValue = orders.length > 0 ? totalOrderAmount / orders.length : 0;
+    
+    return {
+      totalOrders: orders.length,
+      totalRevenue: totalOrderAmount,
+      avgOrderValue,
+      thisMonthOrders: thisMonthOrders.length,
+      thisMonthRevenue
+    };
+  }, [orders, totalOrderAmount, products]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
@@ -200,6 +230,7 @@ export default function OrdersPage({ token }) {
   };
 
   const removeItem = (itemId) => {
+    if (form.items.length === 1) return;
     setForm(prev => ({
       ...prev,
       items: prev.items.filter(item => item.id !== itemId)
@@ -214,14 +245,23 @@ export default function OrdersPage({ token }) {
     });
   };
 
+  const showSuccess = (message) => {
+    setSuccess(message);
+    setTimeout(() => setSuccess(''), 3000);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
     if (!form.customerId) {
-      setError(currentLang.pleaseSelectCustomer);
+      setError(t.pleaseSelectCustomer);
+      setTimeout(() => setError(''), 3000);
       return;
     }
+    
     if (form.items.some(item => !item.productId || item.quantity <= 0)) {
-      setError(currentLang.fillItemsCorrectly);
+      setError(t.fillItemsCorrectly);
+      setTimeout(() => setError(''), 3000);
       return;
     }
 
@@ -236,20 +276,19 @@ export default function OrdersPage({ token }) {
 
       if (form._id) {
         await updateOrder(form._id, payload, token);
-        setPopupMessage(currentLang.orderUpdated);
+        showSuccess(t.orderUpdated);
       } else {
         await createOrder(payload, token);
-        setPopupMessage(currentLang.invoiceSent);
+        showSuccess(`${t.orderCreated} ${t.invoiceSent}`);
       }
       
       resetForm();
       loadData();
       loadTotalAmount();
       setError('');
-      setShowPopup(true);
-      setTimeout(() => setShowPopup(false), 3000);
     } catch (err) {
-      setError(err.response?.data?.message || err.message || currentLang.errorSavingOrder);
+      setError(err.response?.data?.message || err.message || t.errorSavingOrder);
+      setTimeout(() => setError(''), 4000);
     }
   };
 
@@ -263,20 +302,22 @@ export default function OrdersPage({ token }) {
         quantity: item.quantity
       }))
     });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm(currentLang.deleteConfirm)) return;
+    if (!window.confirm(`${t.deleteConfirm}?`)) return;
     try {
       await deleteOrder(id, token);
       loadData();
       loadTotalAmount();
+      showSuccess('Order deleted successfully');
     } catch (err) {
-      alert(err.response?.data?.message || err.message || currentLang.failedToDelete);
+      setError(err.response?.data?.message || err.message || t.failedToDelete);
+      setTimeout(() => setError(''), 3000);
     }
   };
 
-  // PDF Generation (bilingual)
   const generateInvoicePDF = (order) => {
     try {
       const doc = new jsPDF();
@@ -284,38 +325,40 @@ export default function OrdersPage({ token }) {
       const margin = 15;
       let y = 20;
 
-      // Header - Bilingual
-      doc.setFontSize(20);
+      doc.setFillColor(10, 43, 78);
+      doc.rect(0, 0, pageWidth, 50, 'F');
+      
+      doc.setFontSize(22);
       doc.setFont('helvetica', 'bold');
+      doc.setTextColor(255, 255, 255);
+      doc.text('AL RUBAI UNITED AL CRISTAL', pageWidth / 2, y + 15, { align: 'center' });
+      
+      
+      y += 50;
       doc.setTextColor(10, 43, 78);
-      doc.text('AL RUBAI UNITED AL CRISTAL', pageWidth / 2, y, { align: 'center' });
-      
-      y += 10;
-      doc.setFontSize(14);
-      doc.text('الكريستال الرباعي المتحدة', pageWidth / 2, y, { align: 'center' });
-      
-      y += 15;
-      doc.setFontSize(16);
-      doc.text(currentLang.invoice, pageWidth / 2, y, { align: 'center' });
+      doc.setFontSize(18);
+      doc.text(t.invoice, pageWidth / 2, y, { align: 'center' });
       
       y += 15;
       doc.setFontSize(10);
-      doc.setTextColor(80, 80, 80);
-      doc.text(`${currentLang.orderId}: ${order._id.slice(-8)}`, margin, y);
-      doc.text(`${currentLang.date}: ${new Date(order.createdAt).toLocaleDateString(language === 'en' ? 'en-US' : 'ar-EG')}`, margin, y + 6);
+      doc.setTextColor(100, 100, 100);
+      doc.text(`${t.orderId}: ${order._id.slice(-8)}`, margin, y);
+      doc.text(`${t.date}: ${new Date(order.createdAt).toLocaleDateString(language === 'en' ? 'en-US' : 'ar-EG')}`, margin, y + 6);
       
-      // Customer info
       const customer = customers.find(c => c._id === (order.customerId?._id || order.customerId));
       if (customer) {
-        doc.text(`${currentLang.customer}: ${customer.name}`, margin, y + 18);
-        if (customer.email) doc.text(`${currentLang.email}: ${customer.email}`, margin, y + 24);
-        if (customer.phone) doc.text(`${currentLang.phone}: ${customer.phone}`, margin, y + 30);
+        y += 20;
+        doc.setFontSize(11);
+        doc.setTextColor(80, 80, 80);
+        doc.text(`${t.customer}: ${customer.name}`, margin, y);
+        if (customer.email) doc.text(`${t.email}: ${customer.email}`, margin, y + 6);
+        if (customer.phone) doc.text(`${t.phone}: ${customer.phone}`, margin, y + 12);
+        y += 25;
+      } else {
+        y += 20;
       }
 
-      y += 45;
-      
-      // Items table
-      const tableColumn = [currentLang.product, currentLang.quantity, currentLang.unitPrice, currentLang.total];
+      const tableColumn = [t.product, t.quantity, t.unitPrice, t.total];
       const tableRows = order.items.map(item => {
         const product = products.find(p => p._id === (item.productId?._id || item.productId));
         const productName = product?.name || 'Unknown';
@@ -330,209 +373,294 @@ export default function OrdersPage({ token }) {
         head: [tableColumn],
         body: tableRows,
         theme: 'striped',
-        headStyles: { fillColor: [10, 43, 78], textColor: 255 },
+        headStyles: { fillColor: [26, 75, 122], textColor: 255, fontSize: 10 },
+        bodyStyles: { fontSize: 9 },
         margin: { left: margin, right: margin }
       });
       
       const finalY = doc.lastAutoTable.finalY + 10;
       const total = order.totalAmount || calculateOrderTotal(order.items, products);
-      doc.setFontSize(12);
+      doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
-      doc.text(`${currentLang.total}: ${formatMoney(total)}`, pageWidth - margin, finalY, { align: 'right' });
+      doc.setTextColor(212, 175, 55);
+      doc.text(`${t.total}: ${formatMoney(total)}`, pageWidth - margin, finalY, { align: 'right' });
       
-      // Footer - Bilingual
-      const footerY = doc.internal.pageSize.getHeight() - 10;
+      const footerY = doc.internal.pageSize.getHeight() - 15;
       doc.setFontSize(8);
       doc.setTextColor(150, 150, 150);
-      doc.text(currentLang.thankYou, pageWidth / 2, footerY, { align: 'center' });
+      doc.text(t.thankYou, pageWidth / 2, footerY, { align: 'center' });
       
       doc.save(`invoice_${order._id}_${language}.pdf`);
     } catch (err) {
       console.error('Error generating PDF:', err);
-      alert(currentLang.failedToGeneratePDF);
+      setError(t.failedToGeneratePDF);
+      setTimeout(() => setError(''), 3000);
     }
   };
 
-  if (loading) return <div className="orders-page" dir={isRTL ? 'rtl' : 'ltr'}><div className="loading">{currentLang.loading}</div></div>;
-
-  return (
-    <div className="orders-page" dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Language Toggle Button - Floating */}
-      <button 
-        className="btn-language-floating" 
-        onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
-      >
-        <FiGlobe size={18} /> {language === 'en' ? 'العربية' : 'English'}
-      </button>
-
-      <div className="page-header">
-        <div>
-          <h1>{currentLang.orders}</h1>
-          <p>{currentLang.manageOrders}</p>
+  if (loading) {
+    return (
+      <div className="orders-page-modern" dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className="loading-screen-premium">
+          <div className="premium-spinner"></div>
+          <p>{t.loading}</p>
         </div>
       </div>
+    );
+  }
 
-      {error && <div className="error-message">{error}</div>}
+  return (
+    <div className={`orders-page-modern ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="orders-bg-animation">
+        <div className="bg-orb orb-1"></div>
+        <div className="bg-orb orb-2"></div>
+        <div className="bg-orb orb-3"></div>
+      </div>
 
-      {/* Success Popup */}
-      {showPopup && (
-        <div className="popup-overlay">
-          <div className="popup-content">
-            <FiCheckCircle className="popup-icon" />
-            <h3>{currentLang.success}</h3>
-            <p>{popupMessage}</p>
-            <button className="popup-close" onClick={() => setShowPopup(false)}>OK</button>
+      <button className="language-toggle-premium" onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}>
+        <FiGlobe /> {language === 'en' ? 'العربية' : 'English'}
+      </button>
+
+      <div className="page-header-premium">
+        <div className="header-content">
+          <div className="header-icon">
+            <FiShoppingCart size={32} />
           </div>
+          <div>
+            <h1>{t.orders}</h1>
+            <p>{t.manageOrders}</p>
+          </div>
+        </div>
+        <button className="refresh-btn" onClick={() => loadData(true)} disabled={refreshing}>
+          <FiRefreshCw className={refreshing ? 'spinning' : ''} />
+          {refreshing ? t.refreshing : 'Refresh'}
+        </button>
+      </div>
+
+      {error && (
+        <div className="alert-premium error">
+          <FiAlertCircle />
+          <span>{error}</span>
+          <button onClick={() => setError('')}>×</button>
+        </div>
+      )}
+      
+      {success && (
+        <div className="alert-premium success">
+          <FiCheckCircle />
+          <span>{success}</span>
+          <div className="progress-bar"></div>
         </div>
       )}
 
-      {/* KPI Cards */}
-      <div className="kpi-grid">
-        <div className="kpi-card">
-          <FiShoppingCart className="kpi-icon" />
-          <div>
-            <h3>{currentLang.totalOrders}</h3>
-            <p>{orders.length}</p>
+      <div className="kpi-grid-premium">
+        <div className="kpi-card-premium">
+          <div className="kpi-icon-bg" style={{ background: 'linear-gradient(135deg, #1a4b7a, #0a2b4e)' }}>
+            <FiShoppingCart />
+          </div>
+          <div className="kpi-info">
+            <h3>{t.totalOrders}</h3>
+            <div className="kpi-value">{metrics.totalOrders}</div>
+            <div className="kpi-trend">
+              <FiTrendingUp />
+              <span>{metrics.thisMonthOrders} {t.thisMonth}</span>
+            </div>
           </div>
         </div>
-        <div className="kpi-card">
-          <FiDollarSign className="kpi-icon" />
-          <div>
-            <h3>{currentLang.totalRevenue}</h3>
-            <p>{formatMoney(totalOrderAmount)}</p>
+
+        <div className="kpi-card-premium">
+          <div className="kpi-icon-bg" style={{ background: 'linear-gradient(135deg, #1a4b7a, #0a2b4e)' }}>
+            <FiDollarSign />
+          </div>
+          <div className="kpi-info">
+            <h3>{t.totalRevenue}</h3>
+            <div className="kpi-value">{formatMoney(metrics.totalRevenue)}</div>
+            <div className="kpi-sub">{formatMoney(metrics.thisMonthRevenue)} this month</div>
+          </div>
+        </div>
+
+        <div className="kpi-card-premium">
+          <div className="kpi-icon-bg" style={{ background: 'linear-gradient(135deg, #1a4b7a, #0a2b4e)' }}>
+            <FiTrendingUp />
+          </div>
+          <div className="kpi-info">
+            <h3>{t.avgOrderValue}</h3>
+            <div className="kpi-value">{formatMoney(metrics.avgOrderValue)}</div>
+            <div className="kpi-sub">per transaction</div>
           </div>
         </div>
       </div>
 
-      {/* Form Card */}
-      <div className="form-card">
-        <h3><FiShoppingCart /> {form._id ? currentLang.editOrder : currentLang.newOrder}</h3>
+      <div className="form-card-premium">
+        <div className="form-card-header">
+          <h3><FiPlus /> {form._id ? t.editOrder : t.newOrder}</h3>
+          {form._id && (
+            <button className="cancel-edit" onClick={resetForm}>
+              <FiX /> {t.cancel}
+            </button>
+          )}
+        </div>
+        
         <form onSubmit={handleSubmit}>
-          <div className="form-grid">
-            <div className="input-group">
-              <label><FiUser /> {currentLang.customer} *</label>
-              <select
-                name="customerId"
-                value={form.customerId}
-                onChange={handleChange}
-                required
-              >
-                <option value="">{currentLang.selectCustomer}</option>
-                {customers.map(c => (
-                  <option key={c._id} value={c._id}>{c.name}</option>
-                ))}
-              </select>
-            </div>
+          <div className="form-group-premium">
+            <label><FiUser /> {t.customer} <span className="required">*</span></label>
+            <select
+              name="customerId"
+              value={form.customerId}
+              onChange={handleChange}
+              required
+              className="premium-select"
+            >
+              <option value="">{t.selectCustomer}</option>
+              {customers.map(c => (
+                <option key={c._id} value={c._id}>{c.name}</option>
+              ))}
+            </select>
           </div>
 
-          <div className="items-section">
-            <label><FiPackage /> {currentLang.products} *</label>
-            <div className="item-row-header">
-              <span>{currentLang.product}</span>
-              <span>{currentLang.quantity}</span>
+          <div className="items-section-premium">
+            <label><FiPackage /> {t.products} <span className="required">*</span></label>
+            <div className="items-header">
+              <span>{t.product}</span>
+              <span>{t.quantity}</span>
               <span></span>
             </div>
-            {form.items.map((item, index) => (
-              <div key={item.id} className="item-row">
-                <select
-                  value={item.productId}
-                  onChange={e => handleItemChange(item.id, 'productId', e.target.value)}
-                  required
-                >
-                  <option value="">{currentLang.selectProduct}</option>
-                  {products.map(p => (
-                    <option key={p._id} value={p._id}>
-                      {p.name} - {formatMoney(p.price)}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  type="number"
-                  min="1"
-                  value={item.quantity}
-                  onChange={e => handleItemChange(item.id, 'quantity', Number(e.target.value))}
-                  required
-                />
-                {form.items.length > 1 && (
-                  <button type="button" className="remove-btn" onClick={() => removeItem(item.id)}>
-                    <FiX />
-                  </button>
-                )}
-              </div>
-            ))}
-            <button type="button" className="add-item-btn" onClick={addItem}>
-              <FiPlus /> {currentLang.addProduct}
+            
+            {form.items.map((item) => {
+              const selectedProduct = products.find(p => p._id === item.productId);
+              const itemTotal = (selectedProduct?.price || 0) * (item.quantity || 0);
+              
+              return (
+                <div key={item.id} className="item-row-premium">
+                  <select
+                    value={item.productId}
+                    onChange={e => handleItemChange(item.id, 'productId', e.target.value)}
+                    required
+                    className="premium-select"
+                  >
+                    <option value="">{t.selectProduct}</option>
+                    {products.map(p => (
+                      <option key={p._id} value={p._id}>
+                        {p.name} - {formatMoney(p.price)}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="number"
+                    min="1"
+                    value={item.quantity}
+                    onChange={e => handleItemChange(item.id, 'quantity', Number(e.target.value))}
+                    required
+                    className="premium-input"
+                  />
+                  <div className="item-total">{formatMoney(itemTotal)}</div>
+                  {form.items.length > 1 && (
+                    <button type="button" className="remove-item-btn" onClick={() => removeItem(item.id)}>
+                      <FiTrash2 />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+            
+            <button type="button" className="add-item-btn-premium" onClick={addItem}>
+              <FiPlus /> {t.addProduct}
             </button>
           </div>
 
-          <div className="form-actions">
-            <button type="submit" className="btn btn-primary">
-              {form._id ? <><FiEdit2 /> {currentLang.updateOrder}</> : <><FiPlus /> {currentLang.createOrder}</>}
+          <div className="order-summary">
+            <div className="summary-line">
+              <span>Subtotal:</span>
+              <span>{formatMoney(calculateOrderTotal(form.items, products))}</span>
+            </div>
+            <div className="summary-line total">
+              <span>{t.total}:</span>
+              <span>{formatMoney(calculateOrderTotal(form.items, products))}</span>
+            </div>
+          </div>
+
+          <div className="form-actions-premium">
+            <button type="submit" className="btn-submit">
+              {form._id ? <><FiEdit2 /> {t.updateOrder}</> : <><FiPlus /> {t.createOrder}</>}
             </button>
-            {form._id && (
-              <button type="button" className="btn btn-secondary" onClick={resetForm}>
-                <FiX /> {currentLang.cancel}
-              </button>
-            )}
           </div>
         </form>
       </div>
 
-      {/* Orders Table - Without ID column */}
-      <div className="table-container">
-        <h3><FiShoppingCart /> {currentLang.orderList}</h3>
-        <div className="table-responsive">
-          <table className="orders-table">
+      <div className="table-card-premium">
+        <div className="table-header">
+          <h3><FiShoppingCart /> {t.orderList}</h3>
+          <div className="table-stats">{orders.length} total orders</div>
+        </div>
+        
+        <div className="table-responsive-premium">
+          <table className="orders-table-premium">
             <thead>
               <tr>
-                <th>{currentLang.customerName}</th>
-                <th>{currentLang.items}</th>
-                <th>{currentLang.total}</th>
-                <th>{currentLang.date}</th>
-                <th>{currentLang.actions}</th>
+                <th>{t.customerName}</th>
+                <th>{t.items}</th>
+                <th>{t.total}</th>
+                <th>{t.date}</th>
+                <th>{t.actions}</th>
               </tr>
             </thead>
             <tbody>
               {orders.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="empty-message">{currentLang.noOrders}</td>
+                  <td colSpan="5" className="empty-state-premium">
+                    <FiShoppingCart size={48} />
+                    <p>{t.noOrders}</p>
+                  </td>
                 </tr>
               ) : (
                 orders.map(order => {
                   const customer = customers.find(c => c._id === (order.customerId?._id || order.customerId));
                   const total = order.totalAmount || calculateOrderTotal(order.items, products);
                   return (
-                    <tr key={order._id}>
-                      <td data-label={currentLang.customerName}>
-                        <div className="customer-info">
-                          <strong>{customer?.name || '—'}</strong>
-                          {customer?.email && <small>{customer.email}</small>}
+                    <tr key={order._id} className="order-row">
+                      <td data-label={t.customerName}>
+                        <div className="customer-cell">
+                          <div className="customer-avatar">
+                            {customer?.name?.charAt(0).toUpperCase() || '?'}
+                          </div>
+                          <div>
+                            <div className="customer-name">{customer?.name || '—'}</div>
+                            {customer?.email && <div className="customer-email">{customer.email}</div>}
+                          </div>
                         </div>
                       </td>
-                      <td data-label={currentLang.items}>
-                        <div className="items-list">
-                          {order.items.map((item, idx) => {
+                      <td data-label={t.items}>
+                        <div className="items-badges">
+                          {order.items.slice(0, 3).map((item, idx) => {
                             const product = products.find(p => p._id === (item.productId?._id || item.productId));
                             return (
-                              <div key={idx} className="item-badge">
-                                {product?.name} x{item.quantity}
-                              </div>
+                              <span key={idx} className="item-badge-premium">
+                                {product?.name || '?'} ×{item.quantity}
+                              </span>
                             );
                           })}
+                          {order.items.length > 3 && (
+                            <span className="more-badge">+{order.items.length - 3} more</span>
+                          )}
                         </div>
                       </td>
-                      <td data-label={currentLang.total} className="total-cell">{formatMoney(total)}</td>
-                      <td data-label={currentLang.date}>
-                        {new Date(order.createdAt).toLocaleDateString(language === 'en' ? 'en-US' : 'ar-EG')}
+                      <td data-label={t.total} className="total-cell-premium">
+                        {formatMoney(total)}
                       </td>
-                      <td data-label={currentLang.actions} className="actions">
-                        <button className="icon-btn edit-btn" onClick={() => handleEdit(order)} title={currentLang.editOrder}>
+                      <td data-label={t.date}>
+                        <div className="date-cell">
+                          <FiCalendar size={12} />
+                          {new Date(order.createdAt).toLocaleDateString(language === 'en' ? 'en-US' : 'ar-EG')}
+                        </div>
+                      </td>
+                      <td data-label={t.actions} className="actions-cell-premium">
+                        <button className="action-icon edit" onClick={() => handleEdit(order)} title={t.editOrder}>
                           <FiEdit2 />
                         </button>
-                        <button className="icon-btn delete-btn" onClick={() => handleDelete(order._id)} title={currentLang.deleteConfirm}>
+                        <button className="action-icon delete" onClick={() => handleDelete(order._id)} title={t.deleteConfirm}>
                           <FiTrash2 />
                         </button>
-                        <button className="icon-btn download-btn" onClick={() => generateInvoicePDF(order)} title="Download PDF">
+                        <button className="action-icon download" onClick={() => generateInvoicePDF(order)} title={t.downloadInvoice}>
                           <FiDownload />
                         </button>
                       </td>
@@ -541,7 +669,7 @@ export default function OrdersPage({ token }) {
                 })
               )}
             </tbody>
-           </table>
+          </table>
         </div>
       </div>
     </div>
