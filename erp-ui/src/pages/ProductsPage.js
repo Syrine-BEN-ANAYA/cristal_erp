@@ -1,18 +1,16 @@
-// ProductsPage.js - Version modernisée avec thème bleu & doré
+// ProductsPage.js - Version sans stock controls et sans language toggle
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   getProducts,
   createProduct,
   updateProduct,
-  deleteProduct,
-  addStock,
-  removeStock
+  deleteProduct
 } from '../api/productsService';
 import { getSuppliers } from '../api/suppliersService';
 import { 
   FiPlus, FiEdit2, FiTrash2, FiX, FiPackage, FiAlertTriangle, 
-  FiGlobe, FiAlertCircle, FiRefreshCw, FiTrendingUp, FiCheckCircle,
-  FiMinusCircle, FiPlusCircle, FiDollarSign
+  FiAlertCircle, FiRefreshCw, FiTrendingUp, FiCheckCircle,
+  FiDollarSign
 } from 'react-icons/fi';
 import '../styles/ProductsPage.css';
 
@@ -23,7 +21,6 @@ export default function ProductsPage({ token }) {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [language, setLanguage] = useState('en');
   const [validationErrors, setValidationErrors] = useState({});
 
   const translations = {
@@ -60,91 +57,25 @@ export default function ProductsPage({ token }) {
       deleteConfirm: 'Are you sure to delete this product?',
       failedToDelete: 'Failed to delete product',
       errorSavingProduct: 'Error saving product',
-      enterQuantityToAdd: 'Enter quantity to add:',
-      enterQuantityToRemove: 'Enter quantity to remove:',
-      enterPositiveNumber: 'Please enter a positive number',
-      insufficientStock: 'Insufficient stock',
       lowStock: 'Low stock alert',
       stock: 'Stock',
       threshold: 'Threshold',
       loading: 'Loading products...',
       refreshing: 'Refreshing...',
       pleaseFixErrors: 'Please fix the errors below before submitting',
-      validationError: 'Validation Error',
       allFieldsRequired: 'All fields are required',
       stockAutoFilled: 'Stock auto-filled from initial quantity',
-      addStock: 'Add Stock',
-      removeStock: 'Remove Stock',
       totalProducts: 'Total Products',
       lowStockCount: 'Low Stock Items',
       totalValue: 'Inventory Value',
       productCreated: 'Product created successfully!',
       productUpdated: 'Product updated successfully!',
-      productDeleted: 'Product deleted successfully!',
-      stockAdded: 'Stock added successfully!',
-      stockRemoved: 'Stock removed successfully!'
-    },
-    ar: {
-      products: 'إدارة المنتجات',
-      manageProducts: 'إدارة كتالوج المنتجات والمخزون',
-      addNewProduct: 'إضافة منتج جديد',
-      editProduct: 'تعديل المنتج',
-      name: 'اسم المنتج',
-      price: 'السعر ($)',
-      initialQuantity: 'الكمية الأولية',
-      currentStock: 'المخزون الحالي',
-      alertThreshold: 'حد التنبيه',
-      supplier: 'المورد',
-      noSupplier: '-- اختر مورد --',
-      nameRequired: 'اسم المنتج مطلوب',
-      nameMinLength: 'اسم المنتج يجب أن يكون حرفين على الأقل',
-      nameMaxLength: 'اسم المنتج لا يمكن أن يتجاوز 100 حرف',
-      nameDuplicate: 'يوجد منتج بنفس الاسم بالفعل',
-      priceRequired: 'السعر مطلوب',
-      priceInvalid: 'السعر يجب أن يكون رقماً موجباً',
-      initialQuantityRequired: 'الكمية الأولية مطلوبة',
-      quantityInvalid: 'الكمية يجب أن تكون رقماً موجباً',
-      stockRequired: 'المخزون الحالي مطلوب',
-      thresholdRequired: 'حد التنبيه مطلوب',
-      thresholdInvalid: 'حد التنبيه يجب أن يكون رقماً موجباً',
-      supplierRequired: 'الرجاء اختيار مورد',
-      updateProduct: 'تحديث المنتج',
-      addProduct: 'إضافة منتج',
-      cancel: 'إلغاء',
-      productList: 'قائمة المنتجات',
-      actions: 'إجراءات',
-      noProducts: 'لا توجد منتجات. قم بإضافة منتجك الأول أعلاه',
-      deleteConfirm: 'هل تريد حذف هذا المنتج؟',
-      failedToDelete: 'فشل حذف المنتج',
-      errorSavingProduct: 'خطأ في حفظ المنتج',
-      enterQuantityToAdd: 'أدخل الكمية للإضافة:',
-      enterQuantityToRemove: 'أدخل الكمية للإزالة:',
-      enterPositiveNumber: 'الرجاء إدخال رقم موجب',
-      insufficientStock: 'المخزون غير كاف',
-      lowStock: 'تنبيه مخزون منخفض',
-      stock: 'المخزون',
-      threshold: 'الحد الأدنى',
-      loading: 'جاري تحميل المنتجات...',
-      refreshing: 'جاري التحديث...',
-      pleaseFixErrors: 'الرجاء إصلاح الأخطاء أدناه قبل الإرسال',
-      validationError: 'خطأ في التحقق',
-      allFieldsRequired: 'جميع الحقول مطلوبة',
-      stockAutoFilled: 'تم تعيين المخزون تلقائياً من الكمية الأولية',
-      addStock: 'إضافة مخزون',
-      removeStock: 'سحب مخزون',
-      totalProducts: 'إجمالي المنتجات',
-      lowStockCount: 'منتجات المخزون المنخفض',
-      totalValue: 'قيمة المخزون',
-      productCreated: 'تم إنشاء المنتج بنجاح!',
-      productUpdated: 'تم تحديث المنتج بنجاح!',
-      productDeleted: 'تم حذف المنتج بنجاح!',
-      stockAdded: 'تم إضافة المخزون بنجاح!',
-      stockRemoved: 'تم سحب المخزون بنجاح!'
+      productDeleted: 'Product deleted successfully!'
     }
   };
 
-  const currentLang = translations[language];
-  const isRTL = language === 'ar';
+  const currentLang = translations.en;
+  const isRTL = false;
 
   const [form, setForm] = useState({
     _id: null,
@@ -384,47 +315,9 @@ export default function ProductsPage({ token }) {
     }
   };
 
-  const handleAddStock = async (id, currentStock, productName) => {
-    const qty = prompt(currentLang.enterQuantityToAdd, '1');
-    if (!qty) return;
-    const quantity = parseInt(qty);
-    if (isNaN(quantity) || quantity <= 0) {
-      alert(currentLang.enterPositiveNumber);
-      return;
-    }
-    try {
-      await addStock(id, quantity, token);
-      showSuccessMessage(`${currentLang.stockAdded} +${quantity} ${productName}`);
-      loadData();
-    } catch (err) {
-      alert(err.response?.data?.message || err.message || 'Failed to add stock');
-    }
-  };
-
-  const handleRemoveStock = async (id, currentStock, productName) => {
-    const qty = prompt(currentLang.enterQuantityToRemove, '1');
-    if (!qty) return;
-    const quantity = parseInt(qty);
-    if (isNaN(quantity) || quantity <= 0) {
-      alert(currentLang.enterPositiveNumber);
-      return;
-    }
-    if (quantity > currentStock) {
-      alert(currentLang.insufficientStock);
-      return;
-    }
-    try {
-      await removeStock(id, quantity, token);
-      showSuccessMessage(`${currentLang.stockRemoved} -${quantity} ${productName}`);
-      loadData();
-    } catch (err) {
-      alert(err.response?.data?.message || err.message || 'Failed to remove stock');
-    }
-  };
-
   if (loading) {
     return (
-      <div className="products-page-modern" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="products-page-modern" dir="ltr">
         <div className="loading-screen-premium">
           <div className="premium-spinner"></div>
           <p>{currentLang.loading}</p>
@@ -434,18 +327,13 @@ export default function ProductsPage({ token }) {
   }
 
   return (
-    <div className={`products-page-modern ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="products-page-modern ltr" dir="ltr">
       {/* Animated Background */}
       <div className="products-bg-animation">
         <div className="bg-orb orb-1"></div>
         <div className="bg-orb orb-2"></div>
         <div className="bg-orb orb-3"></div>
       </div>
-
-      {/* Language Toggle */}
-      <button className="language-toggle-premium" onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}>
-        <FiGlobe /> {language === 'en' ? 'العربية' : 'English'}
-      </button>
 
       {/* Header */}
       <div className="page-header-premium">
@@ -563,7 +451,7 @@ export default function ProductsPage({ token }) {
             </div>
             
             <div className="input-group-premium">
-              <label><FiPlusCircle /> {currentLang.initialQuantity} <span className="required">*</span></label>
+              <label><FiPlus /> {currentLang.initialQuantity} <span className="required">*</span></label>
               <input
                 type="number"
                 name="initialQuantity"
@@ -666,7 +554,6 @@ export default function ProductsPage({ token }) {
                 products.map(p => {
                   const supplier = suppliers.find(s => s._id === p.supplierId);
                   const isLowStock = (p.stock || 0) <= (p.threshold || 0);
-                  const stockPercentage = p.threshold > 0 ? Math.min((p.stock / p.threshold) * 100, 100) : 100;
                   
                   return (
                     <tr key={p._id} className="product-row">
@@ -677,10 +564,10 @@ export default function ProductsPage({ token }) {
                           </div>
                           <div className="product-name">{p.name}</div>
                         </div>
-                       </td>
+                      </td>
                       <td data-label={currentLang.price} className="price-cell">
                         ${p.price?.toFixed(2) ?? '0.00'}
-                       </td>
+                      </td>
                       <td data-label={currentLang.stock}>
                         <div className="stock-cell">
                           <div className="stock-value-wrapper">
@@ -699,22 +586,6 @@ export default function ProductsPage({ token }) {
                               style={{ width: `${Math.min((p.stock / 100) * 100, 100)}%` }}
                             ></div>
                           </div>
-                          <div className="stock-actions">
-                            <button 
-                              className="stock-action add" 
-                              onClick={() => handleAddStock(p._id, p.stock, p.name)}
-                              title={currentLang.addStock}
-                            >
-                              <FiPlusCircle size={12} />
-                            </button>
-                            <button 
-                              className="stock-action remove" 
-                              onClick={() => handleRemoveStock(p._id, p.stock, p.name)}
-                              title={currentLang.removeStock}
-                            >
-                              <FiMinusCircle size={12} />
-                            </button>
-                          </div>
                         </div>
                        </td>
                       <td data-label={currentLang.threshold}>
@@ -731,12 +602,12 @@ export default function ProductsPage({ token }) {
                           <FiTrash2 />
                         </button>
                        </td>
-                     </tr>
+                    </tr>
                   );
                 })
               )}
             </tbody>
-           </table>
+          </table>
         </div>
       </div>
     </div>

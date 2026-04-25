@@ -1,4 +1,4 @@
-// OrdersPage.js - Version corrigée (problème de balise JSX résolu)
+// OrdersPage.js - Version complète avec validation de stock
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   getOrders, createOrder, updateOrder, deleteOrder, getTotalOrderAmount 
@@ -34,6 +34,26 @@ const calculateOrderTotal = (items, products) => {
   }, 0);
 };
 
+// Fonction de validation du stock
+const validateStockAvailability = (items, products) => {
+  const errors = [];
+  items.forEach(item => {
+    if (!item.productId) return;
+    const productId = normalizeId(item.productId);
+    const product = products.find(p => p._id === productId);
+    if (product && item.quantity > product.stock) {
+      errors.push({
+        productName: product.name,
+        requested: item.quantity,
+        available: product.stock,
+        productId: productId,
+        product: product
+      });
+    }
+  });
+  return errors;
+};
+
 export default function OrdersPage({ token }) {
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
@@ -44,6 +64,7 @@ export default function OrdersPage({ token }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [language, setLanguage] = useState('en');
+  const [stockErrors, setStockErrors] = useState([]);
 
   const translations = {
     en: {
@@ -90,7 +111,12 @@ export default function OrdersPage({ token }) {
       failedToGeneratePDF: 'Failed to generate PDF',
       avgOrderValue: 'Avg Order Value',
       thisMonth: 'This Month',
-      downloadInvoice: 'Download Invoice'
+      downloadInvoice: 'Download Invoice',
+      stockError: 'Insufficient stock',
+      stockInsufficient: 'Insufficient stock',
+      available: 'available',
+      requested: 'requested',
+      stock: 'Stock'
     },
     ar: {
       orders: 'إدارة الطلبات',
@@ -136,7 +162,12 @@ export default function OrdersPage({ token }) {
       failedToGeneratePDF: 'فشل إنشاء PDF',
       avgOrderValue: 'متوسط قيمة الطلب',
       thisMonth: 'هذا الشهر',
-      downloadInvoice: 'تحميل الفاتورة'
+      downloadInvoice: 'تحميل الفاتورة',
+      stockError: 'الكمية غير متوفرة',
+      stockInsufficient: 'الكمية غير كافية في المخزون',
+      available: 'متوفر',
+      requested: 'مطلوب',
+      stock: 'المخزون'
     }
   };
 
@@ -148,6 +179,13 @@ export default function OrdersPage({ token }) {
     customerId: '',
     items: [{ id: Date.now(), productId: '', quantity: 1 }]
   });
+
+  // Fonction pour vérifier le stock en temps réel
+  const checkStockInRealTime = useCallback((items) => {
+    const errors = validateStockAvailability(items, products);
+    setStockErrors(errors);
+    return errors.length === 0;
+  }, [products]);
 
   const loadData = useCallback(async (showRefresh = false) => {
     if (!token) return;
@@ -214,12 +252,21 @@ export default function OrdersPage({ token }) {
   };
 
   const handleItemChange = (itemId, field, value) => {
-    setForm(prev => ({
-      ...prev,
-      items: prev.items.map(item => 
+    setForm(prev => {
+      const updatedItems = prev.items.map(item => 
         item.id === itemId ? { ...item, [field]: value } : item
-      )
-    }));
+      );
+      
+      // Vérifier le stock après la mise à jour
+      setTimeout(() => {
+        checkStockInRealTime(updatedItems);
+      }, 0);
+      
+      return {
+        ...prev,
+        items: updatedItems
+      };
+    });
   };
 
   const addItem = () => {
@@ -235,6 +282,10 @@ export default function OrdersPage({ token }) {
       ...prev,
       items: prev.items.filter(item => item.id !== itemId)
     }));
+    // Re-valider le stock après suppression
+    setTimeout(() => {
+      checkStockInRealTime(form.items.filter(item => item.id !== itemId));
+    }, 0);
   };
 
   const resetForm = () => {
@@ -243,6 +294,7 @@ export default function OrdersPage({ token }) {
       customerId: '',
       items: [{ id: Date.now(), productId: '', quantity: 1 }]
     });
+    setStockErrors([]);
   };
 
   const showSuccess = (message) => {
@@ -262,6 +314,18 @@ export default function OrdersPage({ token }) {
     if (form.items.some(item => !item.productId || item.quantity <= 0)) {
       setError(t.fillItemsCorrectly);
       setTimeout(() => setError(''), 3000);
+      return;
+    }
+
+    // Vérification du stock avant soumission
+    const stockValidationErrors = validateStockAvailability(form.items, products);
+    if (stockValidationErrors.length > 0) {
+      const errorMessage = stockValidationErrors.map(err => 
+        `${err.productName}: ${t.requested} ${err.requested}, ${t.available} ${err.available}`
+      ).join('. ');
+      setError(`${t.stockInsufficient}: ${errorMessage}`);
+      setStockErrors(stockValidationErrors);
+      setTimeout(() => setError(''), 5000);
       return;
     }
 
@@ -286,14 +350,19 @@ export default function OrdersPage({ token }) {
       loadData();
       loadTotalAmount();
       setError('');
+      setStockErrors([]);
     } catch (err) {
-      setError(err.response?.data?.message || err.message || t.errorSavingOrder);
+      if (err.response?.data?.message?.includes('stock') || err.response?.data?.message?.includes('Stock')) {
+        setError(`${t.stockInsufficient}. ${err.response?.data?.message || ''}`);
+      } else {
+        setError(err.response?.data?.message || err.message || t.errorSavingOrder);
+      }
       setTimeout(() => setError(''), 4000);
     }
   };
 
   const handleEdit = (order) => {
-    setForm({
+    const editedForm = {
       _id: order._id,
       customerId: order.customerId?._id || order.customerId,
       items: order.items.map((item, idx) => ({
@@ -301,7 +370,14 @@ export default function OrdersPage({ token }) {
         productId: item.productId?._id || item.productId,
         quantity: item.quantity
       }))
-    });
+    };
+    setForm(editedForm);
+    
+    // Vérifier le stock pour les items existants
+    setTimeout(() => {
+      checkStockInRealTime(editedForm.items);
+    }, 100);
+    
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -332,7 +408,6 @@ export default function OrdersPage({ token }) {
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(255, 255, 255);
       doc.text('AL RUBAI UNITED AL CRISTAL', pageWidth / 2, y + 15, { align: 'center' });
-      
       
       y += 50;
       doc.setTextColor(10, 43, 78);
@@ -523,15 +598,18 @@ export default function OrdersPage({ token }) {
             <div className="items-header">
               <span>{t.product}</span>
               <span>{t.quantity}</span>
+              <span>{t.total}</span>
               <span></span>
             </div>
             
             {form.items.map((item) => {
               const selectedProduct = products.find(p => p._id === item.productId);
               const itemTotal = (selectedProduct?.price || 0) * (item.quantity || 0);
+              const stockError = stockErrors.find(err => err.productId === item.productId);
+              const isStockInsufficient = stockError && item.quantity > selectedProduct?.stock;
               
               return (
-                <div key={item.id} className="item-row-premium">
+                <div key={item.id} className={`item-row-premium ${isStockInsufficient ? 'stock-error' : ''}`}>
                   <select
                     value={item.productId}
                     onChange={e => handleItemChange(item.id, 'productId', e.target.value)}
@@ -541,23 +619,41 @@ export default function OrdersPage({ token }) {
                     <option value="">{t.selectProduct}</option>
                     {products.map(p => (
                       <option key={p._id} value={p._id}>
-                        {p.name} - {formatMoney(p.price)}
+                        {p.name} - {formatMoney(p.price)} ({t.stock}: {p.stock})
                       </option>
                     ))}
                   </select>
-                  <input
-                    type="number"
-                    min="1"
-                    value={item.quantity}
-                    onChange={e => handleItemChange(item.id, 'quantity', Number(e.target.value))}
-                    required
-                    className="premium-input"
-                  />
+                  
+                  <div className="quantity-wrapper">
+                    <input
+                      type="number"
+                      min="1"
+                      max={selectedProduct?.stock || 999}
+                      value={item.quantity}
+                      onChange={e => handleItemChange(item.id, 'quantity', Number(e.target.value))}
+                      required
+                      className={`premium-input ${isStockInsufficient ? 'error-input' : ''}`}
+                    />
+                    {selectedProduct && (
+                      <span className="stock-info">
+                        {t.stock}: {selectedProduct.stock}
+                      </span>
+                    )}
+                  </div>
+                  
                   <div className="item-total">{formatMoney(itemTotal)}</div>
+                  
                   {form.items.length > 1 && (
                     <button type="button" className="remove-item-btn" onClick={() => removeItem(item.id)}>
                       <FiTrash2 />
                     </button>
+                  )}
+                  
+                  {isStockInsufficient && (
+                    <div className="stock-warning-message">
+                      <FiAlertCircle />
+                      <span>{t.stockInsufficient}! Max: {selectedProduct?.stock}</span>
+                    </div>
                   )}
                 </div>
               );
@@ -580,9 +676,15 @@ export default function OrdersPage({ token }) {
           </div>
 
           <div className="form-actions-premium">
-            <button type="submit" className="btn-submit">
+            <button type="submit" className="btn-submit" disabled={stockErrors.length > 0}>
               {form._id ? <><FiEdit2 /> {t.updateOrder}</> : <><FiPlus /> {t.createOrder}</>}
             </button>
+            {stockErrors.length > 0 && (
+              <div className="stock-error-summary">
+                <FiAlertCircle />
+                <span>{stockErrors.length} {t.stockError}(s)</span>
+              </div>
+            )}
           </div>
         </form>
       </div>
