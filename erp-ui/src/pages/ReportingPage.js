@@ -1,4 +1,4 @@
-// ReportingPage.js - Version modernisée
+// ReportingPage.js - Version harmonisée avec thème Bleu Diamant / Or / Blanc
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getOrders } from '../api/ordersService';
 import { getProducts, getLowStockProducts } from '../api/productsService';
@@ -128,8 +128,19 @@ const ReportingPage = () => {
   const currentLang = translations[language];
   const isRTL = language === 'ar';
 
-  // Colors for charts
-  const COLORS = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe', '#43e97b', '#38f9d7'];
+  // Couleurs harmonisées avec le thème Bleu Diamant / Or
+  const CHART_COLORS = {
+    diamond: '#1a4b7a',
+    diamondLight: '#2a6a9e',
+    gold: '#d4af37',
+    goldLight: '#e2c75b',
+    purple: '#667eea',
+    green: '#10b981',
+    red: '#ef4444',
+    orange: '#f59e0b'
+  };
+
+  const PIE_COLORS = ['#1a4b7a', '#d4af37', '#2a6a9e', '#e2c75b', '#0f3a5e', '#c9a03d'];
 
   // Fetch data with refresh capability
   const fetchAllData = useCallback(async (showRefresh = false) => {
@@ -289,12 +300,13 @@ const ReportingPage = () => {
     // Title
     doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(10, 43, 78);
+    doc.setTextColor(26, 75, 122); // Diamond blue
     doc.text('AL RUBAI UNITED AL CRISTAL', pageWidth / 2, y + 8, { align: 'center' });
     doc.setFontSize(14);
 
     y += 30;
     doc.setFontSize(16);
+    doc.setTextColor(26, 75, 122);
     doc.text(currentLang.performanceReport, margin, y);
     y += 10;
     doc.setFontSize(10);
@@ -316,7 +328,7 @@ const ReportingPage = () => {
       head: [[currentLang.metric, currentLang.count, currentLang.value]], 
       body: kpiData, 
       theme: 'striped', 
-      headStyles: { fillColor: [102, 126, 234], textColor: 255 }, 
+      headStyles: { fillColor: [26, 75, 122], textColor: 255 }, 
       margin: { left: margin, right: margin } 
     });
     y = doc.lastAutoTable.finalY + 15;
@@ -330,7 +342,7 @@ const ReportingPage = () => {
         head: [[currentLang.month, currentLang.orderCount, currentLang.revenue]], 
         body: ordersByMonth.map(o => [o.month, o.count.toString(), `$${o.revenue.toFixed(2)}`]), 
         theme: 'striped', 
-        headStyles: { fillColor: [102, 126, 234], textColor: 255 }, 
+        headStyles: { fillColor: [26, 75, 122], textColor: 255 }, 
         margin: { left: margin, right: margin } 
       });
       y = doc.lastAutoTable.finalY + 15;
@@ -345,7 +357,7 @@ const ReportingPage = () => {
         head: [[currentLang.product, currentLang.stock]], 
         body: lowStockProducts.map(p => [p.name, `${p.stock} ${currentLang.units}`]), 
         theme: 'striped', 
-        headStyles: { fillColor: [102, 126, 234], textColor: 255 }, 
+        headStyles: { fillColor: [26, 75, 122], textColor: 255 }, 
         margin: { left: margin, right: margin } 
       });
     }
@@ -402,14 +414,7 @@ const ReportingPage = () => {
 
   return (
     <div className={`reporting-page-modern ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Animated Background */}
-      <div className="reporting-bg-animation">
-        <div className="bg-shape shape-1"></div>
-        <div className="bg-shape shape-2"></div>
-        <div className="bg-shape shape-3"></div>
-      </div>
-
-      {/* Header */}
+      {/* Header - Bleu Diamant */}
       <div className="reporting-header">
         <div className="header-left">
           <div className="header-icon-wrapper">
@@ -434,25 +439,25 @@ const ReportingPage = () => {
         </div>
       </div>
 
-        {/* KPI Cards avec couleurs harmonisées */}
+      {/* KPI Cards - Blanc avec accents */}
       <div className="kpi-grid-modern">
         <div className="kpi-card-premium">
-          <div className="kpi-icon-wrapper" style={{ background: 'linear-gradient(135deg, #1a4b7a, #0a2b4e)' }}>
+          <div className="kpi-icon-wrapper" style={{ background: `linear-gradient(135deg, ${CHART_COLORS.diamond}, ${CHART_COLORS.diamondLight})` }}>
             <FiShoppingCart />
           </div>
           <div className="kpi-content">
             <h3>{currentLang.totalOrders}</h3>
             <div className="kpi-value">{metrics.totalOrders}</div>
-            <div className="kpi-trend positive">
-              <FiTrendingUp />
-              <span>{metrics.orderTrend.toFixed(1)}% {currentLang.vsLastMonth}</span>
+            <div className={`kpi-trend ${metrics.orderTrend >= 0 ? 'positive' : 'negative'}`}>
+              {metrics.orderTrend >= 0 ? <FiTrendingUp /> : <FiTrendingDown />}
+              <span>{Math.abs(metrics.orderTrend).toFixed(1)}% {currentLang.vsLastMonth}</span>
             </div>
           </div>
           <div className="kpi-footer">${metrics.totalRevenue.toFixed(2)} revenue</div>
         </div>
 
         <div className="kpi-card-premium">
-          <div className="kpi-icon-wrapper" style={{ background: 'linear-gradient(135deg, #1a4b7a, #0a2b4e)' }}>
+          <div className="kpi-icon-wrapper" style={{ background: `linear-gradient(135deg, ${CHART_COLORS.diamond}, ${CHART_COLORS.diamondLight})` }}>
             <FiPackage />
           </div>
           <div className="kpi-content">
@@ -464,8 +469,7 @@ const ReportingPage = () => {
         </div>
 
         <div className="kpi-card-premium">
-          <div className="kpi-icon-wrapper" style={{ background: 'linear-gradient(135deg, #1a4b7a, #0a2b4e)' }}>
-            <FiShoppingBag />
+<div className="kpi-icon-wrapper" style={{ background: `linear-gradient(135deg, ${CHART_COLORS.diamond}, ${CHART_COLORS.diamondLight})` }}>            <FiShoppingBag />
           </div>
           <div className="kpi-content">
             <h3>{currentLang.totalPurchases}</h3>
@@ -476,7 +480,7 @@ const ReportingPage = () => {
         </div>
 
         <div className="kpi-card-premium">
-          <div className="kpi-icon-wrapper" style={{ background: 'linear-gradient(135deg, #d4af37, #c9a52c)' }}>
+          <div className="kpi-icon-wrapper" style={{ background: `linear-gradient(135deg, ${CHART_COLORS.gold}, ${CHART_COLORS.goldLight})` }}>
             <FiDollarSign />
           </div>
           <div className="kpi-content">
@@ -513,52 +517,52 @@ const ReportingPage = () => {
               <LineChart data={ordersByMonth}>
                 <defs>
                   <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#667eea" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#667eea" stopOpacity={0}/>
+                    <stop offset="5%" stopColor={CHART_COLORS.purple} stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor={CHART_COLORS.purple} stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                <XAxis dataKey="month" stroke="#94a3b8" />
-                <YAxis yAxisId="left" stroke="#94a3b8" />
-                <YAxis yAxisId="right" orientation="right" stroke="#94a3b8" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="month" stroke="#8a9aaa" />
+                <YAxis yAxisId="left" stroke="#8a9aaa" />
+                <YAxis yAxisId="right" orientation="right" stroke="#8a9aaa" />
                 <Tooltip content={<CustomTooltip />} />
-                <Legend wrapperStyle={{ color: '#94a3b8' }} />
-                <Line yAxisId="left" type="monotone" dataKey="count" stroke="#d4af37" strokeWidth={2} dot={{ r: 4 }} name={currentLang.orderCount} />
-                <Line yAxisId="right" type="monotone" dataKey="revenue" stroke="#667eea" strokeWidth={2} dot={{ r: 4 }} name={currentLang.revenue} />
+                <Legend wrapperStyle={{ color: '#5a6a7a' }} />
+                <Line yAxisId="left" type="monotone" dataKey="count" stroke={CHART_COLORS.gold} strokeWidth={2} dot={{ r: 4, fill: CHART_COLORS.gold }} name={currentLang.orderCount} />
+                <Line yAxisId="right" type="monotone" dataKey="revenue" stroke={CHART_COLORS.purple} strokeWidth={2} dot={{ r: 4, fill: CHART_COLORS.purple }} name={currentLang.revenue} />
               </LineChart>
             )}
             {selectedChart === 'area' && (
               <AreaChart data={ordersByMonth}>
                 <defs>
                   <linearGradient id="countGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#d4af37" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#d4af37" stopOpacity={0}/>
+                    <stop offset="5%" stopColor={CHART_COLORS.gold} stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor={CHART_COLORS.gold} stopOpacity={0}/>
                   </linearGradient>
                   <linearGradient id="revenueGradientArea" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#667eea" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#667eea" stopOpacity={0}/>
+                    <stop offset="5%" stopColor={CHART_COLORS.purple} stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor={CHART_COLORS.purple} stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                <XAxis dataKey="month" stroke="#94a3b8" />
-                <YAxis yAxisId="left" stroke="#94a3b8" />
-                <YAxis yAxisId="right" orientation="right" stroke="#94a3b8" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="month" stroke="#8a9aaa" />
+                <YAxis yAxisId="left" stroke="#8a9aaa" />
+                <YAxis yAxisId="right" orientation="right" stroke="#8a9aaa" />
                 <Tooltip content={<CustomTooltip />} />
-                <Legend wrapperStyle={{ color: '#94a3b8' }} />
-                <Area yAxisId="left" type="monotone" dataKey="count" stroke="#d4af37" fill="url(#countGradient)" name={currentLang.orderCount} />
-                <Area yAxisId="right" type="monotone" dataKey="revenue" stroke="#667eea" fill="url(#revenueGradientArea)" name={currentLang.revenue} />
+                <Legend wrapperStyle={{ color: '#5a6a7a' }} />
+                <Area yAxisId="left" type="monotone" dataKey="count" stroke={CHART_COLORS.gold} fill="url(#countGradient)" name={currentLang.orderCount} />
+                <Area yAxisId="right" type="monotone" dataKey="revenue" stroke={CHART_COLORS.purple} fill="url(#revenueGradientArea)" name={currentLang.revenue} />
               </AreaChart>
             )}
             {selectedChart === 'bar' && (
               <BarChart data={ordersByMonth}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                <XAxis dataKey="month" stroke="#94a3b8" />
-                <YAxis yAxisId="left" stroke="#94a3b8" />
-                <YAxis yAxisId="right" orientation="right" stroke="#94a3b8" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="month" stroke="#8a9aaa" />
+                <YAxis yAxisId="left" stroke="#8a9aaa" />
+                <YAxis yAxisId="right" orientation="right" stroke="#8a9aaa" />
                 <Tooltip content={<CustomTooltip />} />
-                <Legend wrapperStyle={{ color: '#94a3b8' }} />
-                <Bar yAxisId="left" dataKey="count" fill="#d4af37" radius={[8, 8, 0, 0]} name={currentLang.orderCount} />
-                <Bar yAxisId="right" dataKey="revenue" fill="#667eea" radius={[8, 8, 0, 0]} name={currentLang.revenue} />
+                <Legend wrapperStyle={{ color: '#5a6a7a' }} />
+                <Bar yAxisId="left" dataKey="count" fill={CHART_COLORS.gold} radius={[8, 8, 0, 0]} name={currentLang.orderCount} />
+                <Bar yAxisId="right" dataKey="revenue" fill={CHART_COLORS.purple} radius={[8, 8, 0, 0]} name={currentLang.revenue} />
               </BarChart>
             )}
           </ResponsiveContainer>
@@ -571,14 +575,14 @@ const ReportingPage = () => {
           </div>
           <ResponsiveContainer width="100%" height={320}>
             <BarChart data={purchasesByMonth}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-              <XAxis dataKey="month" stroke="#94a3b8" />
-              <YAxis yAxisId="left" stroke="#94a3b8" />
-              <YAxis yAxisId="right" orientation="right" stroke="#94a3b8" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="month" stroke="#8a9aaa" />
+              <YAxis yAxisId="left" stroke="#8a9aaa" />
+              <YAxis yAxisId="right" orientation="right" stroke="#8a9aaa" />
               <Tooltip content={<CustomTooltip />} />
-              <Legend wrapperStyle={{ color: '#94a3b8' }} />
-              <Bar yAxisId="left" dataKey="count" fill="#4facfe" radius={[8, 8, 0, 0]} name={currentLang.purchaseCount} />
-              <Bar yAxisId="right" dataKey="amount" fill="#43e97b" radius={[8, 8, 0, 0]} name={currentLang.amount} />
+              <Legend wrapperStyle={{ color: '#5a6a7a' }} />
+              <Bar yAxisId="left" dataKey="count" fill={CHART_COLORS.diamondLight} radius={[8, 8, 0, 0]} name={currentLang.purchaseCount} />
+              <Bar yAxisId="right" dataKey="amount" fill={CHART_COLORS.green} radius={[8, 8, 0, 0]} name={currentLang.amount} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -600,7 +604,7 @@ const ReportingPage = () => {
                     <div className="product-sales-bar">
                       <div 
                         className="sales-fill" 
-                        style={{ width: `${(product.sales / topProducts[0].sales) * 100}%`, background: COLORS[index % COLORS.length] }}
+                        style={{ width: `${(product.sales / topProducts[0].sales) * 100}%`, background: PIE_COLORS[index % PIE_COLORS.length] }}
                       ></div>
                     </div>
                   </div>
@@ -630,7 +634,7 @@ const ReportingPage = () => {
                   labelLine={false}
                 >
                   {revenueDistribution.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip formatter={(value) => `$${value.toFixed(2)}`} />
@@ -659,7 +663,7 @@ const ReportingPage = () => {
                 <div className="stock-info">
                   <div className="stock-name">{p.name}</div>
                   <div className="stock-level">
-                    <div className="stock-bar" style={{ width: `${Math.min((p.stock / 20) * 100, 100)}%`, background: '#ef4444' }}></div>
+                    <div className="stock-bar" style={{ width: `${Math.min((p.stock / 20) * 100, 100)}%`, background: CHART_COLORS.red }}></div>
                     <span>{p.stock} {currentLang.units} remaining</span>
                   </div>
                 </div>

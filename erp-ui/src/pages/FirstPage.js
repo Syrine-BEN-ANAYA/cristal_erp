@@ -3,8 +3,8 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from "react-router-dom";
 import { 
   FiHome, FiUsers, FiDollarSign, FiCpu, FiShoppingCart, 
-  FiTruck, FiGlobe, FiChevronRight, FiInfo, FiLock,
-  FiBriefcase, FiTrendingUp, FiShield, FiStar
+  FiTruck, FiChevronRight, FiInfo,
+  FiBriefcase, FiShield, FiStar
 } from 'react-icons/fi';
 import '../styles/FirstPage.css';
 
@@ -12,7 +12,7 @@ export default function FirstPage({ onLogout, user }) {
   const navigate = useNavigate();
   const [selectedDept, setSelectedDept] = useState(null);
   const [language, setLanguage] = useState('EN');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm] = useState('');
 
   const translations = {
     EN: {
@@ -97,8 +97,8 @@ export default function FirstPage({ onLogout, user }) {
       id: 'HR',
       nameEN: 'Human Resources',
       nameAR: 'الموارد البشرية',
-      color: '#1a4b7a',
-      bgColor: 'rgba(26, 75, 122, 0.08)',
+    color: '#d4af37',
+      bgColor: 'rgba(212, 175, 55, 0.15)',
       descriptionEN: 'Employee management, recruitment, payroll',
       descriptionAR: 'إدارة الموظفين، التوظيف، كشوف المرتبات',
       path: '/user/hr',
@@ -116,8 +116,8 @@ export default function FirstPage({ onLogout, user }) {
       id: 'FINANCE',
       nameEN: 'Finance & Accounting',
       nameAR: 'المالية والمحاسبة',
-      color: '#1a4b7a',
-      bgColor: 'rgba(26, 75, 122, 0.08)',
+  color: '#d4af37',
+      bgColor: 'rgba(212, 175, 55, 0.15)',
       descriptionEN: 'Financial management, accounting, treasury',
       descriptionAR: 'الإدارة المالية، المحاسبة، الخزانة',
       path: '/user/finance',
@@ -135,8 +135,8 @@ export default function FirstPage({ onLogout, user }) {
       id: 'IT',
       nameEN: 'Information Technology',
       nameAR: 'تكنولوجيا المعلومات',
-      color: '#1a4b7a',
-      bgColor: 'rgba(26, 75, 122, 0.08)',
+   color: '#d4af37',
+      bgColor: 'rgba(212, 175, 55, 0.15)',
       descriptionEN: 'Infrastructure, support, security',
       descriptionAR: 'البنية التحتية، الدعم، الأمن',
       path: '/user/it',
@@ -154,8 +154,8 @@ export default function FirstPage({ onLogout, user }) {
       id: 'SALES',
       nameEN: 'Sales & Purchases',
       nameAR: 'المبيعات والمشتريات',
-      color: '#1a4b7a',
-      bgColor: 'rgba(26, 75, 122, 0.08)',
+      color: '#d4af37',
+      bgColor: 'rgba(212, 175, 55, 0.15)',
       descriptionEN: 'Sales, orders, CRM',
       descriptionAR: 'المبيعات، المشتريات، إدارة علاقات العملاء',
       path: '/user/reporting',
@@ -173,8 +173,8 @@ export default function FirstPage({ onLogout, user }) {
       id: 'LOGISTICS',
       nameEN: 'Logistics & Warehouse',
       nameAR: 'الخدمات اللوجستية',
-      color: '#1a4b7a',
-      bgColor: 'rgba(26, 75, 122, 0.08)',
+    color: '#d4af37',
+      bgColor: 'rgba(212, 175, 55, 0.15)',
       descriptionEN: 'Logistics, warehouse, transport',
       descriptionAR: 'الخدمات اللوجستية، المستودعات، النقل',
       path: '/user/logistics',

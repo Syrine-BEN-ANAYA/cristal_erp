@@ -1,14 +1,13 @@
-// OrdersPage.js - Version complète avec validation de stock
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+// OrdersPage.js - Version sans KPI
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   getOrders, createOrder, updateOrder, deleteOrder, getTotalOrderAmount 
 } from '../api/ordersService';
 import { getProducts } from '../api/productsService';
 import { getCustomers } from '../api/customersService';
 import { 
-  FiPackage, FiUser, FiShoppingCart, FiPlus, FiTrash2, FiX, 
-  FiDollarSign, FiEdit2, FiDownload, FiCheckCircle, FiGlobe,
-  FiCalendar, FiTrendingUp, FiRefreshCw, FiAlertCircle
+  FiPackage, FiUser, FiShoppingCart, FiPlus, FiTrash2, FiX, FiEdit2, FiDownload, FiCheckCircle, FiGlobe,
+  FiCalendar, FiRefreshCw, FiAlertCircle
 } from 'react-icons/fi';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -34,7 +33,6 @@ const calculateOrderTotal = (items, products) => {
   }, 0);
 };
 
-// Fonction de validation du stock
 const validateStockAvailability = (items, products) => {
   const errors = [];
   items.forEach(item => {
@@ -180,7 +178,6 @@ export default function OrdersPage({ token }) {
     items: [{ id: Date.now(), productId: '', quantity: 1 }]
   });
 
-  // Fonction pour vérifier le stock en temps réel
   const checkStockInRealTime = useCallback((items) => {
     const errors = validateStockAvailability(items, products);
     setStockErrors(errors);
@@ -225,27 +222,6 @@ export default function OrdersPage({ token }) {
     loadTotalAmount();
   }, [loadData, loadTotalAmount]);
 
-  const metrics = useMemo(() => {
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
-    const thisMonthOrders = orders.filter(order => {
-      const date = new Date(order.createdAt);
-      return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
-    });
-    const thisMonthRevenue = thisMonthOrders.reduce((sum, order) => 
-      sum + (Number(order.totalAmount) || calculateOrderTotal(order.items, products)), 0
-    );
-    const avgOrderValue = orders.length > 0 ? totalOrderAmount / orders.length : 0;
-    
-    return {
-      totalOrders: orders.length,
-      totalRevenue: totalOrderAmount,
-      avgOrderValue,
-      thisMonthOrders: thisMonthOrders.length,
-      thisMonthRevenue
-    };
-  }, [orders, totalOrderAmount, products]);
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
@@ -257,7 +233,6 @@ export default function OrdersPage({ token }) {
         item.id === itemId ? { ...item, [field]: value } : item
       );
       
-      // Vérifier le stock après la mise à jour
       setTimeout(() => {
         checkStockInRealTime(updatedItems);
       }, 0);
@@ -282,7 +257,6 @@ export default function OrdersPage({ token }) {
       ...prev,
       items: prev.items.filter(item => item.id !== itemId)
     }));
-    // Re-valider le stock après suppression
     setTimeout(() => {
       checkStockInRealTime(form.items.filter(item => item.id !== itemId));
     }, 0);
@@ -317,7 +291,6 @@ export default function OrdersPage({ token }) {
       return;
     }
 
-    // Vérification du stock avant soumission
     const stockValidationErrors = validateStockAvailability(form.items, products);
     if (stockValidationErrors.length > 0) {
       const errorMessage = stockValidationErrors.map(err => 
@@ -373,7 +346,6 @@ export default function OrdersPage({ token }) {
     };
     setForm(editedForm);
     
-    // Vérifier le stock pour les items existants
     setTimeout(() => {
       checkStockInRealTime(editedForm.items);
     }, 100);
@@ -401,7 +373,7 @@ export default function OrdersPage({ token }) {
       const margin = 15;
       let y = 20;
 
-      doc.setFillColor(10, 43, 78);
+      doc.setFillColor(26, 75, 122);
       doc.rect(0, 0, pageWidth, 50, 'F');
       
       doc.setFontSize(22);
@@ -410,7 +382,7 @@ export default function OrdersPage({ token }) {
       doc.text('AL RUBAI UNITED AL CRISTAL', pageWidth / 2, y + 15, { align: 'center' });
       
       y += 50;
-      doc.setTextColor(10, 43, 78);
+      doc.setTextColor(26, 75, 122);
       doc.setFontSize(18);
       doc.text(t.invoice, pageWidth / 2, y, { align: 'center' });
       
@@ -475,9 +447,9 @@ export default function OrdersPage({ token }) {
 
   if (loading) {
     return (
-      <div className="orders-page-modern" dir={isRTL ? 'rtl' : 'ltr'}>
-        <div className="loading-screen-premium">
-          <div className="premium-spinner"></div>
+      <div className="orders-page" dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className="loading-screen">
+          <div className="spinner"></div>
           <p>{t.loading}</p>
         </div>
       </div>
@@ -485,21 +457,15 @@ export default function OrdersPage({ token }) {
   }
 
   return (
-    <div className={`orders-page-modern ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className="orders-bg-animation">
-        <div className="bg-orb orb-1"></div>
-        <div className="bg-orb orb-2"></div>
-        <div className="bg-orb orb-3"></div>
-      </div>
-
-      <button className="language-toggle-premium" onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}>
+    <div className={`orders-page ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+      <button className="language-toggle" onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}>
         <FiGlobe /> {language === 'en' ? 'العربية' : 'English'}
       </button>
 
-      <div className="page-header-premium">
+      <div className="page-header">
         <div className="header-content">
           <div className="header-icon">
-            <FiShoppingCart size={32} />
+            <FiShoppingCart size={28} />
           </div>
           <div>
             <h1>{t.orders}</h1>
@@ -513,7 +479,7 @@ export default function OrdersPage({ token }) {
       </div>
 
       {error && (
-        <div className="alert-premium error">
+        <div className="alert error">
           <FiAlertCircle />
           <span>{error}</span>
           <button onClick={() => setError('')}>×</button>
@@ -521,52 +487,14 @@ export default function OrdersPage({ token }) {
       )}
       
       {success && (
-        <div className="alert-premium success">
+        <div className="alert success">
           <FiCheckCircle />
           <span>{success}</span>
           <div className="progress-bar"></div>
         </div>
       )}
 
-      <div className="kpi-grid-premium">
-        <div className="kpi-card-premium">
-          <div className="kpi-icon-bg" style={{ background: 'linear-gradient(135deg, #1a4b7a, #0a2b4e)' }}>
-            <FiShoppingCart />
-          </div>
-          <div className="kpi-info">
-            <h3>{t.totalOrders}</h3>
-            <div className="kpi-value">{metrics.totalOrders}</div>
-            <div className="kpi-trend">
-              <FiTrendingUp />
-              <span>{metrics.thisMonthOrders} {t.thisMonth}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="kpi-card-premium">
-          <div className="kpi-icon-bg" style={{ background: 'linear-gradient(135deg, #1a4b7a, #0a2b4e)' }}>
-            <FiDollarSign />
-          </div>
-          <div className="kpi-info">
-            <h3>{t.totalRevenue}</h3>
-            <div className="kpi-value">{formatMoney(metrics.totalRevenue)}</div>
-            <div className="kpi-sub">{formatMoney(metrics.thisMonthRevenue)} this month</div>
-          </div>
-        </div>
-
-        <div className="kpi-card-premium">
-          <div className="kpi-icon-bg" style={{ background: 'linear-gradient(135deg, #1a4b7a, #0a2b4e)' }}>
-            <FiTrendingUp />
-          </div>
-          <div className="kpi-info">
-            <h3>{t.avgOrderValue}</h3>
-            <div className="kpi-value">{formatMoney(metrics.avgOrderValue)}</div>
-            <div className="kpi-sub">per transaction</div>
-          </div>
-        </div>
-      </div>
-
-      <div className="form-card-premium">
+      <div className="form-card">
         <div className="form-card-header">
           <h3><FiPlus /> {form._id ? t.editOrder : t.newOrder}</h3>
           {form._id && (
@@ -577,14 +505,14 @@ export default function OrdersPage({ token }) {
         </div>
         
         <form onSubmit={handleSubmit}>
-          <div className="form-group-premium">
+          <div className="form-group">
             <label><FiUser /> {t.customer} <span className="required">*</span></label>
             <select
               name="customerId"
               value={form.customerId}
               onChange={handleChange}
               required
-              className="premium-select"
+              className="form-select"
             >
               <option value="">{t.selectCustomer}</option>
               {customers.map(c => (
@@ -593,7 +521,7 @@ export default function OrdersPage({ token }) {
             </select>
           </div>
 
-          <div className="items-section-premium">
+          <div className="items-section">
             <label><FiPackage /> {t.products} <span className="required">*</span></label>
             <div className="items-header">
               <span>{t.product}</span>
@@ -609,12 +537,12 @@ export default function OrdersPage({ token }) {
               const isStockInsufficient = stockError && item.quantity > selectedProduct?.stock;
               
               return (
-                <div key={item.id} className={`item-row-premium ${isStockInsufficient ? 'stock-error' : ''}`}>
+                <div key={item.id} className={`item-row ${isStockInsufficient ? 'stock-error' : ''}`}>
                   <select
                     value={item.productId}
                     onChange={e => handleItemChange(item.id, 'productId', e.target.value)}
                     required
-                    className="premium-select"
+                    className="form-select"
                   >
                     <option value="">{t.selectProduct}</option>
                     {products.map(p => (
@@ -632,7 +560,7 @@ export default function OrdersPage({ token }) {
                       value={item.quantity}
                       onChange={e => handleItemChange(item.id, 'quantity', Number(e.target.value))}
                       required
-                      className={`premium-input ${isStockInsufficient ? 'error-input' : ''}`}
+                      className={`form-input ${isStockInsufficient ? 'error-input' : ''}`}
                     />
                     {selectedProduct && (
                       <span className="stock-info">
@@ -644,13 +572,13 @@ export default function OrdersPage({ token }) {
                   <div className="item-total">{formatMoney(itemTotal)}</div>
                   
                   {form.items.length > 1 && (
-                    <button type="button" className="remove-item-btn" onClick={() => removeItem(item.id)}>
+                    <button type="button" className="remove-item" onClick={() => removeItem(item.id)}>
                       <FiTrash2 />
                     </button>
                   )}
                   
                   {isStockInsufficient && (
-                    <div className="stock-warning-message">
+                    <div className="stock-warning">
                       <FiAlertCircle />
                       <span>{t.stockInsufficient}! Max: {selectedProduct?.stock}</span>
                     </div>
@@ -659,7 +587,7 @@ export default function OrdersPage({ token }) {
               );
             })}
             
-            <button type="button" className="add-item-btn-premium" onClick={addItem}>
+            <button type="button" className="add-item-btn" onClick={addItem}>
               <FiPlus /> {t.addProduct}
             </button>
           </div>
@@ -675,7 +603,7 @@ export default function OrdersPage({ token }) {
             </div>
           </div>
 
-          <div className="form-actions-premium">
+          <div className="form-actions">
             <button type="submit" className="btn-submit" disabled={stockErrors.length > 0}>
               {form._id ? <><FiEdit2 /> {t.updateOrder}</> : <><FiPlus /> {t.createOrder}</>}
             </button>
@@ -689,14 +617,14 @@ export default function OrdersPage({ token }) {
         </form>
       </div>
 
-      <div className="table-card-premium">
+      <div className="table-card">
         <div className="table-header">
           <h3><FiShoppingCart /> {t.orderList}</h3>
           <div className="table-stats">{orders.length} total orders</div>
         </div>
         
-        <div className="table-responsive-premium">
-          <table className="orders-table-premium">
+        <div className="table-responsive">
+          <table className="orders-table">
             <thead>
               <tr>
                 <th>{t.customerName}</th>
@@ -709,7 +637,7 @@ export default function OrdersPage({ token }) {
             <tbody>
               {orders.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="empty-state-premium">
+                  <td colSpan="5" className="empty-state">
                     <FiShoppingCart size={48} />
                     <p>{t.noOrders}</p>
                   </td>
@@ -736,17 +664,19 @@ export default function OrdersPage({ token }) {
                           {order.items.slice(0, 3).map((item, idx) => {
                             const product = products.find(p => p._id === (item.productId?._id || item.productId));
                             return (
-                              <span key={idx} className="item-badge-premium">
+                              <span key={idx} className="item-badge">
                                 {product?.name || '?'} ×{item.quantity}
                               </span>
                             );
                           })}
                           {order.items.length > 3 && (
-                            <span className="more-badge">+{order.items.length - 3} more</span>
+                            <span className="more-badge">
+                              +{order.items.length - 3} more
+                            </span>
                           )}
                         </div>
                       </td>
-                      <td data-label={t.total} className="total-cell-premium">
+                      <td data-label={t.total} className="total-cell">
                         {formatMoney(total)}
                       </td>
                       <td data-label={t.date}>
@@ -755,7 +685,7 @@ export default function OrdersPage({ token }) {
                           {new Date(order.createdAt).toLocaleDateString(language === 'en' ? 'en-US' : 'ar-EG')}
                         </div>
                       </td>
-                      <td data-label={t.actions} className="actions-cell-premium">
+                      <td data-label={t.actions} className="actions-cell">
                         <button className="action-icon edit" onClick={() => handleEdit(order)} title={t.editOrder}>
                           <FiEdit2 />
                         </button>

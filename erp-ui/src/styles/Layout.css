@@ -127,7 +127,7 @@
   justify-content: center;
   font-weight: 700;
   color: var(--primary-dark);
-  font-size: 1rem;
+  font-size: 0.8rem;
 }
 
 .user-details-modern {
@@ -248,7 +248,7 @@
   text-decoration: none;
   transition: var(--transition);
   position: relative;
-  font-size: 0.9rem;
+  font-size: 1.1rem;
 }
 
 .sidebar-link:hover {
@@ -431,15 +431,15 @@
   }
   
   .company-name-main {
-    font-size: 0.9rem;
+    font-size: 1rem;
   }
   
   .company-name-sub {
-    font-size: 0.65rem;
+    font-size: 0.9rem;
   }
   
   .company-name-ar {
-    font-size: 0.55rem;
+    font-size: 0.8rem;
   }
   
   .user-avatar-modern {

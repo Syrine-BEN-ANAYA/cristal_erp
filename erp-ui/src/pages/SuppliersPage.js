@@ -1,10 +1,10 @@
-// SuppliersPage.js - Version modernisée avec thème bleu & doré
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+// SuppliersPage.js - Version sans KPI
+import React, { useEffect, useState, useCallback } from 'react';
 import { getSuppliers, createSupplier, updateSupplier, deleteSupplier } from '../api/suppliersService';
 import { 
   FiUser, FiMail, FiPhone, FiMapPin, FiPlus, FiEdit2, FiTrash2, 
-  FiX, FiGlobe, FiRefreshCw, FiTruck, FiTrendingUp, FiCheckCircle,
-  FiAlertCircle, FiPackage
+  FiX, FiGlobe, FiRefreshCw, FiTruck, FiCheckCircle,
+  FiAlertCircle
 } from 'react-icons/fi';
 import '../styles/SuppliersPage.css';
 
@@ -39,7 +39,7 @@ export default function SuppliersPage({ token }) {
       suppliersList: 'Suppliers List',
       actions: 'Actions',
       noSuppliers: 'No suppliers found. Add your first supplier above.',
-      deleteConfirm: 'Are you sure you want to delete this supplier?',
+      deleteConfirm: 'Delete this supplier?',
       updateFailed: 'Update failed',
       creationFailed: 'Creation failed',
       deleteFailed: 'Delete failed',
@@ -51,11 +51,7 @@ export default function SuppliersPage({ token }) {
       addressPlaceholder: 'Full address',
       supplierCreated: 'Supplier created successfully!',
       supplierUpdated: 'Supplier updated successfully!',
-      supplierDeleted: 'Supplier deleted successfully!',
-      totalSuppliers: 'Total Suppliers',
-      withContact: 'With Contact',
-      activePartners: 'Active Partners',
-      contactInfo: 'contact info'
+      supplierDeleted: 'Supplier deleted successfully!'
     },
     ar: {
       suppliers: 'إدارة الموردين',
@@ -73,7 +69,7 @@ export default function SuppliersPage({ token }) {
       suppliersList: 'قائمة الموردين',
       actions: 'إجراءات',
       noSuppliers: 'لا يوجد موردين. قم بإضافة موردك الأول أعلاه',
-      deleteConfirm: 'هل أنت متأكد من حذف هذا المورد؟',
+      deleteConfirm: 'حذف هذا المورد؟',
       updateFailed: 'فشل التحديث',
       creationFailed: 'فشل الإنشاء',
       deleteFailed: 'فشل الحذف',
@@ -85,15 +81,11 @@ export default function SuppliersPage({ token }) {
       addressPlaceholder: 'العنوان الكامل',
       supplierCreated: 'تم إنشاء المورد بنجاح!',
       supplierUpdated: 'تم تحديث المورد بنجاح!',
-      supplierDeleted: 'تم حذف المورد بنجاح!',
-      totalSuppliers: 'إجمالي الموردين',
-      withContact: 'مع معلومات الاتصال',
-      activePartners: 'شركاء نشطون',
-      contactInfo: 'معلومات الاتصال'
+      supplierDeleted: 'تم حذف المورد بنجاح!'
     }
   };
 
-  const currentLang = translations[language];
+  const t = translations[language];
   const isRTL = language === 'ar';
 
   const loadSuppliers = useCallback(async (showRefresh = false) => {
@@ -130,20 +122,6 @@ export default function SuppliersPage({ token }) {
     }
   }, [success]);
 
-  const metrics = useMemo(() => {
-    const withEmail = suppliers.filter(s => s.email && s.email.trim() !== '').length;
-    const withPhone = suppliers.filter(s => s.phone && s.phone.trim() !== '').length;
-    const withFullContact = suppliers.filter(s => s.email && s.email.trim() !== '' && s.phone && s.phone.trim() !== '').length;
-    
-    return {
-      total: suppliers.length,
-      withEmail,
-      withPhone,
-      withFullContact,
-      contactRate: suppliers.length > 0 ? (withFullContact / suppliers.length) * 100 : 0
-    };
-  }, [suppliers]);
-
   const resetForm = () => {
     setName('');
     setEmail('');
@@ -160,7 +138,8 @@ export default function SuppliersPage({ token }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name.trim()) {
-      setError(currentLang.nameRequired);
+      setError(t.nameRequired);
+      setTimeout(() => setError(''), 3000);
       return;
     }
 
@@ -175,15 +154,16 @@ export default function SuppliersPage({ token }) {
       if (editingId) {
         const updated = await updateSupplier(editingId, payload, token);
         setSuppliers(suppliers.map(s => (s._id === updated._id ? updated : s)));
-        showSuccessMessage(currentLang.supplierUpdated);
+        showSuccessMessage(t.supplierUpdated);
       } else {
         const created = await createSupplier(payload, token);
         setSuppliers([...suppliers, created]);
-        showSuccessMessage(currentLang.supplierCreated);
+        showSuccessMessage(t.supplierCreated);
       }
       resetForm();
     } catch (err) {
-      setError(err.message || (editingId ? currentLang.updateFailed : currentLang.creationFailed));
+      setError(err.message || (editingId ? t.updateFailed : t.creationFailed));
+      setTimeout(() => setError(''), 4000);
     }
   };
 
@@ -197,211 +177,162 @@ export default function SuppliersPage({ token }) {
   };
 
   const handleDelete = async (id, name) => {
-    if (!window.confirm(`${currentLang.deleteConfirm} "${name}"?`)) return;
+    if (!window.confirm(`${t.deleteConfirm} "${name}"?`)) return;
     try {
       await deleteSupplier(id, token);
       setSuppliers(suppliers.filter(s => s._id !== id));
-      showSuccessMessage(`${currentLang.supplierDeleted} "${name}"`);
+      showSuccessMessage(`${t.supplierDeleted} "${name}"`);
     } catch (err) {
-      setError(err.message || currentLang.deleteFailed);
+      setError(err.message || t.deleteFailed);
+      setTimeout(() => setError(''), 3000);
     }
   };
 
   if (loading) {
     return (
-      <div className="suppliers-page-modern" dir={isRTL ? 'rtl' : 'ltr'}>
-        <div className="loading-screen-premium">
-          <div className="premium-spinner"></div>
-          <p>{currentLang.loading}</p>
+      <div className="suppliers-page" dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className="loading-screen">
+          <div className="spinner"></div>
+          <p>{t.loading}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`suppliers-page-modern ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Animated Background */}
-      <div className="suppliers-bg-animation">
-        <div className="bg-orb orb-1"></div>
-        <div className="bg-orb orb-2"></div>
-        <div className="bg-orb orb-3"></div>
-      </div>
-
-      {/* Language Toggle */}
-      <button className="language-toggle-premium" onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}>
+    <div className={`suppliers-page ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+      <button className="language-toggle" onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}>
         <FiGlobe /> {language === 'en' ? 'العربية' : 'English'}
       </button>
 
-      {/* Header */}
-      <div className="page-header-premium">
+      <div className="page-header">
         <div className="header-content">
           <div className="header-icon">
-            <FiTruck size={32} />
+            <FiTruck size={28} />
           </div>
           <div>
-            <h1>{currentLang.suppliers}</h1>
-            <p>{currentLang.manageSuppliers}</p>
+            <h1>{t.suppliers}</h1>
+            <p>{t.manageSuppliers}</p>
           </div>
         </div>
         <button className="refresh-btn" onClick={() => loadSuppliers(true)} disabled={refreshing}>
           <FiRefreshCw className={refreshing ? 'spinning' : ''} />
-          {refreshing ? currentLang.refreshing : 'Refresh'}
+          {refreshing ? t.refreshing : 'Refresh'}
         </button>
       </div>
 
-      {/* Alerts */}
       {error && (
-        <div className="alert-premium error">
+        <div className="alert error">
           <FiAlertCircle />
           <span>{error}</span>
           <button onClick={() => setError('')}>×</button>
         </div>
       )}
+      
       {success && (
-        <div className="alert-premium success">
+        <div className="alert success">
           <FiCheckCircle />
           <span>{success}</span>
           <div className="progress-bar"></div>
         </div>
       )}
 
-      {/* KPI Cards */}
-      <div className="kpi-grid-premium">
-        <div className="kpi-card-premium">
-          <div className="kpi-icon-bg" style={{ background: 'linear-gradient(135deg, #1a4b7a, #0a2b4e)' }}>
-            <FiTruck />
-          </div>
-          <div className="kpi-info">
-            <h3>{currentLang.totalSuppliers}</h3>
-            <div className="kpi-value">{metrics.total}</div>
-            <div className="kpi-trend">
-              <FiTrendingUp />
-              <span>Total partners</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="kpi-card-premium">
-          <div className="kpi-icon-bg" style={{ background: 'linear-gradient(135deg, #1a4b7a, #0a2b4e)' }}>
-            <FiMail />
-          </div>
-          <div className="kpi-info">
-            <h3>{currentLang.withContact}</h3>
-            <div className="kpi-value">{metrics.withFullContact}</div>
-            <div className="kpi-sub">{metrics.contactRate.toFixed(0)}% complete</div>
-          </div>
-        </div>
-
-        <div className="kpi-card-premium">
-          <div className="kpi-icon-bg" style={{ background: 'linear-gradient(135deg, #1a4b7a, #0a2b4e)' }}>
-            <FiPackage />
-          </div>
-          <div className="kpi-info">
-            <h3>Active Status</h3>
-            <div className="kpi-value">{((metrics.withPhone / metrics.total) * 100 || 0).toFixed(0)}%</div>
-            <div className="kpi-sub">with phone contact</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Form Card */}
-      <div className="form-card-premium">
+      <div className="form-card">
         <div className="form-card-header">
-          <h3><FiPlus /> {editingId ? currentLang.editSupplier : currentLang.addNewSupplier}</h3>
+          <h3><FiPlus /> {editingId ? t.editSupplier : t.addNewSupplier}</h3>
           {editingId && (
             <button className="cancel-edit" onClick={resetForm}>
-              <FiX /> {currentLang.cancel}
+              <FiX /> {t.cancel}
             </button>
           )}
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="form-grid-premium">
-            <div className="input-group-premium">
-              <label><FiUser /> {currentLang.name} <span className="required">*</span></label>
+          <div className="form-grid">
+            <div className="input-group">
+              <label><FiUser /> {t.name} <span className="required">*</span></label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder={currentLang.supplierName}
-                className="premium-input"
+                placeholder={t.supplierName}
+                className="form-input"
                 required
               />
             </div>
 
-            <div className="input-group-premium">
-              <label><FiMail /> {currentLang.email}</label>
+            <div className="input-group">
+              <label><FiMail /> {t.email}</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder={currentLang.emailPlaceholder}
-                className="premium-input"
+                placeholder={t.emailPlaceholder}
+                className="form-input"
               />
             </div>
 
-            <div className="input-group-premium">
-              <label><FiPhone /> {currentLang.phone}</label>
+            <div className="input-group">
+              <label><FiPhone /> {t.phone}</label>
               <input
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder={currentLang.phonePlaceholder}
-                className="premium-input"
+                placeholder={t.phonePlaceholder}
+                className="form-input"
               />
             </div>
 
-            <div className="input-group-premium">
-              <label><FiMapPin /> {currentLang.address}</label>
+            <div className="input-group">
+              <label><FiMapPin /> {t.address}</label>
               <input
                 type="text"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                placeholder={currentLang.addressPlaceholder}
-                className="premium-input"
+                placeholder={t.addressPlaceholder}
+                className="form-input"
               />
             </div>
           </div>
 
-          <div className="form-actions-premium">
+          <div className="form-actions">
             <button type="submit" className="btn-submit">
               {editingId ? <FiEdit2 /> : <FiPlus />}
-              {editingId ? currentLang.update : currentLang.add}
+              {editingId ? t.update : t.add}
             </button>
           </div>
         </form>
       </div>
 
-      {/* Suppliers Table */}
-      <div className="table-card-premium">
+      <div className="table-card">
         <div className="table-header">
-          <h3><FiTruck /> {currentLang.suppliersList}</h3>
+          <h3><FiTruck /> {t.suppliersList}</h3>
           <div className="table-stats">{suppliers.length} total suppliers</div>
         </div>
 
-        <div className="table-responsive-premium">
-          <table className="suppliers-table-premium">
+        <div className="table-responsive">
+          <table className="suppliers-table">
             <thead>
               <tr>
-                <th>{currentLang.name}</th>
-                <th>{currentLang.email}</th>
-                <th>{currentLang.phone}</th>
-                <th>{currentLang.address}</th>
-                <th>{currentLang.actions}</th>
+                <th>{t.name}</th>
+                <th>{t.email}</th>
+                <th>{t.phone}</th>
+                <th>{t.address}</th>
+                <th>{t.actions}</th>
               </tr>
             </thead>
             <tbody>
               {suppliers.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="empty-state-premium">
+                  <td colSpan="5" className="empty-state">
                     <FiTruck size={48} />
-                    <p>{currentLang.noSuppliers}</p>
+                    <p>{t.noSuppliers}</p>
                   </td>
                 </tr>
               ) : (
                 suppliers.map((supplier) => (
                   <tr key={supplier._id} className="supplier-row">
-                    <td data-label={currentLang.name}>
+                    <td data-label={t.name}>
                       <div className="supplier-cell">
                         <div className="supplier-avatar">
                           {supplier.name.charAt(0).toUpperCase()}
@@ -409,31 +340,31 @@ export default function SuppliersPage({ token }) {
                         <div className="supplier-name">{supplier.name}</div>
                       </div>
                     </td>
-                    <td data-label={currentLang.email}>
+                    <td data-label={t.email}>
                       {supplier.email ? (
                         <a href={`mailto:${supplier.email}`} className="email-link">
                           {supplier.email}
                         </a>
                       ) : '—'}
                     </td>
-                    <td data-label={currentLang.phone}>
+                    <td data-label={t.phone}>
                       {supplier.phone ? (
                         <a href={`tel:${supplier.phone}`} className="phone-link">
                           {supplier.phone}
                         </a>
                       ) : '—'}
                     </td>
-                    <td data-label={currentLang.address}>
+                    <td data-label={t.address}>
                       <div className="address-cell">
                         <FiMapPin size={12} />
                         <span>{supplier.address || '—'}</span>
                       </div>
                     </td>
-                    <td data-label={currentLang.actions} className="actions-cell-premium">
-                      <button className="action-icon edit" onClick={() => handleEdit(supplier)} title={currentLang.editSupplier}>
+                    <td data-label={t.actions} className="actions-cell">
+                      <button className="action-icon edit" onClick={() => handleEdit(supplier)} title={t.editSupplier}>
                         <FiEdit2 />
                       </button>
-                      <button className="action-icon delete" onClick={() => handleDelete(supplier._id, supplier.name)} title={currentLang.deleteConfirm}>
+                      <button className="action-icon delete" onClick={() => handleDelete(supplier._id, supplier.name)} title={t.deleteConfirm}>
                         <FiTrash2 />
                       </button>
                     </td>

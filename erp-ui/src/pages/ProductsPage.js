@@ -1,5 +1,5 @@
-// ProductsPage.js - Version sans stock controls et sans language toggle
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+// ProductsPage.js - Version avec support AR/EN et sans KPI
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   getProducts,
   createProduct,
@@ -9,7 +9,7 @@ import {
 import { getSuppliers } from '../api/suppliersService';
 import { 
   FiPlus, FiEdit2, FiTrash2, FiX, FiPackage, FiAlertTriangle, 
-  FiAlertCircle, FiRefreshCw, FiTrendingUp, FiCheckCircle,
+  FiAlertCircle, FiRefreshCw, FiCheckCircle, FiGlobe,
   FiDollarSign
 } from 'react-icons/fi';
 import '../styles/ProductsPage.css';
@@ -22,6 +22,7 @@ export default function ProductsPage({ token }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [validationErrors, setValidationErrors] = useState({});
+  const [language, setLanguage] = useState('en');
 
   const translations = {
     en: {
@@ -54,7 +55,7 @@ export default function ProductsPage({ token }) {
       productList: 'Product Catalog',
       actions: 'Actions',
       noProducts: 'No products found. Add your first product above.',
-      deleteConfirm: 'Are you sure to delete this product?',
+      deleteConfirm: 'Delete this product?',
       failedToDelete: 'Failed to delete product',
       errorSavingProduct: 'Error saving product',
       lowStock: 'Low stock alert',
@@ -63,19 +64,61 @@ export default function ProductsPage({ token }) {
       loading: 'Loading products...',
       refreshing: 'Refreshing...',
       pleaseFixErrors: 'Please fix the errors below before submitting',
-      allFieldsRequired: 'All fields are required',
       stockAutoFilled: 'Stock auto-filled from initial quantity',
-      totalProducts: 'Total Products',
-      lowStockCount: 'Low Stock Items',
-      totalValue: 'Inventory Value',
       productCreated: 'Product created successfully!',
       productUpdated: 'Product updated successfully!',
-      productDeleted: 'Product deleted successfully!'
+      productDeleted: 'Product deleted successfully!',
+      refresh: 'Refresh'
+    },
+    ar: {
+      products: 'إدارة المنتجات',
+      manageProducts: 'إدارة كتالوج المنتجات والمخزون',
+      addNewProduct: 'إضافة منتج جديد',
+      editProduct: 'تعديل المنتج',
+      name: 'اسم المنتج',
+      price: 'السعر ($)',
+      initialQuantity: 'الكمية الأولية',
+      currentStock: 'المخزون الحالي',
+      alertThreshold: 'حد التنبيه',
+      supplier: 'المورد',
+      noSupplier: '-- اختر مورد --',
+      nameRequired: 'اسم المنتج مطلوب',
+      nameMinLength: 'يجب أن يكون اسم المنتج حرفين على الأقل',
+      nameMaxLength: 'لا يمكن أن يتجاوز اسم المنتج 100 حرف',
+      nameDuplicate: 'منتج بنفس الاسم موجود بالفعل',
+      priceRequired: 'السعر مطلوب',
+      priceInvalid: 'يجب أن يكون السعر رقماً موجباً',
+      initialQuantityRequired: 'الكمية الأولية مطلوبة',
+      quantityInvalid: 'يجب أن تكون الكمية رقماً موجباً',
+      stockRequired: 'المخزون الحالي مطلوب',
+      thresholdRequired: 'حد التنبيه مطلوب',
+      thresholdInvalid: 'يجب أن يكون حد التنبيه رقماً موجباً',
+      supplierRequired: 'الرجاء اختيار المورد',
+      updateProduct: 'تحديث المنتج',
+      addProduct: 'إضافة منتج',
+      cancel: 'إلغاء',
+      productList: 'قائمة المنتجات',
+      actions: 'إجراءات',
+      noProducts: 'لا توجد منتجات. قم بإضافة منتجك الأول أعلاه',
+      deleteConfirm: 'حذف هذا المنتج؟',
+      failedToDelete: 'فشل حذف المنتج',
+      errorSavingProduct: 'خطأ في حفظ المنتج',
+      lowStock: 'تنبيه المخزون المنخفض',
+      stock: 'المخزون',
+      threshold: 'الحد',
+      loading: 'جاري تحميل المنتجات...',
+      refreshing: 'جاري التحديث...',
+      pleaseFixErrors: 'الرجاء إصلاح الأخطاء أدناه قبل الإرسال',
+      stockAutoFilled: 'يتم تعبئة المخزون تلقائياً من الكمية الأولية',
+      productCreated: 'تم إنشاء المنتج بنجاح!',
+      productUpdated: 'تم تحديث المنتج بنجاح!',
+      productDeleted: 'تم حذف المنتج بنجاح!',
+      refresh: 'تحديث'
     }
   };
 
-  const currentLang = translations.en;
-  const isRTL = false;
+  const t = translations[language];
+  const isRTL = language === 'ar';
 
   const [form, setForm] = useState({
     _id: null,
@@ -125,61 +168,47 @@ export default function ProductsPage({ token }) {
     }
   }, [success]);
 
-  const metrics = useMemo(() => {
-    const lowStockCount = products.filter(p => (p.stock || 0) <= (p.threshold || 0)).length;
-    const totalInventoryValue = products.reduce((sum, p) => sum + ((p.price || 0) * (p.stock || 0)), 0);
-    const outOfStockCount = products.filter(p => (p.stock || 0) === 0).length;
-    
-    return {
-      total: products.length,
-      lowStock: lowStockCount,
-      outOfStock: outOfStockCount,
-      totalValue: totalInventoryValue,
-      healthyStock: products.length - lowStockCount
-    };
-  }, [products]);
-
   const showSuccessMessage = (msg) => {
     setSuccess(msg);
   };
 
   const validateName = (name, excludeId = null) => {
-    if (!name || name.trim() === '') return currentLang.nameRequired;
-    if (name.length < 2) return currentLang.nameMinLength;
-    if (name.length > 100) return currentLang.nameMaxLength;
+    if (!name || name.trim() === '') return t.nameRequired;
+    if (name.length < 2) return t.nameMinLength;
+    if (name.length > 100) return t.nameMaxLength;
     const duplicate = products.some(p => 
       p.name.toLowerCase() === name.toLowerCase() && p._id !== excludeId
     );
-    if (duplicate) return currentLang.nameDuplicate;
+    if (duplicate) return t.nameDuplicate;
     return '';
   };
 
   const validatePrice = (price) => {
-    if (price === '' || price === null || price === undefined) return currentLang.priceRequired;
-    if (isNaN(price) || price < 0) return currentLang.priceInvalid;
+    if (price === '' || price === null || price === undefined) return t.priceRequired;
+    if (isNaN(price) || price < 0) return t.priceInvalid;
     return '';
   };
 
   const validateInitialQuantity = (quantity) => {
-    if (quantity === '' || quantity === null || quantity === undefined) return currentLang.initialQuantityRequired;
-    if (isNaN(quantity) || quantity < 0) return currentLang.quantityInvalid;
+    if (quantity === '' || quantity === null || quantity === undefined) return t.initialQuantityRequired;
+    if (isNaN(quantity) || quantity < 0) return t.quantityInvalid;
     return '';
   };
 
   const validateStock = (stock) => {
-    if (stock === '' || stock === null || stock === undefined) return currentLang.stockRequired;
-    if (isNaN(stock) || stock < 0) return currentLang.quantityInvalid;
+    if (stock === '' || stock === null || stock === undefined) return t.stockRequired;
+    if (isNaN(stock) || stock < 0) return t.quantityInvalid;
     return '';
   };
 
   const validateThreshold = (threshold) => {
-    if (threshold === '' || threshold === null || threshold === undefined) return currentLang.thresholdRequired;
-    if (isNaN(threshold) || threshold < 0) return currentLang.thresholdInvalid;
+    if (threshold === '' || threshold === null || threshold === undefined) return t.thresholdRequired;
+    if (isNaN(threshold) || threshold < 0) return t.thresholdInvalid;
     return '';
   };
 
   const validateSupplier = (supplierId) => {
-    if (!supplierId || supplierId === '') return currentLang.supplierRequired;
+    if (!supplierId || supplierId === '') return t.supplierRequired;
     return '';
   };
 
@@ -256,7 +285,8 @@ export default function ProductsPage({ token }) {
     
     const isValid = validateForm();
     if (!isValid) {
-      setError(`⚠️ ${currentLang.pleaseFixErrors}`);
+      setError(`⚠️ ${t.pleaseFixErrors}`);
+      setTimeout(() => setError(''), 4000);
       return;
     }
     
@@ -272,19 +302,20 @@ export default function ProductsPage({ token }) {
 
       if (form._id) {
         await updateProduct(form._id, payload, token);
-        showSuccessMessage(currentLang.productUpdated);
+        showSuccessMessage(t.productUpdated);
       } else {
         await createProduct(payload, token);
-        showSuccessMessage(currentLang.productCreated);
+        showSuccessMessage(t.productCreated);
       }
       resetForm();
       loadData();
     } catch (err) {
-      const errorMsg = err.response?.data?.message || err.message || currentLang.errorSavingProduct;
+      const errorMsg = err.response?.data?.message || err.message || t.errorSavingProduct;
       setError(errorMsg);
+      setTimeout(() => setError(''), 4000);
       
       if (errorMsg.toLowerCase().includes('duplicate') || errorMsg.toLowerCase().includes('already exists')) {
-        setValidationErrors(prev => ({ ...prev, name: currentLang.nameDuplicate }));
+        setValidationErrors(prev => ({ ...prev, name: t.nameDuplicate }));
       }
     }
   };
@@ -305,137 +336,95 @@ export default function ProductsPage({ token }) {
   };
 
   const handleDelete = async (id, name) => {
-    if (!window.confirm(`${currentLang.deleteConfirm} "${name}"?`)) return;
+    if (!window.confirm(`${t.deleteConfirm} "${name}"?`)) return;
     try {
       await deleteProduct(id, token);
-      showSuccessMessage(`${currentLang.productDeleted} "${name}"`);
+      showSuccessMessage(`${t.productDeleted} "${name}"`);
       loadData();
     } catch (err) {
-      setError(err.response?.data?.message || err.message || currentLang.failedToDelete);
+      setError(err.response?.data?.message || err.message || t.failedToDelete);
+      setTimeout(() => setError(''), 3000);
     }
   };
 
   if (loading) {
     return (
-      <div className="products-page-modern" dir="ltr">
-        <div className="loading-screen-premium">
-          <div className="premium-spinner"></div>
-          <p>{currentLang.loading}</p>
+      <div className={`products-page ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className="loading-screen">
+          <div className="spinner"></div>
+          <p>{t.loading}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="products-page-modern ltr" dir="ltr">
-      {/* Animated Background */}
-      <div className="products-bg-animation">
-        <div className="bg-orb orb-1"></div>
-        <div className="bg-orb orb-2"></div>
-        <div className="bg-orb orb-3"></div>
-      </div>
+    <div className={`products-page ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+      {/* Language Toggle */}
+      <button className="language-toggle" onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}>
+        <FiGlobe /> {language === 'en' ? 'العربية' : 'English'}
+      </button>
 
-      {/* Header */}
-      <div className="page-header-premium">
+      <div className="page-header">
         <div className="header-content">
           <div className="header-icon">
-            <FiPackage size={32} />
+            <FiPackage size={28} />
           </div>
           <div>
-            <h1>{currentLang.products}</h1>
-            <p>{currentLang.manageProducts}</p>
+            <h1>{t.products}</h1>
+            <p>{t.manageProducts}</p>
           </div>
         </div>
         <button className="refresh-btn" onClick={() => loadData(true)} disabled={refreshing}>
           <FiRefreshCw className={refreshing ? 'spinning' : ''} />
-          {refreshing ? currentLang.refreshing : 'Refresh'}
+          {refreshing ? t.refreshing : t.refresh}
         </button>
       </div>
 
-      {/* Alerts */}
       {error && (
-        <div className="alert-premium error">
+        <div className="alert error">
           <FiAlertCircle />
           <span>{error}</span>
           <button onClick={() => setError('')}>×</button>
         </div>
       )}
+      
       {success && (
-        <div className="alert-premium success">
+        <div className="alert success">
           <FiCheckCircle />
           <span>{success}</span>
           <div className="progress-bar"></div>
         </div>
       )}
 
-      {/* KPI Cards */}
-      <div className="kpi-grid-premium">
-        <div className="kpi-card-premium">
-          <div className="kpi-icon-bg" style={{ background: 'linear-gradient(135deg, #1a4b7a, #0a2b4e)' }}>
-            <FiPackage />
-          </div>
-          <div className="kpi-info">
-            <h3>{currentLang.totalProducts}</h3>
-            <div className="kpi-value">{metrics.total}</div>
-            <div className="kpi-trend">
-              <FiTrendingUp />
-              <span>Active products</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="kpi-card-premium">
-          <div className="kpi-icon-bg" style={{ background: 'linear-gradient(135deg, #1a4b7a, #0a2b4e)' }}>
-            <FiAlertTriangle />
-          </div>
-          <div className="kpi-info">
-            <h3>{currentLang.lowStockCount}</h3>
-            <div className="kpi-value">{metrics.lowStock}</div>
-            <div className="kpi-sub">{metrics.healthyStock} healthy stock</div>
-          </div>
-        </div>
-
-        <div className="kpi-card-premium">
-          <div className="kpi-icon-bg" style={{ background: 'linear-gradient(135deg, #1a4b7a, #0a2b4e)' }}>
-            <FiDollarSign />
-          </div>
-          <div className="kpi-info">
-            <h3>{currentLang.totalValue}</h3>
-            <div className="kpi-value">${metrics.totalValue.toFixed(2)}</div>
-            <div className="kpi-sub">Inventory value</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Form Card */}
-      <div className="form-card-premium">
+      <div className="form-card">
         <div className="form-card-header">
-          <h3><FiPackage /> {form._id ? currentLang.editProduct : currentLang.addNewProduct}</h3>
+          <h3><FiPackage /> {form._id ? t.editProduct : t.addNewProduct}</h3>
           {form._id && (
             <button className="cancel-edit" onClick={resetForm}>
-              <FiX /> {currentLang.cancel}
+              <FiX /> {t.cancel}
             </button>
           )}
         </div>
 
         <form onSubmit={handleSubmit} noValidate>
-          <div className="form-grid-premium">
-            <div className="input-group-premium">
-              <label><FiPackage /> {currentLang.name} <span className="required">*</span></label>
+          <div className="form-grid">
+            <div className="input-group">
+              <label><FiPackage /> {t.name} <span className="required">*</span></label>
               <input
                 type="text"
                 name="name"
                 value={form.name}
                 onChange={handleChange}
                 onBlur={(e) => handleFieldBlur('name', e.target.value)}
-                placeholder={currentLang.name}
-                className={`premium-input ${validationErrors.name ? 'input-error' : ''}`}
+                placeholder={t.name}
+                className={`form-input ${validationErrors.name ? 'input-error' : ''}`}
               />
               {validationErrors.name && <div className="field-error">{validationErrors.name}</div>}
             </div>
             
-            <div className="input-group-premium">
-              <label><FiDollarSign /> {currentLang.price} <span className="required">*</span></label>
+            <div className="input-group">
+              <label><FiDollarSign /> {t.price} <span className="required">*</span></label>
               <input
                 type="number"
                 name="price"
@@ -445,13 +434,13 @@ export default function ProductsPage({ token }) {
                 min="0"
                 step="0.01"
                 placeholder="0.00"
-                className={`premium-input ${validationErrors.price ? 'input-error' : ''}`}
+                className={`form-input ${validationErrors.price ? 'input-error' : ''}`}
               />
               {validationErrors.price && <div className="field-error">{validationErrors.price}</div>}
             </div>
             
-            <div className="input-group-premium">
-              <label><FiPlus /> {currentLang.initialQuantity} <span className="required">*</span></label>
+            <div className="input-group">
+              <label><FiPlus /> {t.initialQuantity} <span className="required">*</span></label>
               <input
                 type="number"
                 name="initialQuantity"
@@ -460,14 +449,14 @@ export default function ProductsPage({ token }) {
                 onBlur={(e) => handleFieldBlur('initialQuantity', e.target.value)}
                 min="0"
                 placeholder="0"
-                className={`premium-input ${validationErrors.initialQuantity ? 'input-error' : ''}`}
+                className={`form-input ${validationErrors.initialQuantity ? 'input-error' : ''}`}
               />
               {validationErrors.initialQuantity && <div className="field-error">{validationErrors.initialQuantity}</div>}
-              <small className="field-hint">{currentLang.stockAutoFilled}</small>
+              <small className="field-hint">{t.stockAutoFilled}</small>
             </div>
             
-            <div className="input-group-premium">
-              <label><FiPackage /> {currentLang.currentStock} <span className="required">*</span></label>
+            <div className="input-group">
+              <label><FiPackage /> {t.currentStock} <span className="required">*</span></label>
               <input
                 type="number"
                 name="stock"
@@ -476,14 +465,14 @@ export default function ProductsPage({ token }) {
                 onBlur={(e) => handleFieldBlur('stock', e.target.value)}
                 min="0"
                 placeholder="0"
-                className={`premium-input ${validationErrors.stock ? 'input-error' : ''}`}
+                className={`form-input ${validationErrors.stock ? 'input-error' : ''}`}
                 readOnly={!form._id}
               />
               {validationErrors.stock && <div className="field-error">{validationErrors.stock}</div>}
             </div>
             
-            <div className="input-group-premium">
-              <label><FiAlertTriangle /> {currentLang.alertThreshold} <span className="required">*</span></label>
+            <div className="input-group">
+              <label><FiAlertTriangle /> {t.alertThreshold} <span className="required">*</span></label>
               <input
                 type="number"
                 name="threshold"
@@ -492,21 +481,21 @@ export default function ProductsPage({ token }) {
                 onBlur={(e) => handleFieldBlur('threshold', e.target.value)}
                 min="0"
                 placeholder="0"
-                className={`premium-input ${validationErrors.threshold ? 'input-error' : ''}`}
+                className={`form-input ${validationErrors.threshold ? 'input-error' : ''}`}
               />
               {validationErrors.threshold && <div className="field-error">{validationErrors.threshold}</div>}
             </div>
             
-            <div className="input-group-premium">
-              <label>🏭 {currentLang.supplier} <span className="required">*</span></label>
+            <div className="input-group">
+              <label>🏭 {t.supplier} <span className="required">*</span></label>
               <select 
                 name="supplierId" 
                 value={form.supplierId} 
                 onChange={handleChange}
                 onBlur={(e) => handleFieldBlur('supplierId', e.target.value)}
-                className={`premium-select ${validationErrors.supplierId ? 'input-error' : ''}`}
+                className={`form-select ${validationErrors.supplierId ? 'input-error' : ''}`}
               >
-                <option value="">{currentLang.supplierRequired}</option>
+                <option value="">{t.supplierRequired}</option>
                 {suppliers.map(s => (
                   <option key={s._id} value={s._id}>{s.name}</option>
                 ))}
@@ -515,39 +504,38 @@ export default function ProductsPage({ token }) {
             </div>
           </div>
           
-          <div className="form-actions-premium">
+          <div className="form-actions">
             <button type="submit" className="btn-submit">
-              {form._id ? <><FiEdit2 /> {currentLang.updateProduct}</> : <><FiPlus /> {currentLang.addProduct}</>}
+              {form._id ? <><FiEdit2 /> {t.updateProduct}</> : <><FiPlus /> {t.addProduct}</>}
             </button>
           </div>
         </form>
       </div>
 
-      {/* Products Table */}
-      <div className="table-card-premium">
+      <div className="table-card">
         <div className="table-header">
-          <h3><FiPackage /> {currentLang.productList}</h3>
-          <div className="table-stats">{products.length} products</div>
+          <h3><FiPackage /> {t.productList}</h3>
+          <div className="table-stats">{products.length} {t.products.toLowerCase()}</div>
         </div>
 
-        <div className="table-responsive-premium">
-          <table className="products-table-premium">
+        <div className="table-responsive">
+          <table className="products-table">
             <thead>
               <tr>
-                <th>{currentLang.name}</th>
-                <th>{currentLang.price}</th>
-                <th>{currentLang.stock}</th>
-                <th>{currentLang.threshold}</th>
-                <th>{currentLang.supplier}</th>
-                <th>{currentLang.actions}</th>
+                <th>{t.name}</th>
+                <th>{t.price}</th>
+                <th>{t.stock}</th>
+                <th>{t.threshold}</th>
+                <th>{t.supplier}</th>
+                <th>{t.actions}</th>
               </tr>
             </thead>
             <tbody>
               {products.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="empty-state-premium">
+                  <td colSpan="6" className="empty-state">
                     <FiPackage size={48} />
-                    <p>{currentLang.noProducts}</p>
+                    <p>{t.noProducts}</p>
                   </td>
                 </tr>
               ) : (
@@ -557,7 +545,7 @@ export default function ProductsPage({ token }) {
                   
                   return (
                     <tr key={p._id} className="product-row">
-                      <td data-label={currentLang.name}>
+                      <td data-label={t.name}>
                         <div className="product-cell">
                           <div className="product-avatar">
                             {p.name.charAt(0).toUpperCase()}
@@ -565,17 +553,17 @@ export default function ProductsPage({ token }) {
                           <div className="product-name">{p.name}</div>
                         </div>
                       </td>
-                      <td data-label={currentLang.price} className="price-cell">
+                      <td data-label={t.price} className="price-cell">
                         ${p.price?.toFixed(2) ?? '0.00'}
                       </td>
-                      <td data-label={currentLang.stock}>
+                      <td data-label={t.stock}>
                         <div className="stock-cell">
                           <div className="stock-value-wrapper">
                             <span className={`stock-value ${isLowStock ? 'low-stock-value' : ''}`}>
                               {p.stock ?? 0}
                             </span>
                             {isLowStock && (
-                              <span className="low-stock-badge" title={currentLang.lowStock}>
+                              <span className="low-stock-badge" title={t.lowStock}>
                                 <FiAlertTriangle size={12} />
                               </span>
                             )}
@@ -587,21 +575,21 @@ export default function ProductsPage({ token }) {
                             ></div>
                           </div>
                         </div>
-                       </td>
-                      <td data-label={currentLang.threshold}>
+                      </td>
+                      <td data-label={t.threshold}>
                         <span className="threshold-badge">{p.threshold ?? 0}</span>
-                       </td>
-                      <td data-label={currentLang.supplier}>
+                      </td>
+                      <td data-label={t.supplier}>
                         {supplier?.name || '—'}
-                       </td>
-                      <td data-label={currentLang.actions} className="actions-cell-premium">
-                        <button className="action-icon edit" onClick={() => handleEdit(p)} title={currentLang.editProduct}>
+                      </td>
+                      <td data-label={t.actions} className="actions-cell">
+                        <button className="action-icon edit" onClick={() => handleEdit(p)} title={t.editProduct}>
                           <FiEdit2 />
                         </button>
-                        <button className="action-icon delete" onClick={() => handleDelete(p._id, p.name)} title={currentLang.deleteConfirm}>
+                        <button className="action-icon delete" onClick={() => handleDelete(p._id, p.name)} title={t.deleteConfirm}>
                           <FiTrash2 />
                         </button>
-                       </td>
+                      </td>
                     </tr>
                   );
                 })
