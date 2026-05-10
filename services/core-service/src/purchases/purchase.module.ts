@@ -1,17 +1,18 @@
 import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
 import { PurchaseService } from './purchase.service';
 import { PurchaseController } from './purchase.controller';
-import { MongooseModule } from '@nestjs/mongoose';
 import { Purchase, PurchaseSchema } from './schemas/purchase.schema';
 import { ProductsModule } from '../products/products.module';
+import { AuditClient } from '../audit/audit.client';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Purchase.name, schema: PurchaseSchema }]),
-    ProductsModule, // ⚠️ obligatoire car utilisé dans service
+    ProductsModule,
   ],
-  providers: [PurchaseService],
   controllers: [PurchaseController],
-  exports: [PurchaseService], // 🔴 SI ÇA MANQUE → ERREUR
+  providers: [PurchaseService, AuditClient],
+  exports: [PurchaseService],
 })
 export class PurchaseModule {}

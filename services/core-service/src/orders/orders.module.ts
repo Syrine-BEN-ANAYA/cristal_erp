@@ -2,19 +2,17 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { OrdersService } from './orders.service';
 import { OrdersController } from './orders.controller';
-import { ProductsModule } from '../products/products.module'; // 🔹 Import du module produit
-import { Order, OrderItem, OrderItemSchema, OrderSchema } from './schemas/order.schema';
+import { Order, OrderSchema } from './schemas/order.schema';
+import { ProductsModule } from '../products/products.module';
+import { AuditClient } from '../audit/audit.client';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: Order.name, schema: OrderSchema },
-      { name: OrderItem.name, schema: OrderItemSchema },
-    ]),
-    ProductsModule, // 🔹 Injection de ProductService
+    MongooseModule.forFeature([{ name: Order.name, schema: OrderSchema }]),
+    ProductsModule,
   ],
-  providers: [OrdersService],
   controllers: [OrdersController],
-  exports:[OrdersService],
+  providers: [OrdersService, AuditClient],
+  exports: [OrdersService],
 })
 export class OrdersModule {}

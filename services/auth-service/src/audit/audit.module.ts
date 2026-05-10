@@ -1,15 +1,22 @@
 import { Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule'; // ← Ajouter
 import { MongooseModule } from '@nestjs/mongoose';
-import { AuditService } from './audit.service';
 import { AuditController } from './audit.controller';
+import { AuditService } from './audit.service';
+import { AuditCron } from './audit.cron'; // ← Ajouter
 import { Audit, AuditSchema } from './schemas/audit.schema';
+import { User, UserSchema } from '../users/schemas/user.schema';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Audit.name, schema: AuditSchema }]),
+    ScheduleModule.forRoot(), // ← Ajouter
+    MongooseModule.forFeature([
+      { name: Audit.name, schema: AuditSchema },
+      { name: User.name, schema: UserSchema },
+    ]),
   ],
-  providers: [AuditService],
   controllers: [AuditController],
-  exports: [AuditService], // export pour utilisation dans AuthService, UsersService, etc.
+  providers: [AuditService, AuditCron], // ← Ajouter AuditCron
+  exports: [AuditService],
 })
 export class AuditModule {}

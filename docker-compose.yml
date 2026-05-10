@@ -14,8 +14,7 @@ services:
      timeout: 10s
      retries: 3
  
-      
-
+    
   mongodb-exporter:
     image: bitnami/mongodb-exporter:latest
     container_name: cristal_erp-mongodb-exporter-1

@@ -1,5 +1,6 @@
-// CustomersPage.js - Version sans KPI
+// CustomersPage.js - Version avec contexte global
 import React, { useEffect, useState, useCallback } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 import {
   getCustomers,
   createCustomer,
@@ -14,21 +15,11 @@ import {
 import '../styles/CustomersPage.css';
 
 export default function CustomersPage({ token }) {
-  const [customers, setCustomers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [language, setLanguage] = useState('en');
+  const { t, isRTL, language, toggleLanguage } = useLanguage();
 
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
-  const [editingId, setEditingId] = useState(null);
-
-  const translations = {
-    en: {
+  // Traductions spécifiques à CustomersPage
+  const customersTranslations = {
+    EN: {
       customers: 'Customers Management',
       manageCustomers: 'Manage your customer database',
       addNewCustomer: 'Add New Customer',
@@ -58,7 +49,7 @@ export default function CustomersPage({ token }) {
       customerUpdated: 'Customer updated successfully!',
       customerDeleted: 'Customer deleted successfully!'
     },
-    ar: {
+    AR: {
       customers: 'إدارة العملاء',
       manageCustomers: 'إدارة قاعدة بيانات العملاء',
       addNewCustomer: 'إضافة عميل جديد',
@@ -90,8 +81,19 @@ export default function CustomersPage({ token }) {
     }
   };
 
-  const t = translations[language];
-  const isRTL = language === 'ar';
+  const localT = customersTranslations[language];
+
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
+  const [editingId, setEditingId] = useState(null);
 
   const loadCustomers = useCallback(async (showRefresh = false) => {
     if (!token) return;
@@ -143,7 +145,7 @@ export default function CustomersPage({ token }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name.trim()) {
-      setError(t.nameRequired);
+      setError(localT.nameRequired);
       setTimeout(() => setError(''), 3000);
       return;
     }
@@ -159,15 +161,15 @@ export default function CustomersPage({ token }) {
       if (editingId) {
         const updated = await updateCustomer(editingId, payload, token);
         setCustomers(customers.map(c => (c._id === updated._id ? updated : c)));
-        showSuccessMessage(t.customerUpdated);
+        showSuccessMessage(localT.customerUpdated);
       } else {
         const created = await createCustomer(payload, token);
         setCustomers([...customers, created]);
-        showSuccessMessage(t.customerCreated);
+        showSuccessMessage(localT.customerCreated);
       }
       resetForm();
     } catch (err) {
-      setError(err.message || (editingId ? t.updateFailed : t.creationFailed));
+      setError(err.message || (editingId ? localT.updateFailed : localT.creationFailed));
       setTimeout(() => setError(''), 4000);
     }
   };
@@ -182,13 +184,13 @@ export default function CustomersPage({ token }) {
   };
 
   const handleDelete = async (id, name) => {
-    if (!window.confirm(`${t.deleteConfirm} "${name}"?`)) return;
+    if (!window.confirm(`${localT.deleteConfirm} "${name}"?`)) return;
     try {
       await deleteCustomer(id, token);
       setCustomers(customers.filter(c => c._id !== id));
-      showSuccessMessage(`${t.customerDeleted} "${name}"`);
+      showSuccessMessage(`${localT.customerDeleted} "${name}"`);
     } catch (err) {
-      setError(err.message || t.deleteFailed);
+      setError(err.message || localT.deleteFailed);
       setTimeout(() => setError(''), 3000);
     }
   };
@@ -198,7 +200,7 @@ export default function CustomersPage({ token }) {
       <div className="customers-page" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="loading-screen">
           <div className="spinner"></div>
-          <p>{t.loading}</p>
+          <p>{localT.loading}</p>
         </div>
       </div>
     );
@@ -206,7 +208,7 @@ export default function CustomersPage({ token }) {
 
   return (
     <div className={`customers-page ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-      <button className="language-toggle" onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}>
+      <button className="language-toggle" onClick={toggleLanguage}>
         <FiGlobe /> {language === 'en' ? 'العربية' : 'English'}
       </button>
 
@@ -216,13 +218,13 @@ export default function CustomersPage({ token }) {
             <FiUsers size={28} />
           </div>
           <div>
-            <h1>{t.customers}</h1>
-            <p>{t.manageCustomers}</p>
+            <h1>{localT.customers}</h1>
+            <p>{localT.manageCustomers}</p>
           </div>
         </div>
         <button className="refresh-btn" onClick={() => loadCustomers(true)} disabled={refreshing}>
           <FiRefreshCw className={refreshing ? 'spinning' : ''} />
-          {refreshing ? t.refreshing : 'Refresh'}
+          {refreshing ? localT.refreshing : t.refresh}
         </button>
       </div>
 
@@ -244,10 +246,10 @@ export default function CustomersPage({ token }) {
 
       <div className="form-card">
         <div className="form-card-header">
-          <h3><FiPlus /> {editingId ? t.editCustomer : t.addNewCustomer}</h3>
+          <h3><FiPlus /> {editingId ? localT.editCustomer : localT.addNewCustomer}</h3>
           {editingId && (
             <button className="cancel-edit" onClick={resetForm}>
-              <FiX /> {t.cancel}
+              <FiX /> {localT.cancel}
             </button>
           )}
         </div>
@@ -255,46 +257,46 @@ export default function CustomersPage({ token }) {
         <form onSubmit={handleSubmit}>
           <div className="form-grid">
             <div className="input-group">
-              <label><FiUser /> {t.name} <span className="required">*</span></label>
+              <label><FiUser /> {localT.name} <span className="required">*</span></label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder={t.customerName}
+                placeholder={localT.customerName}
                 className="form-input"
                 required
               />
             </div>
 
             <div className="input-group">
-              <label><FiMail /> {t.email}</label>
+              <label><FiMail /> {localT.email}</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder={t.emailPlaceholder}
+                placeholder={localT.emailPlaceholder}
                 className="form-input"
               />
             </div>
 
             <div className="input-group">
-              <label><FiPhone /> {t.phone}</label>
+              <label><FiPhone /> {localT.phone}</label>
               <input
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder={t.phonePlaceholder}
+                placeholder={localT.phonePlaceholder}
                 className="form-input"
               />
             </div>
 
             <div className="input-group">
-              <label><FiMapPin /> {t.address}</label>
+              <label><FiMapPin /> {localT.address}</label>
               <input
                 type="text"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                placeholder={t.addressPlaceholder}
+                placeholder={localT.addressPlaceholder}
                 className="form-input"
               />
             </div>
@@ -303,7 +305,7 @@ export default function CustomersPage({ token }) {
           <div className="form-actions">
             <button type="submit" className="btn-submit">
               {editingId ? <FiEdit2 /> : <FiPlus />}
-              {editingId ? t.update : t.add}
+              {editingId ? localT.update : localT.add}
             </button>
           </div>
         </form>
@@ -311,19 +313,19 @@ export default function CustomersPage({ token }) {
 
       <div className="table-card">
         <div className="table-header">
-          <h3><FiUsers /> {t.customersList}</h3>
-          <div className="table-stats">{customers.length} total customers</div>
+          <h3><FiUsers /> {localT.customersList}</h3>
+          <div className="table-stats">{customers.length} {localT.customers}</div>
         </div>
 
         <div className="table-responsive">
           <table className="customers-table">
             <thead>
               <tr>
-                <th>{t.name}</th>
-                <th>{t.email}</th>
-                <th>{t.phone}</th>
-                <th>{t.address}</th>
-                <th>{t.actions}</th>
+                <th>{localT.name}</th>
+                <th>{localT.email}</th>
+                <th>{localT.phone}</th>
+                <th>{localT.address}</th>
+                <th>{localT.actions}</th>
               </tr>
             </thead>
             <tbody>
@@ -331,13 +333,13 @@ export default function CustomersPage({ token }) {
                 <tr>
                   <td colSpan="5" className="empty-state">
                     <FiUsers size={48} />
-                    <p>{t.noCustomers}</p>
+                    <p>{localT.noCustomers}</p>
                   </td>
                 </tr>
               ) : (
                 customers.map((customer) => (
                   <tr key={customer._id} className="customer-row">
-                    <td data-label={t.name}>
+                    <td data-label={localT.name}>
                       <div className="customer-cell">
                         <div className="customer-avatar">
                           {customer.name.charAt(0).toUpperCase()}
@@ -345,31 +347,31 @@ export default function CustomersPage({ token }) {
                         <div className="customer-name">{customer.name}</div>
                       </div>
                     </td>
-                    <td data-label={t.email}>
+                    <td data-label={localT.email}>
                       {customer.email ? (
                         <a href={`mailto:${customer.email}`} className="email-link">
                           {customer.email}
                         </a>
                       ) : '—'}
                     </td>
-                    <td data-label={t.phone}>
+                    <td data-label={localT.phone}>
                       {customer.phone ? (
                         <a href={`tel:${customer.phone}`} className="phone-link">
                           {customer.phone}
                         </a>
                       ) : '—'}
                     </td>
-                    <td data-label={t.address}>
+                    <td data-label={localT.address}>
                       <div className="address-cell">
                         <FiMapPin size={12} />
                         <span>{customer.address || '—'}</span>
                       </div>
                     </td>
-                    <td data-label={t.actions} className="actions-cell">
-                      <button className="action-icon edit" onClick={() => handleEdit(customer)} title={t.editCustomer}>
+                    <td data-label={localT.actions} className="actions-cell">
+                      <button className="action-icon edit" onClick={() => handleEdit(customer)} title={localT.editCustomer}>
                         <FiEdit2 />
                       </button>
-                      <button className="action-icon delete" onClick={() => handleDelete(customer._id, customer.name)} title={t.deleteConfirm}>
+                      <button className="action-icon delete" onClick={() => handleDelete(customer._id, customer.name)} title={localT.deleteConfirm}>
                         <FiTrash2 />
                       </button>
                     </td>

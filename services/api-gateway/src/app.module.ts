@@ -14,6 +14,7 @@ import { SuppliersGateway } from './routes/suppliers.gateway';
 import { CustomersGateway } from './routes/customers.gateway';
 import { PurchasesGateway } from './routes/purchase.gateway';
 import { HealthController } from './health.controller';
+import { AuditGateway } from './routes/audit.gateway';
 
 @Module({
   controllers: [
@@ -25,6 +26,7 @@ import { HealthController } from './health.controller';
     CustomersGateway,
     PurchasesGateway,
     HealthController,
+    AuditGateway,
   ],
   providers: [
     {

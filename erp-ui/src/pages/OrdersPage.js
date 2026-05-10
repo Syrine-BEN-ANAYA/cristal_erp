@@ -1,5 +1,6 @@
-// OrdersPage.js - Version sans KPI
+// OrdersPage.js - Version avec contexte global
 import React, { useState, useEffect, useCallback } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 import { 
   getOrders, createOrder, updateOrder, deleteOrder, getTotalOrderAmount 
 } from '../api/ordersService';
@@ -53,34 +54,21 @@ const validateStockAvailability = (items, products) => {
 };
 
 export default function OrdersPage({ token }) {
-  const [orders, setOrders] = useState([]);
-  const [products, setProducts] = useState([]);
-  const [customers, setCustomers] = useState([]);
-  const [totalOrderAmount, setTotalOrderAmount] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [language, setLanguage] = useState('en');
-  const [stockErrors, setStockErrors] = useState([]);
+  const { t, isRTL, language, toggleLanguage } = useLanguage();
 
-  const translations = {
-    en: {
+  // Traductions spécifiques à OrdersPage
+  const ordersTranslations = {
+    EN: {
       orders: 'Orders Management',
       manageOrders: 'Manage customer orders and track revenue',
-      totalOrders: 'Total Orders',
-      totalRevenue: 'Total Revenue',
       newOrder: 'Create New Order',
       editOrder: 'Edit Order',
-      customer: 'Customer',
-      products: 'Products',
       selectCustomer: 'Select a customer',
       selectProduct: 'Select product',
       quantity: 'Quantity',
       addProduct: 'Add Product',
       createOrder: 'Create Order',
       updateOrder: 'Update Order',
-      cancel: 'Cancel',
       orderList: 'Recent Orders',
       customerName: 'Customer',
       items: 'Items',
@@ -88,7 +76,6 @@ export default function OrdersPage({ token }) {
       date: 'Date',
       actions: 'Actions',
       noOrders: 'No orders found. Create your first order above.',
-      success: 'Success!',
       orderCreated: 'Order created successfully!',
       orderUpdated: 'Order updated successfully!',
       invoiceSent: 'Invoice has been sent to the customer.',
@@ -107,31 +94,27 @@ export default function OrdersPage({ token }) {
       errorSavingOrder: 'Error saving order',
       failedToDelete: 'Failed to delete order',
       failedToGeneratePDF: 'Failed to generate PDF',
-      avgOrderValue: 'Avg Order Value',
-      thisMonth: 'This Month',
       downloadInvoice: 'Download Invoice',
       stockError: 'Insufficient stock',
       stockInsufficient: 'Insufficient stock',
       available: 'available',
       requested: 'requested',
-      stock: 'Stock'
+      stock: 'Stock',
+      subtotal: 'Subtotal',
+      customer: 'Customer',
+      products: 'Products'
     },
-    ar: {
+    AR: {
       orders: 'إدارة الطلبات',
       manageOrders: 'إدارة طلبات العملاء وتتبع الإيرادات',
-      totalOrders: 'إجمالي الطلبات',
-      totalRevenue: 'إجمالي الإيرادات',
       newOrder: 'إنشاء طلب جديد',
       editOrder: 'تعديل طلب',
-      customer: 'العميل',
-      products: 'المنتجات',
       selectCustomer: 'اختر عميل',
       selectProduct: 'اختر منتج',
       quantity: 'الكمية',
       addProduct: 'إضافة منتج',
       createOrder: 'إنشاء طلب',
       updateOrder: 'تحديث الطلب',
-      cancel: 'إلغاء',
       orderList: 'الطلبات الأخيرة',
       customerName: 'العميل',
       items: 'المنتجات',
@@ -139,7 +122,6 @@ export default function OrdersPage({ token }) {
       date: 'التاريخ',
       actions: 'إجراءات',
       noOrders: 'لا توجد طلبات. قم بإنشاء طلبك الأول أعلاه',
-      success: 'نجاح!',
       orderCreated: 'تم إنشاء الطلب بنجاح!',
       orderUpdated: 'تم تحديث الطلب بنجاح!',
       invoiceSent: 'تم إرسال الفاتورة إلى العميل',
@@ -158,19 +140,29 @@ export default function OrdersPage({ token }) {
       errorSavingOrder: 'خطأ في حفظ الطلب',
       failedToDelete: 'فشل حذف الطلب',
       failedToGeneratePDF: 'فشل إنشاء PDF',
-      avgOrderValue: 'متوسط قيمة الطلب',
-      thisMonth: 'هذا الشهر',
       downloadInvoice: 'تحميل الفاتورة',
       stockError: 'الكمية غير متوفرة',
       stockInsufficient: 'الكمية غير كافية في المخزون',
       available: 'متوفر',
       requested: 'مطلوب',
-      stock: 'المخزون'
+      stock: 'المخزون',
+      subtotal: 'المجموع الفرعي',
+      customer: 'العميل',
+      products: 'المنتجات'
     }
   };
 
-  const t = translations[language];
-  const isRTL = language === 'ar';
+  const localT = ordersTranslations[language];
+
+  const [orders, setOrders] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [totalOrderAmount, setTotalOrderAmount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [stockErrors, setStockErrors] = useState([]);
 
   const [form, setForm] = useState({
     _id: null,
@@ -280,13 +272,13 @@ export default function OrdersPage({ token }) {
     e.preventDefault();
     
     if (!form.customerId) {
-      setError(t.pleaseSelectCustomer);
+      setError(localT.pleaseSelectCustomer);
       setTimeout(() => setError(''), 3000);
       return;
     }
     
     if (form.items.some(item => !item.productId || item.quantity <= 0)) {
-      setError(t.fillItemsCorrectly);
+      setError(localT.fillItemsCorrectly);
       setTimeout(() => setError(''), 3000);
       return;
     }
@@ -294,9 +286,9 @@ export default function OrdersPage({ token }) {
     const stockValidationErrors = validateStockAvailability(form.items, products);
     if (stockValidationErrors.length > 0) {
       const errorMessage = stockValidationErrors.map(err => 
-        `${err.productName}: ${t.requested} ${err.requested}, ${t.available} ${err.available}`
+        `${err.productName}: ${localT.requested} ${err.requested}, ${localT.available} ${err.available}`
       ).join('. ');
-      setError(`${t.stockInsufficient}: ${errorMessage}`);
+      setError(`${localT.stockInsufficient}: ${errorMessage}`);
       setStockErrors(stockValidationErrors);
       setTimeout(() => setError(''), 5000);
       return;
@@ -313,10 +305,10 @@ export default function OrdersPage({ token }) {
 
       if (form._id) {
         await updateOrder(form._id, payload, token);
-        showSuccess(t.orderUpdated);
+        showSuccess(localT.orderUpdated);
       } else {
         await createOrder(payload, token);
-        showSuccess(`${t.orderCreated} ${t.invoiceSent}`);
+        showSuccess(`${localT.orderCreated} ${localT.invoiceSent}`);
       }
       
       resetForm();
@@ -326,9 +318,9 @@ export default function OrdersPage({ token }) {
       setStockErrors([]);
     } catch (err) {
       if (err.response?.data?.message?.includes('stock') || err.response?.data?.message?.includes('Stock')) {
-        setError(`${t.stockInsufficient}. ${err.response?.data?.message || ''}`);
+        setError(`${localT.stockInsufficient}. ${err.response?.data?.message || ''}`);
       } else {
-        setError(err.response?.data?.message || err.message || t.errorSavingOrder);
+        setError(err.response?.data?.message || err.message || localT.errorSavingOrder);
       }
       setTimeout(() => setError(''), 4000);
     }
@@ -354,14 +346,14 @@ export default function OrdersPage({ token }) {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm(`${t.deleteConfirm}?`)) return;
+    if (!window.confirm(`${localT.deleteConfirm}?`)) return;
     try {
       await deleteOrder(id, token);
       loadData();
       loadTotalAmount();
       showSuccess('Order deleted successfully');
     } catch (err) {
-      setError(err.response?.data?.message || err.message || t.failedToDelete);
+      setError(err.response?.data?.message || err.message || localT.failedToDelete);
       setTimeout(() => setError(''), 3000);
     }
   };
@@ -384,28 +376,28 @@ export default function OrdersPage({ token }) {
       y += 50;
       doc.setTextColor(26, 75, 122);
       doc.setFontSize(18);
-      doc.text(t.invoice, pageWidth / 2, y, { align: 'center' });
+      doc.text(localT.invoice, pageWidth / 2, y, { align: 'center' });
       
       y += 15;
       doc.setFontSize(10);
       doc.setTextColor(100, 100, 100);
-      doc.text(`${t.orderId}: ${order._id.slice(-8)}`, margin, y);
-      doc.text(`${t.date}: ${new Date(order.createdAt).toLocaleDateString(language === 'en' ? 'en-US' : 'ar-EG')}`, margin, y + 6);
+      doc.text(`${localT.orderId}: ${order._id.slice(-8)}`, margin, y);
+      doc.text(`${localT.date}: ${new Date(order.createdAt).toLocaleDateString(language === 'en' ? 'en-US' : 'ar-EG')}`, margin, y + 6);
       
       const customer = customers.find(c => c._id === (order.customerId?._id || order.customerId));
       if (customer) {
         y += 20;
         doc.setFontSize(11);
         doc.setTextColor(80, 80, 80);
-        doc.text(`${t.customer}: ${customer.name}`, margin, y);
-        if (customer.email) doc.text(`${t.email}: ${customer.email}`, margin, y + 6);
-        if (customer.phone) doc.text(`${t.phone}: ${customer.phone}`, margin, y + 12);
+        doc.text(`${localT.customer}: ${customer.name}`, margin, y);
+        if (customer.email) doc.text(`${localT.email}: ${customer.email}`, margin, y + 6);
+        if (customer.phone) doc.text(`${localT.phone}: ${customer.phone}`, margin, y + 12);
         y += 25;
       } else {
         y += 20;
       }
 
-      const tableColumn = [t.product, t.quantity, t.unitPrice, t.total];
+      const tableColumn = [localT.product, localT.quantity, localT.unitPrice, localT.total];
       const tableRows = order.items.map(item => {
         const product = products.find(p => p._id === (item.productId?._id || item.productId));
         const productName = product?.name || 'Unknown';
@@ -430,17 +422,17 @@ export default function OrdersPage({ token }) {
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(212, 175, 55);
-      doc.text(`${t.total}: ${formatMoney(total)}`, pageWidth - margin, finalY, { align: 'right' });
+      doc.text(`${localT.total}: ${formatMoney(total)}`, pageWidth - margin, finalY, { align: 'right' });
       
       const footerY = doc.internal.pageSize.getHeight() - 15;
       doc.setFontSize(8);
       doc.setTextColor(150, 150, 150);
-      doc.text(t.thankYou, pageWidth / 2, footerY, { align: 'center' });
+      doc.text(localT.thankYou, pageWidth / 2, footerY, { align: 'center' });
       
       doc.save(`invoice_${order._id}_${language}.pdf`);
     } catch (err) {
       console.error('Error generating PDF:', err);
-      setError(t.failedToGeneratePDF);
+      setError(localT.failedToGeneratePDF);
       setTimeout(() => setError(''), 3000);
     }
   };
@@ -450,7 +442,7 @@ export default function OrdersPage({ token }) {
       <div className="orders-page" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="loading-screen">
           <div className="spinner"></div>
-          <p>{t.loading}</p>
+          <p>{localT.loading}</p>
         </div>
       </div>
     );
@@ -458,7 +450,7 @@ export default function OrdersPage({ token }) {
 
   return (
     <div className={`orders-page ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-      <button className="language-toggle" onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}>
+      <button className="language-toggle" onClick={toggleLanguage}>
         <FiGlobe /> {language === 'en' ? 'العربية' : 'English'}
       </button>
 
@@ -468,13 +460,13 @@ export default function OrdersPage({ token }) {
             <FiShoppingCart size={28} />
           </div>
           <div>
-            <h1>{t.orders}</h1>
-            <p>{t.manageOrders}</p>
+            <h1>{localT.orders}</h1>
+            <p>{localT.manageOrders}</p>
           </div>
         </div>
         <button className="refresh-btn" onClick={() => loadData(true)} disabled={refreshing}>
           <FiRefreshCw className={refreshing ? 'spinning' : ''} />
-          {refreshing ? t.refreshing : 'Refresh'}
+          {refreshing ? localT.refreshing : t.refresh}
         </button>
       </div>
 
@@ -496,7 +488,7 @@ export default function OrdersPage({ token }) {
 
       <div className="form-card">
         <div className="form-card-header">
-          <h3><FiPlus /> {form._id ? t.editOrder : t.newOrder}</h3>
+          <h3><FiPlus /> {form._id ? localT.editOrder : localT.newOrder}</h3>
           {form._id && (
             <button className="cancel-edit" onClick={resetForm}>
               <FiX /> {t.cancel}
@@ -506,7 +498,7 @@ export default function OrdersPage({ token }) {
         
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label><FiUser /> {t.customer} <span className="required">*</span></label>
+            <label><FiUser /> {localT.customer} <span className="required">*</span></label>
             <select
               name="customerId"
               value={form.customerId}
@@ -514,7 +506,7 @@ export default function OrdersPage({ token }) {
               required
               className="form-select"
             >
-              <option value="">{t.selectCustomer}</option>
+              <option value="">{localT.selectCustomer}</option>
               {customers.map(c => (
                 <option key={c._id} value={c._id}>{c.name}</option>
               ))}
@@ -522,11 +514,11 @@ export default function OrdersPage({ token }) {
           </div>
 
           <div className="items-section">
-            <label><FiPackage /> {t.products} <span className="required">*</span></label>
+            <label><FiPackage /> {localT.products} <span className="required">*</span></label>
             <div className="items-header">
-              <span>{t.product}</span>
-              <span>{t.quantity}</span>
-              <span>{t.total}</span>
+              <span>{localT.product}</span>
+              <span>{localT.quantity}</span>
+              <span>{localT.total}</span>
               <span></span>
             </div>
             
@@ -544,10 +536,10 @@ export default function OrdersPage({ token }) {
                     required
                     className="form-select"
                   >
-                    <option value="">{t.selectProduct}</option>
+                    <option value="">{localT.selectProduct}</option>
                     {products.map(p => (
                       <option key={p._id} value={p._id}>
-                        {p.name} - {formatMoney(p.price)} ({t.stock}: {p.stock})
+                        {p.name} - {formatMoney(p.price)} ({localT.stock}: {p.stock})
                       </option>
                     ))}
                   </select>
@@ -564,7 +556,7 @@ export default function OrdersPage({ token }) {
                     />
                     {selectedProduct && (
                       <span className="stock-info">
-                        {t.stock}: {selectedProduct.stock}
+                        {localT.stock}: {selectedProduct.stock}
                       </span>
                     )}
                   </div>
@@ -580,7 +572,7 @@ export default function OrdersPage({ token }) {
                   {isStockInsufficient && (
                     <div className="stock-warning">
                       <FiAlertCircle />
-                      <span>{t.stockInsufficient}! Max: {selectedProduct?.stock}</span>
+                      <span>{localT.stockInsufficient}! Max: {selectedProduct?.stock}</span>
                     </div>
                   )}
                 </div>
@@ -588,29 +580,29 @@ export default function OrdersPage({ token }) {
             })}
             
             <button type="button" className="add-item-btn" onClick={addItem}>
-              <FiPlus /> {t.addProduct}
+              <FiPlus /> {localT.addProduct}
             </button>
           </div>
 
           <div className="order-summary">
             <div className="summary-line">
-              <span>Subtotal:</span>
+              <span>{localT.subtotal}:</span>
               <span>{formatMoney(calculateOrderTotal(form.items, products))}</span>
             </div>
             <div className="summary-line total">
-              <span>{t.total}:</span>
+              <span>{localT.total}:</span>
               <span>{formatMoney(calculateOrderTotal(form.items, products))}</span>
             </div>
           </div>
 
           <div className="form-actions">
             <button type="submit" className="btn-submit" disabled={stockErrors.length > 0}>
-              {form._id ? <><FiEdit2 /> {t.updateOrder}</> : <><FiPlus /> {t.createOrder}</>}
+              {form._id ? <><FiEdit2 /> {localT.updateOrder}</> : <><FiPlus /> {localT.createOrder}</>}
             </button>
             {stockErrors.length > 0 && (
               <div className="stock-error-summary">
                 <FiAlertCircle />
-                <span>{stockErrors.length} {t.stockError}(s)</span>
+                <span>{stockErrors.length} {localT.stockError}(s)</span>
               </div>
             )}
           </div>
@@ -619,19 +611,19 @@ export default function OrdersPage({ token }) {
 
       <div className="table-card">
         <div className="table-header">
-          <h3><FiShoppingCart /> {t.orderList}</h3>
-          <div className="table-stats">{orders.length} total orders</div>
+          <h3><FiShoppingCart /> {localT.orderList}</h3>
+          <div className="table-stats">{orders.length} orders</div>
         </div>
         
         <div className="table-responsive">
           <table className="orders-table">
             <thead>
               <tr>
-                <th>{t.customerName}</th>
-                <th>{t.items}</th>
-                <th>{t.total}</th>
-                <th>{t.date}</th>
-                <th>{t.actions}</th>
+                <th>{localT.customerName}</th>
+                <th>{localT.items}</th>
+                <th>{localT.total}</th>
+                <th>{localT.date}</th>
+                <th>{localT.actions}</th>
               </tr>
             </thead>
             <tbody>
@@ -639,7 +631,7 @@ export default function OrdersPage({ token }) {
                 <tr>
                   <td colSpan="5" className="empty-state">
                     <FiShoppingCart size={48} />
-                    <p>{t.noOrders}</p>
+                    <p>{localT.noOrders}</p>
                   </td>
                 </tr>
               ) : (
@@ -648,7 +640,7 @@ export default function OrdersPage({ token }) {
                   const total = order.totalAmount || calculateOrderTotal(order.items, products);
                   return (
                     <tr key={order._id} className="order-row">
-                      <td data-label={t.customerName}>
+                      <td data-label={localT.customerName}>
                         <div className="customer-cell">
                           <div className="customer-avatar">
                             {customer?.name?.charAt(0).toUpperCase() || '?'}
@@ -659,7 +651,7 @@ export default function OrdersPage({ token }) {
                           </div>
                         </div>
                       </td>
-                      <td data-label={t.items}>
+                      <td data-label={localT.items}>
                         <div className="items-badges">
                           {order.items.slice(0, 3).map((item, idx) => {
                             const product = products.find(p => p._id === (item.productId?._id || item.productId));
@@ -676,23 +668,23 @@ export default function OrdersPage({ token }) {
                           )}
                         </div>
                       </td>
-                      <td data-label={t.total} className="total-cell">
+                      <td data-label={localT.total} className="total-cell">
                         {formatMoney(total)}
                       </td>
-                      <td data-label={t.date}>
+                      <td data-label={localT.date}>
                         <div className="date-cell">
                           <FiCalendar size={12} />
                           {new Date(order.createdAt).toLocaleDateString(language === 'en' ? 'en-US' : 'ar-EG')}
                         </div>
                       </td>
-                      <td data-label={t.actions} className="actions-cell">
-                        <button className="action-icon edit" onClick={() => handleEdit(order)} title={t.editOrder}>
+                      <td data-label={localT.actions} className="actions-cell">
+                        <button className="action-icon edit" onClick={() => handleEdit(order)} title={localT.editOrder}>
                           <FiEdit2 />
                         </button>
-                        <button className="action-icon delete" onClick={() => handleDelete(order._id)} title={t.deleteConfirm}>
+                        <button className="action-icon delete" onClick={() => handleDelete(order._id)} title={localT.deleteConfirm}>
                           <FiTrash2 />
                         </button>
-                        <button className="action-icon download" onClick={() => generateInvoicePDF(order)} title={t.downloadInvoice}>
+                        <button className="action-icon download" onClick={() => generateInvoicePDF(order)} title={localT.downloadInvoice}>
                           <FiDownload />
                         </button>
                       </td>

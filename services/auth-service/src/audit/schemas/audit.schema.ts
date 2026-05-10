@@ -9,6 +9,9 @@ export class Audit {
   userId!: string;
 
   @Prop({ required: true })
+  username!: string;  // ✅ Ajoute le username
+
+  @Prop({ required: true })
   action!: string;
 
   @Prop({ required: true })

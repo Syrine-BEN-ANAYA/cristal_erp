@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
+import { LanguageProvider, useLanguage } from "./context/LanguageContext";
 
 import LoginPage from "./pages/LoginPage";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
@@ -13,9 +14,12 @@ import { getMe } from "./api/authService";
 import PurchasesPage from "./pages/PurchasesPage";
 import ReportingPage from "./pages/ReportingPage";
 import UnderConstructionPage from "./pages/UnderConstructionPage";
+import AuditPage from "./pages/AuditPage";
+import UsersManagement from "./pages/UsersManagement";
 import FirstPage from "./pages/FirstPage";
 
-function App() {
+// ✅ Composant qui contient toute la logique de l'app (avec useLanguage)
+function AppContent() {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -73,6 +77,26 @@ function App() {
       <Route path="/change-password" element={
         user?.mustChangePassword ? (
           <ChangePasswordPage user={user} token={token} onPasswordChanged={handlePasswordChanged} />
+        ) : (
+          <Navigate to="/" />
+        )
+      } />
+      
+      <Route path="/admin/users" element={
+        user && (user.role === "ADMIN" || user.role === "SUPER_ADMIN") ? (
+          <Layout user={user} onLogout={handleLogout}>
+            <UsersManagement user={user} token={token} />
+          </Layout>
+        ) : (
+          <Navigate to="/" />
+        )
+      } />
+      
+      <Route path="/admin/audit" element={
+        user && (user.role === "ADMIN" || user.role === "SUPER_ADMIN") ? (
+          <Layout user={user} onLogout={handleLogout}>
+            <AuditPage token={token} user={user} />
+          </Layout>
         ) : (
           <Navigate to="/" />
         )
@@ -150,6 +174,15 @@ function App() {
       
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+  );
+}
+
+// ✅ App principal qui enveloppe tout avec LanguageProvider
+function App() {
+  return (
+    <LanguageProvider>
+      <AppContent />
+    </LanguageProvider>
   );
 }
 

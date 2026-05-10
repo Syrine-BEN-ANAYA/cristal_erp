@@ -1,5 +1,6 @@
-// PurchasesPage.js - Version sans KPI
+// PurchasesPage.js - Version avec contexte global
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 import {
   getPurchases,
   createPurchase,
@@ -30,18 +31,11 @@ const formatMoney = (value) => {
 };
 
 export default function PurchasesPage({ token }) {
-  const [purchases, setPurchases] = useState([]);
-  const [products, setProducts] = useState([]);
-  const [suppliers, setSuppliers] = useState([]);
-  const [totalPurchaseAmount, setTotalPurchaseAmount] = useState(0);
-  const [language, setLanguage] = useState('en');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const { t, isRTL, language, toggleLanguage } = useLanguage();
 
-  const translations = {
-    en: {
+  // Traductions spécifiques à PurchasesPage
+  const purchasesTranslations = {
+    EN: {
       purchases: 'Purchases Management',
       managePurchases: 'Manage purchase orders and track expenses',
       newPurchase: 'Create New Purchase Order',
@@ -82,9 +76,10 @@ export default function PurchasesPage({ token }) {
       date: 'Date',
       email: 'Email',
       phone: 'Phone',
-      items: 'Items'
+      items: 'Items',
+      subtotal: 'Subtotal'
     },
-    ar: {
+    AR: {
       purchases: 'إدارة المشتريات',
       managePurchases: 'إدارة أوامر الشراء وتتبع المصروفات',
       newPurchase: 'إنشاء أمر شراء جديد',
@@ -125,12 +120,21 @@ export default function PurchasesPage({ token }) {
       date: 'التاريخ',
       email: 'البريد الإلكتروني',
       phone: 'الهاتف',
-      items: 'المنتجات'
+      items: 'المنتجات',
+      subtotal: 'المجموع الفرعي'
     }
   };
 
-  const t = translations[language];
-  const isRTL = language === 'ar';
+  const localT = purchasesTranslations[language];
+
+  const [purchases, setPurchases] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
+  const [totalPurchaseAmount, setTotalPurchaseAmount] = useState(0);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const [form, setForm] = useState({
     supplierId: '',
@@ -163,7 +167,7 @@ export default function PurchasesPage({ token }) {
     const supplierId = getUniqueSupplierFromItems(items);
     
     if (supplierId === 'multiple') {
-      setError(t.multipleSuppliersWarning);
+      setError(localT.multipleSuppliersWarning);
       setFormFunc(prev => ({ ...prev, supplierId: '' }));
       return false;
     } else if (supplierId) {
@@ -287,13 +291,13 @@ export default function PurchasesPage({ token }) {
     e.preventDefault();
     
     if (!form.supplierId) {
-      setError(t.multipleSuppliersWarning);
+      setError(localT.multipleSuppliersWarning);
       setTimeout(() => setError(''), 3000);
       return;
     }
     
     if (form.items.some(item => !item.productId || item.quantity < 1 || item.price < 0)) {
-      setError(t.fillItemsCorrectly);
+      setError(localT.fillItemsCorrectly);
       setTimeout(() => setError(''), 3000);
       return;
     }
@@ -309,11 +313,11 @@ export default function PurchasesPage({ token }) {
 
     try {
       await createPurchase(payload, token);
-      showSuccessMessage(`${t.purchaseCreated} ${t.invoiceSent}`);
+      showSuccessMessage(`${localT.purchaseCreated} ${localT.invoiceSent}`);
       resetForm();
       loadAllData();
     } catch (err) {
-      setError(err.response?.data?.message || err.message || t.errorSavingPurchase);
+      setError(err.response?.data?.message || err.message || localT.errorSavingPurchase);
       setTimeout(() => setError(''), 4000);
     }
   };
@@ -365,12 +369,12 @@ export default function PurchasesPage({ token }) {
 
   const handleUpdateSubmit = async () => {
     if (!editForm.supplierId) {
-      setError(t.multipleSuppliersWarning);
+      setError(localT.multipleSuppliersWarning);
       setTimeout(() => setError(''), 3000);
       return;
     }
     if (editForm.items.some(item => !item.productId || item.quantity < 1 || item.price < 0)) {
-      setError(t.fillItemsCorrectly);
+      setError(localT.fillItemsCorrectly);
       setTimeout(() => setError(''), 3000);
       return;
     }
@@ -386,25 +390,25 @@ export default function PurchasesPage({ token }) {
 
     try {
       await updatePurchase(editingPurchaseId, payload, token);
-      setSuccess(t.purchaseUpdated);
+      setSuccess(localT.purchaseUpdated);
       setTimeout(() => setSuccess(''), 3000);
       closeEditModal();
       loadAllData();
     } catch (err) {
-      setError(err.response?.data?.message || err.message || t.errorSavingPurchase);
+      setError(err.response?.data?.message || err.message || localT.errorSavingPurchase);
       setTimeout(() => setError(''), 4000);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm(t.deleteConfirm)) return;
+    if (!window.confirm(localT.deleteConfirm)) return;
     try {
       await deletePurchase(id, token);
       setSuccess('Purchase deleted successfully');
       setTimeout(() => setSuccess(''), 3000);
       loadAllData();
     } catch (err) {
-      setError(err.response?.data?.message || err.message || t.failedToDelete);
+      setError(err.response?.data?.message || err.message || localT.failedToDelete);
       setTimeout(() => setError(''), 3000);
     }
   };
@@ -427,28 +431,28 @@ export default function PurchasesPage({ token }) {
       y += 50;
       doc.setTextColor(26, 75, 122);
       doc.setFontSize(18);
-      doc.text(t.purchaseInvoice, pageWidth / 2, y, { align: 'center' });
+      doc.text(localT.purchaseInvoice, pageWidth / 2, y, { align: 'center' });
       
       y += 15;
       doc.setFontSize(10);
       doc.setTextColor(100, 100, 100);
-      doc.text(`${t.invoiceNumber}: PUR-${purchase._id.slice(-8)}`, margin, y);
-      doc.text(`${t.date}: ${new Date(purchase.createdAt).toLocaleDateString(language === 'en' ? 'en-US' : 'ar-EG')}`, margin, y + 6);
+      doc.text(`${localT.invoiceNumber}: PUR-${purchase._id.slice(-8)}`, margin, y);
+      doc.text(`${localT.date}: ${new Date(purchase.createdAt).toLocaleDateString(language === 'en' ? 'en-US' : 'ar-EG')}`, margin, y + 6);
       
       const supplier = suppliers.find(s => s._id === (purchase.supplierId?._id || purchase.supplierId));
       if (supplier) {
         y += 20;
         doc.setFontSize(11);
         doc.setTextColor(80, 80, 80);
-        doc.text(`${t.supplier}: ${supplier.name}`, margin, y);
-        if (supplier.email) doc.text(`${t.email}: ${supplier.email}`, margin, y + 6);
-        if (supplier.phone) doc.text(`${t.phone}: ${supplier.phone}`, margin, y + 12);
+        doc.text(`${localT.supplier}: ${supplier.name}`, margin, y);
+        if (supplier.email) doc.text(`${localT.email}: ${supplier.email}`, margin, y + 6);
+        if (supplier.phone) doc.text(`${localT.phone}: ${supplier.phone}`, margin, y + 12);
         y += 25;
       } else {
         y += 20;
       }
 
-      const tableColumn = [t.product, t.quantity, t.unitPrice, t.total];
+      const tableColumn = [localT.product, localT.quantity, localT.unitPrice, localT.total];
       const tableRows = purchase.items.map(item => {
         const product = products.find(p => p._id === (item.productId?._id || item.productId));
         const productName = product?.name || 'Unknown';
@@ -473,17 +477,17 @@ export default function PurchasesPage({ token }) {
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(212, 175, 55);
-      doc.text(`${t.total}: ${formatMoney(total)}`, pageWidth - margin, finalY, { align: 'right' });
+      doc.text(`${localT.total}: ${formatMoney(total)}`, pageWidth - margin, finalY, { align: 'right' });
       
       const footerY = doc.internal.pageSize.getHeight() - 15;
       doc.setFontSize(8);
       doc.setTextColor(150, 150, 150);
-      doc.text(t.thankYou, pageWidth / 2, footerY, { align: 'center' });
+      doc.text(localT.thankYou, pageWidth / 2, footerY, { align: 'center' });
       
       doc.save(`purchase_invoice_${purchase._id}_${language}.pdf`);
     } catch (err) {
       console.error('Error generating PDF:', err);
-      setError(t.failedToGeneratePDF);
+      setError(localT.failedToGeneratePDF);
       setTimeout(() => setError(''), 3000);
     }
   };
@@ -493,7 +497,7 @@ export default function PurchasesPage({ token }) {
       <div className="purchases-page" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="loading-screen">
           <div className="spinner"></div>
-          <p>{t.loading}</p>
+          <p>{localT.loading}</p>
         </div>
       </div>
     );
@@ -501,7 +505,7 @@ export default function PurchasesPage({ token }) {
 
   return (
     <div className={`purchases-page ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-      <button className="language-toggle" onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}>
+      <button className="language-toggle" onClick={toggleLanguage}>
         <FiGlobe /> {language === 'en' ? 'العربية' : 'English'}
       </button>
 
@@ -511,13 +515,13 @@ export default function PurchasesPage({ token }) {
             <FiShoppingBag size={28} />
           </div>
           <div>
-            <h1>{t.purchases}</h1>
-            <p>{t.managePurchases}</p>
+            <h1>{localT.purchases}</h1>
+            <p>{localT.managePurchases}</p>
           </div>
         </div>
         <button className="refresh-btn" onClick={() => loadAllData(true)} disabled={refreshing}>
           <FiRefreshCw className={refreshing ? 'spinning' : ''} />
-          {refreshing ? t.refreshing : 'Refresh'}
+          {refreshing ? localT.refreshing : t.refresh}
         </button>
       </div>
 
@@ -539,18 +543,17 @@ export default function PurchasesPage({ token }) {
 
       <div className="form-card">
         <div className="form-card-header">
-          <h3><FiPlus /> {t.newPurchase}</h3>
+          <h3><FiPlus /> {localT.newPurchase}</h3>
         </div>
         
         <form onSubmit={handleSubmit}>
-        
           <div className="items-section">
-            <label><FiPackage /> {t.products} <span className="required">*</span></label>
+            <label><FiPackage /> {localT.products} <span className="required">*</span></label>
             <div className="items-header">
-              <span>{t.product}</span>
-              <span>{t.quantity}</span>
-              <span>{t.unitPrice}</span>
-              <span>{t.total}</span>
+              <span>{localT.product}</span>
+              <span>{localT.quantity}</span>
+              <span>{localT.unitPrice}</span>
+              <span>{localT.total}</span>
               <span></span>
             </div>
             
@@ -565,17 +568,17 @@ export default function PurchasesPage({ token }) {
                     className="form-select"
                     required
                   >
-                    <option value="">{t.selectProduct}</option>
+                    <option value="">{localT.selectProduct}</option>
                     {products.map(p => (
                       <option key={p._id} value={p._id}>
-                        {p.name} ({t.stock}: {p.stock ?? 0})
+                        {p.name} ({localT.stock}: {p.stock ?? 0})
                       </option>
                     ))}
                   </select>
                   <input
                     type="number"
                     min="1"
-                    placeholder={t.quantity}
+                    placeholder={localT.quantity}
                     value={item.quantity}
                     onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
                     className="form-input"
@@ -585,7 +588,7 @@ export default function PurchasesPage({ token }) {
                     type="number"
                     min="0"
                     step="0.01"
-                    placeholder={t.unitPrice}
+                    placeholder={localT.unitPrice}
                     value={item.price}
                     onChange={(e) => handleItemChange(index, 'price', e.target.value)}
                     className="form-input"
@@ -602,24 +605,24 @@ export default function PurchasesPage({ token }) {
             })}
             
             <button type="button" className="add-item-btn" onClick={addItem}>
-              <FiPlus /> {t.addProduct}
+              <FiPlus /> {localT.addProduct}
             </button>
           </div>
 
           <div className="order-summary">
             <div className="summary-line">
-              <span>Subtotal:</span>
+              <span>{localT.subtotal}:</span>
               <span>{formatMoney(calculateTotal(form.items))}</span>
             </div>
             <div className="summary-line total">
-              <span>{t.total}:</span>
+              <span>{localT.total}:</span>
               <span>{formatMoney(calculateTotal(form.items))}</span>
             </div>
           </div>
 
           <div className="form-actions">
             <button type="submit" className="btn-submit">
-              <FiPlus /> {t.createPurchase}
+              <FiPlus /> {localT.createPurchase}
             </button>
           </div>
         </form>
@@ -627,19 +630,19 @@ export default function PurchasesPage({ token }) {
 
       <div className="table-card">
         <div className="table-header">
-          <h3><FiShoppingBag /> {t.purchaseList}</h3>
-          <div className="table-stats">{purchases.length} total purchases</div>
+          <h3><FiShoppingBag /> {localT.purchaseList}</h3>
+          <div className="table-stats">{purchases.length} {localT.purchases}</div>
         </div>
         
         <div className="table-responsive">
           <table className="purchases-table">
             <thead>
               <tr>
-                <th>{t.supplier}</th>
-                <th>{t.items}</th>
-                <th>{t.total}</th>
-                <th>{t.date}</th>
-                <th>{t.actions}</th>
+                <th>{localT.supplier}</th>
+                <th>{localT.items}</th>
+                <th>{localT.total}</th>
+                <th>{localT.date}</th>
+                <th>{localT.actions}</th>
               </tr>
             </thead>
             <tbody>
@@ -647,7 +650,7 @@ export default function PurchasesPage({ token }) {
                 <tr>
                   <td colSpan="5" className="empty-state">
                     <FiShoppingBag size={48} />
-                    <p>{t.noPurchases}</p>
+                    <p>{localT.noPurchases}</p>
                   </td>
                 </tr>
               ) : (
@@ -656,7 +659,7 @@ export default function PurchasesPage({ token }) {
                   const total = purchase.totalAmount || calculateTotal(purchase.items);
                   return (
                     <tr key={purchase._id} className="purchase-row">
-                      <td data-label={t.supplier}>
+                      <td data-label={localT.supplier}>
                         <div className="supplier-cell">
                           <div className="supplier-avatar">
                             {supplier?.name?.charAt(0).toUpperCase() || '?'}
@@ -667,7 +670,7 @@ export default function PurchasesPage({ token }) {
                           </div>
                         </div>
                       </td>
-                      <td data-label={t.items}>
+                      <td data-label={localT.items}>
                         <div className="items-badges">
                           {purchase.items.slice(0, 3).map((item, idx) => {
                             const product = products.find(p => p._id === (item.productId?._id || item.productId));
@@ -684,23 +687,23 @@ export default function PurchasesPage({ token }) {
                           )}
                         </div>
                       </td>
-                      <td data-label={t.total} className="total-cell">
+                      <td data-label={localT.total} className="total-cell">
                         {formatMoney(total)}
                       </td>
-                      <td data-label={t.date}>
+                      <td data-label={localT.date}>
                         <div className="date-cell">
                           <FiCalendar size={12} />
                           {new Date(purchase.createdAt).toLocaleDateString(language === 'en' ? 'en-US' : 'ar-EG')}
                         </div>
                       </td>
-                      <td data-label={t.actions} className="actions-cell">
-                        <button className="action-icon edit" onClick={() => openEditModal(purchase)} title={t.editPurchase}>
+                      <td data-label={localT.actions} className="actions-cell">
+                        <button className="action-icon edit" onClick={() => openEditModal(purchase)} title={localT.editPurchase}>
                           <FiEdit2 />
                         </button>
-                        <button className="action-icon delete" onClick={() => handleDelete(purchase._id)} title={t.deleteConfirm}>
+                        <button className="action-icon delete" onClick={() => handleDelete(purchase._id)} title={localT.deleteConfirm}>
                           <FiTrash2 />
                         </button>
-                        <button className="action-icon download" onClick={() => generateInvoicePDF(purchase)} title={t.downloadInvoice}>
+                        <button className="action-icon download" onClick={() => generateInvoicePDF(purchase)} title={localT.downloadInvoice}>
                           <FiDownload />
                         </button>
                       </td>
@@ -718,30 +721,30 @@ export default function PurchasesPage({ token }) {
         <div className="modal-overlay" onClick={closeEditModal}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3><FiEdit2 /> {t.editPurchase}</h3>
+              <h3><FiEdit2 /> {localT.editPurchase}</h3>
               <button className="modal-close" onClick={closeEditModal}>×</button>
             </div>
             <div className="modal-body">
               <div className="form-group">
-                <label><FiTruck /> {t.supplier}</label>
+                <label><FiTruck /> {localT.supplier}</label>
                 <div className="supplier-auto-field">
                   <input
                     type="text"
-                    value={editForm.supplierId ? getSupplierName(editForm.supplierId) : t.supplierAutoFilled}
+                    value={editForm.supplierId ? getSupplierName(editForm.supplierId) : localT.supplierAutoFilled}
                     readOnly
                     className="form-input auto-filled"
                   />
-                  <span className="auto-badge">{t.supplierAutoFilled}</span>
+                  <span className="auto-badge">{localT.supplierAutoFilled}</span>
                 </div>
               </div>
 
               <div className="items-section">
-                <label><FiPackage /> {t.products}</label>
+                <label><FiPackage /> {localT.products}</label>
                 <div className="items-header">
-                  <span>{t.product}</span>
-                  <span>{t.quantity}</span>
-                  <span>{t.unitPrice}</span>
-                  <span>{t.total}</span>
+                  <span>{localT.product}</span>
+                  <span>{localT.quantity}</span>
+                  <span>{localT.unitPrice}</span>
+                  <span>{localT.total}</span>
                   <span></span>
                 </div>
                 
@@ -755,10 +758,10 @@ export default function PurchasesPage({ token }) {
                         onChange={(e) => handleEditItemChange(index, 'productId', e.target.value)}
                         className="form-select"
                       >
-                        <option value="">{t.selectProduct}</option>
+                        <option value="">{localT.selectProduct}</option>
                         {products.map(p => (
                           <option key={p._id} value={p._id}>
-                            {p.name} ({t.stock}: {p.stock ?? 0})
+                            {p.name} ({localT.stock}: {p.stock ?? 0})
                           </option>
                         ))}
                       </select>
@@ -788,20 +791,20 @@ export default function PurchasesPage({ token }) {
                 })}
                 
                 <button type="button" className="add-item-btn" onClick={addEditItem}>
-                  <FiPlus /> {t.addProduct}
+                  <FiPlus /> {localT.addProduct}
                 </button>
               </div>
 
               <div className="order-summary">
                 <div className="summary-line total">
-                  <span>{t.total}:</span>
+                  <span>{localT.total}:</span>
                   <span>{formatMoney(calculateTotal(editForm.items))}</span>
                 </div>
               </div>
             </div>
             <div className="modal-footer">
-              <button className="btn-secondary" onClick={closeEditModal}>{t.cancel}</button>
-              <button className="btn-primary" onClick={handleUpdateSubmit}>{t.updatePurchase}</button>
+              <button className="btn-secondary" onClick={closeEditModal}>{localT.cancel}</button>
+              <button className="btn-primary" onClick={handleUpdateSubmit}>{localT.updatePurchase}</button>
             </div>
           </div>
         </div>

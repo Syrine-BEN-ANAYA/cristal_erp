@@ -1,17 +1,75 @@
-// LoginPage.js - Version corrigée pour Sales & Purchases
-import React, { useState } from 'react';
+// LoginPage.js - Version avec contexte global
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from '../context/LanguageContext';
 import { login } from '../api/authService';
-import { FiMail, FiLock } from 'react-icons/fi';
+import { FiMail, FiLock, FiGlobe } from 'react-icons/fi';
 import '../styles/LoginPage.css';
 
 const LoginPage = ({ onLogin }) => {
   const navigate = useNavigate();
+  const { language, toggleLanguage, t, isRTL } = useLanguage();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+
+  // Traductions spécifiques à LoginPage
+  const loginTranslations = {
+    EN: {
+      welcomeBack: 'Welcome back',
+      signIn: 'Sign in to your account',
+      username: 'Username',
+      usernamePlaceholder: 'Enter your username',
+      password: 'Password',
+      passwordPlaceholder: '••••••••',
+      rememberMe: 'Remember me',
+      forgotPassword: 'Forgot password?',
+      login: 'Log in',
+      loggingIn: 'Checking...',
+      noAccount: "Don't have an account?",
+      contactSupport: 'Contact support',
+      networkError: 'Network error. Please check your connection.',
+      invalidRequest: 'Invalid request. Please check your credentials.',
+      userNotFound: 'User does not exist',
+      accessForbidden: 'Access forbidden. Please contact your administrator.',
+      tooManyAttempts: 'Too many attempts. Please try again later.',
+      serverError: 'Server error. Please try again later.',
+      loginFailed: 'Login failed',
+      accessDenied: 'Access Denied',
+      departmentRestrictedAdmin: '"{{department}}" department is restricted to Administrators only.',
+      departmentRestrictedUser: '"{{department}}" department is restricted to regular users and Super Administrators only.',
+      departmentRestrictedDefault: 'You don\'t have permission for "{{department}}" department.'
+    },
+    AR: {
+      welcomeBack: 'مرحباً بعودتك',
+      signIn: 'تسجيل الدخول إلى حسابك',
+      username: 'اسم المستخدم',
+      usernamePlaceholder: 'أدخل اسم المستخدم',
+      password: 'كلمة المرور',
+      passwordPlaceholder: '••••••••',
+      rememberMe: 'تذكرني',
+      forgotPassword: 'نسيت كلمة المرور؟',
+      login: 'تسجيل الدخول',
+      loggingIn: 'جاري التحقق...',
+      noAccount: 'ليس لديك حساب؟',
+      contactSupport: 'اتصل بالدعم',
+      networkError: 'خطأ في الشبكة. يرجى التحقق من اتصالك.',
+      invalidRequest: 'طلب غير صالح. يرجى التحقق من بياناتك.',
+      userNotFound: 'المستخدم غير موجود',
+      accessForbidden: 'الوصول ممنوع. يرجى الاتصال بالمسؤول.',
+      tooManyAttempts: 'محاولات كثيرة. يرجى المحاولة لاحقاً.',
+      serverError: 'خطأ في الخادم. يرجى المحاولة لاحقاً.',
+      loginFailed: 'فشل تسجيل الدخول',
+      accessDenied: 'الوصول ممنوع',
+      departmentRestrictedAdmin: 'قسم "{{department}}" مقيد بالمسؤولين فقط.',
+      departmentRestrictedUser: 'قسم "{{department}}" مقيد بالمستخدمين العاديين والمسؤولين العامين فقط.',
+      departmentRestrictedDefault: 'ليس لديك صلاحية لدخول قسم "{{department}}".'
+    }
+  };
+
+  const localT = loginTranslations[language];
 
   // Helper function to safely set localStorage
   const safeSetLocalStorage = (key, value) => {
@@ -19,7 +77,6 @@ const LoginPage = ({ onLogin }) => {
       localStorage.setItem(key, value);
       return true;
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.warn(`Failed to save to localStorage: ${key}`, err);
       return false;
     }
@@ -30,7 +87,6 @@ const LoginPage = ({ onLogin }) => {
     try {
       localStorage.removeItem(key);
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.warn(`Failed to remove from localStorage: ${key}`, err);
     }
   };
@@ -56,21 +112,21 @@ const LoginPage = ({ onLogin }) => {
   // Helper function to get access denied message
   const getAccessDeniedMessage = (selectedDeptType, selectedDeptName) => {
     if (selectedDeptType === 'admin') {
-      return `⛔ Access Denied: "${selectedDeptName}" department is restricted to Administrators only.`;
+      return localT.departmentRestrictedAdmin.replace('{{department}}', selectedDeptName);
     }
     if (selectedDeptType === 'user') {
-      return `⛔ Access Denied: "${selectedDeptName}" department is restricted to regular users and Super Administrators only.`;
+      return localT.departmentRestrictedUser.replace('{{department}}', selectedDeptName);
     }
-    return `⛔ Access Denied: You don't have permission for "${selectedDeptName}" department.`;
+    return localT.departmentRestrictedDefault.replace('{{department}}', selectedDeptName);
   };
 
   // Helper function to get error message from response
   const getErrorMessage = (err) => {
     if (!err.response) {
       if (err.request) {
-        return 'Network error. Please check your connection.';
+        return localT.networkError;
       }
-      return err.message || 'Login failed';
+      return err.message || localT.loginFailed;
     }
 
     const status = err.response.status;
@@ -78,22 +134,21 @@ const LoginPage = ({ onLogin }) => {
 
     switch (status) {
       case 400:
-        return 'Invalid request. Please check your credentials.';
+        return localT.invalidRequest;
       case 401:
       case 404:
-        return 'User does not exist';
+        return localT.userNotFound;
       case 403:
-        return 'Access forbidden. Please contact your administrator.';
+        return localT.accessForbidden;
       case 429:
-        return 'Too many attempts. Please try again later.';
+        return localT.tooManyAttempts;
       case 500:
-        return 'Server error. Please try again later.';
+        return localT.serverError;
       default:
-        // Check backend message for invalid credentials patterns
         if (backendMessage && /invalid|credentials|not found|exist|incorrect/i.test(backendMessage)) {
-          return 'User does not exist';
+          return localT.userNotFound;
         }
-        return backendMessage || `Login failed (${status})`;
+        return backendMessage || `${localT.loginFailed} (${status})`;
     }
   };
 
@@ -116,7 +171,8 @@ const LoginPage = ({ onLogin }) => {
 
     try {
       const selectedDeptType = localStorage.getItem('selectedDepartmentType');
-      const selectedDeptName = localStorage.getItem('selectedDepartmentName') || 'this department';
+      const selectedDeptName = localStorage.getItem('selectedDepartmentName') || 
+        (language === 'EN' ? 'this department' : 'هذا القسم');
       
       const res = await login(username, password);
       const { user, access_token } = res;
@@ -131,13 +187,7 @@ const LoginPage = ({ onLogin }) => {
       }
       
       // Save token with remember me option
-      if (rememberMe) {
-        safeSetLocalStorage('token', access_token);
-      } else {
-        safeSetLocalStorage('token', access_token);
-        // For session-only storage, we could use sessionStorage
-        // sessionStorage.setItem('token', access_token);
-      }
+      safeSetLocalStorage('token', access_token);
       
       onLogin(user, access_token);
       clearDepartmentStorage();
@@ -160,7 +210,7 @@ const LoginPage = ({ onLogin }) => {
   };
 
   // Load saved credentials if remember me was checked
-  React.useEffect(() => {
+  useEffect(() => {
     try {
       const savedUsername = localStorage.getItem('rememberedUsername');
       if (savedUsername) {
@@ -193,7 +243,13 @@ const LoginPage = ({ onLogin }) => {
   };
 
   return (
-    <div className="login-page">
+    <div className={`login-page ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+      {/* Language Toggle */}
+      <button className="login-language-toggle" onClick={toggleLanguage}>
+        <FiGlobe size={16} />
+        <span>{language === 'EN' ? 'العربية' : 'English'}</span>
+      </button>
+
       <div className="login-grid">
         <div className="login-brand">
           <div className="brand-content">
@@ -213,18 +269,18 @@ const LoginPage = ({ onLogin }) => {
 
         <div className="login-form-container">
           <div className="login-card">
-            <h3 className="form-title">Welcome back</h3>
-            <p className="form-subtitle">Sign in to your account</p>
+            <h3 className="form-title">{localT.welcomeBack}</h3>
+            <p className="form-subtitle">{localT.signIn}</p>
             <form onSubmit={handleSubmit}>
               <div className="input-group">
-                <label htmlFor="username" className="input-label">Username</label>
+                <label htmlFor="username" className="input-label">{localT.username}</label>
                 <div className="input-wrapper">
                   <FiMail className="input-icon" />
                   <input
                     type="text"
                     id="username"
                     className="input-field"
-                    placeholder="Enter your username"
+                    placeholder={localT.usernamePlaceholder}
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     required
@@ -235,14 +291,14 @@ const LoginPage = ({ onLogin }) => {
               </div>
 
               <div className="input-group">
-                <label htmlFor="password" className="input-label">Password</label>
+                <label htmlFor="password" className="input-label">{localT.password}</label>
                 <div className="input-wrapper">
                   <FiLock className="input-icon" />
                   <input
                     type="password"
                     id="password"
                     className="input-field"
-                    placeholder="••••••••"
+                    placeholder={localT.passwordPlaceholder}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -260,17 +316,19 @@ const LoginPage = ({ onLogin }) => {
                     onChange={handleRememberMeChange}
                     disabled={isLoading}
                   />
-                  <span>Remember me</span>
+                  <span>{localT.rememberMe}</span>
                 </label>
-                <a href="/forgot-password" className="forgot-link">Forgot password?</a>
+                <a href="/forgot-password" className="forgot-link">{localT.forgotPassword}</a>
               </div>
 
               <button type="submit" className="login-button" disabled={isLoading}>
-                {isLoading ? 'Checking...' : 'Log in'}
+                {isLoading ? localT.loggingIn : localT.login}
               </button>
               {error && <div className="error-message">{error}</div>}
             </form>
-            <p className="signup-prompt">Don't have an account? <a href="/contact">Contact support</a></p>
+            <p className="signup-prompt">
+              {localT.noAccount} <a href="/contact">{localT.contactSupport}</a>
+            </p>
           </div>
         </div>
       </div>

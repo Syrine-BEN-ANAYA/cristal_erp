@@ -41,6 +41,8 @@ interface Order {
 export class OrdersGateway {
   private ORDERS_SERVICE_URL =
     process.env.ORDERS_SERVICE_URL || 'http://localhost:3102';
+  private AUTH_SERVICE_URL =
+    process.env.AUTH_SERVICE_URL || 'http://localhost:3101';
 
   constructor() {
     Logger.log('OrdersGateway chargé correctement', 'API-GATEWAY');
@@ -65,6 +67,27 @@ export class OrdersGateway {
     );
   }
 
+  // ✅ Fonction pour envoyer les logs à auth-service
+  private async sendAuditLog(data: {
+    userId: string;
+    username: string;
+    action: string;
+    entity: string;
+    ip?: string;
+    endpoint?: string;
+    details?: any;
+  }) {
+    try {
+      await axios.post(`${this.AUTH_SERVICE_URL}/audits/remote-log`, data, {
+        headers: {
+          'x-internal-token': process.env.INTERNAL_API_KEY || 'internal-secret',
+        },
+      });
+    } catch (error) {
+      Logger.error('Failed to send audit log', 'OrdersGateway');
+    }
+  }
+
   @Post()
   async create(
     @Body() body: CreateOrderDto,
@@ -76,11 +99,32 @@ export class OrdersGateway {
         body,
         { headers: this.getAuthHeader(req) },
       );
+
+      // ✅ Audit: Création commande
+      const user = (req as any).user;
+      if (user) {
+        await this.sendAuditLog({
+          userId: user._id?.toString() || user.id,
+          username: user.username || user.email,
+          action: 'CREATE_ORDER',
+          entity: 'ORDER',
+          ip: req.ip || req.socket?.remoteAddress,
+          endpoint: req.originalUrl || '/orders',
+          details: {
+            orderId: res.data.id,
+            customerId: body.customerId,
+            itemsCount: body.items.length,
+            totalAmount: res.data.totalAmount,
+          },
+        });
+      }
+
       return res.data;
     } catch (error) {
       this.handleAxiosError(error, 'Erreur création commande');
     }
   }
+
   @Get('total')
   async getTotalOrderAmount(
     @Req() req: Request,
@@ -90,11 +134,27 @@ export class OrdersGateway {
         `${this.ORDERS_SERVICE_URL}/orders/total`,
         { headers: this.getAuthHeader(req) },
       );
+
+      // ✅ Audit: Consultation total commandes
+      const user = (req as any).user;
+      if (user) {
+        await this.sendAuditLog({
+          userId: user._id?.toString() || user.id,
+          username: user.username || user.email,
+          action: 'VIEW_TOTAL_REVENUE',
+          entity: 'ORDER',
+          ip: req.ip || req.socket?.remoteAddress,
+          endpoint: req.originalUrl || '/orders/total',
+          details: { totalOrderAmount: res.data.totalOrderAmount },
+        });
+      }
+
       return res.data;
     } catch (err) {
       this.handleAxiosError(err, 'Erreur récupération total commandes');
     }
   }
+
   @Put(':id')
   async update(
     @Param('id') id: string,
@@ -115,6 +175,26 @@ export class OrdersGateway {
         body,
         { headers: this.getAuthHeader(req) },
       );
+
+      // ✅ Audit: Modification commande
+      const user = (req as any).user;
+      if (user) {
+        await this.sendAuditLog({
+          userId: user._id?.toString() || user.id,
+          username: user.username || user.email,
+          action: 'UPDATE_ORDER',
+          entity: 'ORDER',
+          ip: req.ip || req.socket?.remoteAddress,
+          endpoint: req.originalUrl || `/orders/${id}`,
+          details: {
+            orderId: id,
+            customerId: body.customerId,
+            itemsCount: body.items.length,
+            totalAmount: res.data.totalAmount,
+          },
+        });
+      }
+
       return res.data;
     } catch (error) {
       this.handleAxiosError(error, 'Erreur mise à jour commande');
@@ -128,6 +208,21 @@ export class OrdersGateway {
         `${this.ORDERS_SERVICE_URL}/orders`,
         { headers: this.getAuthHeader(req) },
       );
+
+      // ✅ Audit: Consultation liste commandes
+      const user = (req as any).user;
+      if (user) {
+        await this.sendAuditLog({
+          userId: user._id?.toString() || user.id,
+          username: user.username || user.email,
+          action: 'VIEW_ALL_ORDERS',
+          entity: 'ORDER',
+          ip: req.ip || req.socket?.remoteAddress,
+          endpoint: req.originalUrl || '/orders',
+          details: { count: res.data.length },
+        });
+      }
+
       return res.data;
     } catch (error) {
       this.handleAxiosError(error, 'Erreur récupération commandes');
@@ -141,6 +236,24 @@ export class OrdersGateway {
         `${this.ORDERS_SERVICE_URL}/orders/${id}`,
         { headers: this.getAuthHeader(req) },
       );
+
+      // ✅ Audit: Consultation commande spécifique
+      const user = (req as any).user;
+      if (user) {
+        await this.sendAuditLog({
+          userId: user._id?.toString() || user.id,
+          username: user.username || user.email,
+          action: 'VIEW_ONE_ORDER',
+          entity: 'ORDER',
+          ip: req.ip || req.socket?.remoteAddress,
+          endpoint: req.originalUrl || `/orders/${id}`,
+          details: {
+            orderId: id,
+            totalAmount: res.data.totalAmount,
+          },
+        });
+      }
+
       return res.data;
     } catch (error) {
       this.handleAxiosError(error, 'Erreur récupération commande');
@@ -157,6 +270,21 @@ export class OrdersGateway {
         `${this.ORDERS_SERVICE_URL}/orders/${id}`,
         { headers: this.getAuthHeader(req) },
       );
+
+      // ✅ Audit: Suppression commande
+      const user = (req as any).user;
+      if (user) {
+        await this.sendAuditLog({
+          userId: user._id?.toString() || user.id,
+          username: user.username || user.email,
+          action: 'DELETE_ORDER',
+          entity: 'ORDER',
+          ip: req.ip || req.socket?.remoteAddress,
+          endpoint: req.originalUrl || `/orders/${id}`,
+          details: { orderId: id },
+        });
+      }
+
       return res.data;
     } catch (error) {
       this.handleAxiosError(error, 'Erreur suppression commande');

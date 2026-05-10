@@ -223,7 +223,40 @@
 .brand-icon {
   font-size: 1.2rem;
 }
+.logout-button-modern:hover {
+  background: rgba(239, 68, 68, 0.3);
+  color: #fecaca;
+  transform: translateY(-2px);
+}
 
+/* ===== Language Button ===== */
+.lang-button-modern {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--glass-border);
+  border-radius: 2rem;
+  color: var(--text-white);
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.lang-button-modern:hover {
+  background: rgba(212, 175, 55, 0.2);
+  border-color: var(--accent-gold);
+  transform: translateY(-2px);
+}
+/* RTL support for language button */
+.layout-modern.rtl .lang-button-modern {
+  flex-direction: row-reverse;
+}
+.mobile-menu-toggle {
+  display: none;
+}
 .sidebar-nav-modern {
   flex: 1;
   padding: 1rem 0;
