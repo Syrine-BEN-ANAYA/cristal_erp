@@ -1,5 +1,13 @@
-import { IsString, IsNotEmpty, IsNumber, Min, IsOptional, IsMongoId } from 'class-validator';
-import { Types } from 'mongoose';
+import {
+  IsString,
+  IsNotEmpty,
+  IsNumber,
+  Min,
+  IsOptional,
+  IsMongoId,
+} from 'class-validator';
+
+import { Type } from 'class-transformer';
 
 export class CreateProductDto {
   @IsString()
@@ -7,26 +15,28 @@ export class CreateProductDto {
   name: string;
 
   @IsNumber()
+  @Type(() => Number)
   @Min(0)
   price: number;
 
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   @Min(0)
   initialQuantity?: number;
 
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   @Min(0)
   stock?: number;
 
   @IsOptional()
   @IsMongoId()
-  supplierId?: Types.ObjectId;
+  supplierId?: string;
 
   @IsNumber()
+  @Type(() => Number)
   @Min(10)
   threshold: number;
-
-
 }

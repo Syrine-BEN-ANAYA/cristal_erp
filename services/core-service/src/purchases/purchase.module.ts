@@ -4,7 +4,6 @@ import { PurchaseService } from './purchase.service';
 import { PurchaseController } from './purchase.controller';
 import { Purchase, PurchaseSchema } from './schemas/purchase.schema';
 import { ProductsModule } from '../products/products.module';
-import { AuditClient } from '../audit/audit.client';
 
 @Module({
   imports: [
@@ -12,7 +11,7 @@ import { AuditClient } from '../audit/audit.client';
     ProductsModule,
   ],
   controllers: [PurchaseController],
-  providers: [PurchaseService, AuditClient],
+  providers: [PurchaseService],
   exports: [PurchaseService],
 })
 export class PurchaseModule {}

@@ -1,46 +1,215 @@
 import axios from "axios";
 
-// URL de l'API Gateway pour les achats (adaptez selon votre configuration)
-const API_GATEWAY_URL = process.env.REACT_APP_API_GATEWAY_URL_PURCHASES || "http://localhost:3104/purchases";
+/* -------------------------------------------------------------------------- */
+/*                                   CONFIG                                   */
+/* -------------------------------------------------------------------------- */
 
-// Helper pour config avec token
-const getConfig = (token) => ({
-  headers: { Authorization: `Bearer ${token}` },
-});
+const API_GATEWAY_URL =
+  process.env.REACT_APP_API_GATEWAY_URL_PURCHASES ||
+  "http://localhost:3104/purchases";
 
-// ---------------- CREATE PURCHASE ----------------
-export const createPurchase = async (purchaseData, token) => {
-  const res = await axios.post(API_GATEWAY_URL, purchaseData, getConfig(token));
-  return res.data;
+/* -------------------------------------------------------------------------- */
+/*                              AXIOS CONFIG                                  */
+/* -------------------------------------------------------------------------- */
+
+const getConfig = (token) => {
+
+  if (!token) {
+    throw new Error("Authentication token missing");
+  }
+
+  return {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+
+    timeout: 10000,
+  };
 };
 
-// ---------------- GET ALL PURCHASES ----------------
-export const getPurchases = async (token) => {
-  const res = await axios.get(API_GATEWAY_URL, getConfig(token));
-  return res.data;
+/* -------------------------------------------------------------------------- */
+/*                              HANDLE ERRORS                                 */
+/* -------------------------------------------------------------------------- */
+
+const handleError = (error, fallbackMessage) => {
+
+  console.error("Purchase API Error:", error);
+
+  if (error.response) {
+
+    throw new Error(
+      error.response.data?.message ||
+      error.response.data ||
+      fallbackMessage
+    );
+  }
+
+  if (error.request) {
+    throw new Error("Server not responding");
+  }
+
+  throw new Error(fallbackMessage);
 };
 
-// ---------------- GET PURCHASE BY ID ----------------
-export const getPurchaseById = async (id, token) => {
-  const res = await axios.get(`${API_GATEWAY_URL}/${id}`, getConfig(token));
-  return res.data;
+/* -------------------------------------------------------------------------- */
+/*                            CREATE PURCHASE                                 */
+/* -------------------------------------------------------------------------- */
+
+export const createPurchase = async (
+  purchaseData,
+  token
+) => {
+
+  try {
+
+    const res = await axios.post(
+      API_GATEWAY_URL,
+      purchaseData,
+      getConfig(token)
+    );
+
+    return res.data;
+
+  } catch (error) {
+
+    handleError(
+      error,
+      "Erreur création achat"
+    );
+  }
 };
 
-// ---------------- UPDATE PURCHASE ----------------
-export const updatePurchase = async (id, purchaseData, token) => {
-  console.log('UPDATE URL:', `${API_GATEWAY_URL}/${id}`);
-  const res = await axios.put(`${API_GATEWAY_URL}/${id}`, purchaseData, getConfig(token));
-  return res.data;
+/* -------------------------------------------------------------------------- */
+/*                            GET ALL PURCHASES                               */
+/* -------------------------------------------------------------------------- */
+
+export const getPurchases = async (
+  token
+) => {
+
+  try {
+
+    const res = await axios.get(
+      API_GATEWAY_URL,
+      getConfig(token)
+    );
+
+    return res.data;
+
+  } catch (error) {
+
+    handleError(
+      error,
+      "Erreur récupération achats"
+    );
+  }
 };
 
-// ---------------- DELETE PURCHASE ----------------
-export const deletePurchase = async (id, token) => {
-  const res = await axios.delete(`${API_GATEWAY_URL}/${id}`, getConfig(token));
-  return res.data;
+/* -------------------------------------------------------------------------- */
+/*                           GET PURCHASE BY ID                               */
+/* -------------------------------------------------------------------------- */
+
+export const getPurchaseById = async (
+  id,
+  token
+) => {
+
+  try {
+
+    const res = await axios.get(
+      `${API_GATEWAY_URL}/${id}`,
+      getConfig(token)
+    );
+
+    return res.data;
+
+  } catch (error) {
+
+    handleError(
+      error,
+      "Erreur récupération achat"
+    );
+  }
 };
 
-// ---------------- GET TOTAL PURCHASE AMOUNT ----------------
-export const getTotalPurchaseAmount = async (token) => {
-  const res = await axios.get(`${API_GATEWAY_URL}/total`, getConfig(token));
-  return res.data; // retourne { totalPurchaseAmount: number }
+/* -------------------------------------------------------------------------- */
+/*                              UPDATE PURCHASE                               */
+/* -------------------------------------------------------------------------- */
+
+export const updatePurchase = async (
+  id,
+  purchaseData,
+  token
+) => {
+
+  try {
+
+    const res = await axios.put(
+      `${API_GATEWAY_URL}/${id}`,
+      purchaseData,
+      getConfig(token)
+    );
+
+    return res.data;
+
+  } catch (error) {
+
+    handleError(
+      error,
+      "Erreur mise à jour achat"
+    );
+  }
+};
+
+/* -------------------------------------------------------------------------- */
+/*                              DELETE PURCHASE                               */
+/* -------------------------------------------------------------------------- */
+
+export const deletePurchase = async (
+  id,
+  token
+) => {
+
+  try {
+
+    const res = await axios.delete(
+      `${API_GATEWAY_URL}/${id}`,
+      getConfig(token)
+    );
+
+    return res.data;
+
+  } catch (error) {
+
+    handleError(
+      error,
+      "Erreur suppression achat"
+    );
+  }
+};
+
+/* -------------------------------------------------------------------------- */
+/*                       GET TOTAL PURCHASE AMOUNT                            */
+/* -------------------------------------------------------------------------- */
+
+export const getTotalPurchaseAmount = async (
+  token
+) => {
+
+  try {
+
+    const res = await axios.get(
+      `${API_GATEWAY_URL}/total`,
+      getConfig(token)
+    );
+
+    return res.data;
+
+  } catch (error) {
+
+    handleError(
+      error,
+      "Erreur récupération total achats"
+    );
+  }
 };

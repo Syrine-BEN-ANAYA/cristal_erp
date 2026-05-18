@@ -9,12 +9,11 @@ services:
     networks:
       - erp-network
     healthcheck:
-     test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
-     interval: 10s
-     timeout: 10s
-     retries: 3
- 
-    
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 3
+
   mongodb-exporter:
     image: bitnami/mongodb-exporter:latest
     container_name: cristal_erp-mongodb-exporter-1
@@ -56,6 +55,20 @@ services:
     networks:
       - erp-network
 
+  hr-service:
+    build: ./services/hr-service
+    image: hr-service:latest
+    restart: unless-stopped
+    environment:
+      MONGO_URI: mongodb://mongo:27017/hr-service
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "3206:3106"
+    networks:
+      - erp-network
+
   api-gateway:
     build: ./services/api-gateway
     image: api-gateway:latest
@@ -65,6 +78,7 @@ services:
     depends_on:
       - auth-service
       - core-service
+      - hr-service
     networks:
       - erp-network
 
@@ -107,33 +121,32 @@ services:
     depends_on:
       - auth-service
       - core-service
+      - hr-service
       - api-gateway
       - mongodb-exporter
 
   grafana:
-   image: grafana/grafana:latest
-   ports:
-    - "3000:3000"
-   environment:
-    - GF_AUTH_ANONYMOUS_ENABLED=true
-    - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
-    - GF_SERVER_ALLOW_EMBEDDING=true
-    - GF_SECURITY_ALLOW_EMBEDDING=true
-    - GF_SERVER_SERVE_FROM_SUB_PATH=true
-    # VOICI LA LIGNE CRUCIALE POUR DÉSACTIVER X-FRAME-OPTIONS
-    - GF_SECURITY_X_FRAME_OPTIONS=allow-from http://localhost:3105
-    # OU utilisez cette ligne pour autoriser toutes les origines (développement uniquement)
-    - GF_SECURITY_X_FRAME_OPTIONS=
-   volumes:
-    - grafana-data:/var/lib/grafana
-    - ./monitoring/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
-   networks:
-    - erp-network
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_SERVER_ALLOW_EMBEDDING=true
+      - GF_SECURITY_ALLOW_EMBEDDING=true
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+      - GF_SECURITY_X_FRAME_OPTIONS=allow-from http://localhost:3105
+      - GF_SECURITY_X_FRAME_OPTIONS=
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+    networks:
+      - erp-network
 
   # ============================================
   # SonarQube avec PostgreSQL
   # ============================================
-  
+
   sonarqube-db:
     image: postgres:15
     container_name: cristal_erp-sonarqube-db
@@ -159,13 +172,10 @@ services:
     ports:
       - "9000:9000"
     environment:
-      # Configuration PostgreSQL
       SONAR_JDBC_URL: jdbc:postgresql://sonarqube-db:5432/sonarqube
       SONAR_JDBC_USERNAME: sonarqube
       SONAR_JDBC_PASSWORD: sonarqube
-      # Désactive les vérifications Elasticsearch pour Docker
       SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
-      # Configuration mémoire (optionnel, pour les petites machines)
       SONAR_CE_JAVAOPTS: "-Xmx512m"
       SONAR_WEB_JAVAOPTS: "-Xmx512m"
       SONAR_SEARCH_JAVAOPTS: "-Xmx512m"
@@ -184,7 +194,6 @@ networks:
     driver: bridge
 
 volumes:
-  # Volumes existants
   mongo-data:
   n8n-data:
   grafana-data:

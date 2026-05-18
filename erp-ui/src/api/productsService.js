@@ -71,4 +71,4 @@ export const removeStock = (id, quantity, token) =>
 
 // ---------------- GET LOW STOCK PRODUCTS ----------------
 export const getLowStockProducts = (token) =>
-  request("get", "/low-stock/list", token); // ← route adaptée au gateway
+request("get", "/low-stock", token);

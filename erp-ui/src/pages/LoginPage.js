@@ -173,11 +173,11 @@ const LoginPage = ({ onLogin }) => {
       const selectedDeptType = localStorage.getItem('selectedDepartmentType');
       const selectedDeptName = localStorage.getItem('selectedDepartmentName') || 
         (language === 'EN' ? 'this department' : 'هذا القسم');
+      const selectedDeptId = localStorage.getItem('selectedDepartment');
       
       const res = await login(username, password);
       const { user, access_token } = res;
       
-      // Check department access
       const hasAccess = checkDepartmentAccess(selectedDeptType, user.role);
       if (!hasAccess) {
         const errorMsg = getAccessDeniedMessage(selectedDeptType, selectedDeptName);
@@ -186,7 +186,6 @@ const LoginPage = ({ onLogin }) => {
         return;
       }
       
-      // Save token with remember me option
       safeSetLocalStorage('token', access_token);
       
       onLogin(user, access_token);
@@ -197,8 +196,16 @@ const LoginPage = ({ onLogin }) => {
         return;
       }
 
-      // Redirection based on department
-      const redirectPath = selectedDeptType === 'admin' ? "/admin" : "/user/reporting";
+      // ✅ REDIRECTION CORRIGÉE
+      let redirectPath = "/user/reporting";
+
+      if (selectedDeptType === 'admin') {
+        redirectPath = "/admin";
+      } else if (selectedDeptId === 'HR') {
+        redirectPath = "/user/hr";
+      }
+
+      console.log("Redirection vers:", redirectPath);
       navigate(redirectPath);
       
     } catch (err) {
@@ -244,7 +251,6 @@ const LoginPage = ({ onLogin }) => {
 
   return (
     <div className={`login-page ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Language Toggle */}
       <button className="login-language-toggle" onClick={toggleLanguage}>
         <FiGlobe size={16} />
         <span>{language === 'EN' ? 'العربية' : 'English'}</span>

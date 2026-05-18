@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 import { Product, ProductDocument } from './schemas/product.schema';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -8,15 +8,22 @@ import { UpdateProductDto } from './dto/update-product.dto';
 @Injectable()
 export class ProductsService {
   constructor(
-    @InjectModel(Product.name) private productModel: Model<ProductDocument>,
+    @InjectModel(Product.name)
+    private productModel: Model<ProductDocument>,
   ) {}
 
   async create(dto: CreateProductDto): Promise<ProductDocument> {
+    const stock = dto.stock ?? dto.initialQuantity ?? 0;
+
     const product = new this.productModel({
-      ...dto,
-      stock: dto.stock ?? dto.initialQuantity ?? 0,
-      initialQuantity: dto.initialQuantity ?? 0,
+      name: dto.name,
+      price: dto.price,
+      stock,
+      initialQuantity: dto.initialQuantity ?? stock,
+      supplierId: dto.supplierId?.length ? dto.supplierId : null,
+      threshold: dto.threshold,
     });
+
     return product.save();
   }
 
@@ -30,14 +37,16 @@ export class ProductsService {
     return product;
   }
 
-  async findLowStock(): Promise<ProductDocument[]> {
-    return this.productModel.find({ stock: { $lte: Types.Decimal128.fromString('10') } }).exec();
-  }
-
+async findLowStock(): Promise<ProductDocument[]> {
+  return this.productModel.find({
+    stock: { $lte: 10 }
+  }).exec();
+}
   async update(id: string, dto: UpdateProductDto): Promise<ProductDocument> {
     const updated = await this.productModel
       .findByIdAndUpdate(id, dto, { new: true })
       .exec();
+
     if (!updated) throw new NotFoundException('Produit non trouvé');
     return updated;
   }
@@ -55,8 +64,11 @@ export class ProductsService {
 
   async removeStock(id: string, quantity: number): Promise<ProductDocument> {
     const product = await this.findOne(id);
-    if (product.stock < quantity)
+
+    if (product.stock < quantity) {
       throw new NotFoundException('Stock insuffisant');
+    }
+
     product.stock -= quantity;
     return product.save();
   }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { LanguageProvider, useLanguage } from "./context/LanguageContext";
+import { LanguageProvider } from "./context/LanguageContext";
 
 import LoginPage from "./pages/LoginPage";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
@@ -9,6 +9,8 @@ import ProductsPage from "./pages/ProductsPage";
 import OrdersPage from "./pages/OrdersPage";
 import CustomersPage from "./pages/CustomersPage";
 import SuppliersPage from "./pages/SuppliersPage";
+
+
 import AdminPage from "./pages/AdminPage";
 import { getMe } from "./api/authService";
 import PurchasesPage from "./pages/PurchasesPage";
@@ -17,6 +19,16 @@ import UnderConstructionPage from "./pages/UnderConstructionPage";
 import AuditPage from "./pages/AuditPage";
 import UsersManagement from "./pages/UsersManagement";
 import FirstPage from "./pages/FirstPage";
+import HrPage from "./pages/HrPage";
+import EmployeesPage from "./pages/EmployeesPage";
+import DepartmentsPage from "./pages/DepartmentsPage";
+import ContractsPage from "./pages/ContractsPage";
+import LeavesPage from "./pages/LeavesPage";
+
+import PayrollPage from "./pages/PayrollPage";
+
+
+
 
 // ✅ Composant qui contient toute la logique de l'app (avec useLanguage)
 function AppContent() {
@@ -81,7 +93,65 @@ function AppContent() {
           <Navigate to="/" />
         )
       } />
-      
+ 
+   <Route path="/user/hr/*" element={
+  user ? (
+    <Layout user={user} onLogout={handleLogout}>
+      <HrPage token={token} user={user} onLogout={handleLogout} />
+    </Layout>
+  ) : (
+    <Navigate to="/" />
+  )
+} />
+   <Route path="/user/hr/payroll/*" element={
+  user ? (
+    <Layout user={user} onLogout={handleLogout}>
+      <PayrollPage token={token} user={user} onLogout={handleLogout} />
+    </Layout>
+  ) : (
+    <Navigate to="/" />
+  )
+} />
+
+      {/* Route directe pour EmployeesPage (optionnelle) */}
+      <Route path="/user/hr/employees" element={
+        user ? (
+          <Layout user={user} onLogout={handleLogout}>
+            <EmployeesPage token={token} language="en" />
+          </Layout>
+        ) : (
+          <Navigate to="/" />
+        )
+      } />
+           {/* Route directe pour EmployeesPage (optionnelle) */}
+      <Route path="/user/hr/departments" element={
+        user ? (
+          <Layout user={user} onLogout={handleLogout}>
+            <DepartmentsPage token={token} />
+          </Layout>
+        ) : (
+          <Navigate to="/" />
+        )
+      } />
+        <Route path="/user/hr/contracts" element={
+        user ? (
+          <Layout user={user} onLogout={handleLogout}>
+            <ContractsPage token={token} />
+          </Layout>
+        ) : (
+          <Navigate to="/" />
+        )
+      } />
+         <Route path="/user/hr/leaves" element={
+        user ? (
+          <Layout user={user} onLogout={handleLogout}>
+            <LeavesPage token={token} />
+          </Layout>
+        ) : (
+          <Navigate to="/" />
+        )
+      } />
+             
       <Route path="/admin/users" element={
         user && (user.role === "ADMIN" || user.role === "SUPER_ADMIN") ? (
           <Layout user={user} onLogout={handleLogout}>
@@ -101,16 +171,16 @@ function AppContent() {
           <Navigate to="/" />
         )
       } />
-      
-      <Route path="/admin" element={
+        <Route path="/admin/audit" element={
         user && (user.role === "ADMIN" || user.role === "SUPER_ADMIN") ? (
           <Layout user={user} onLogout={handleLogout}>
-            <AdminPage user={user} token={token} />
+            <AuditPage token={token} user={user} />
           </Layout>
         ) : (
           <Navigate to="/" />
         )
       } />
+     
       
       <Route path="/user/reporting" element={
         user ? (
@@ -177,7 +247,6 @@ function AppContent() {
   );
 }
 
-// ✅ App principal qui enveloppe tout avec LanguageProvider
 function App() {
   return (
     <LanguageProvider>

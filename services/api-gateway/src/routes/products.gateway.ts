@@ -50,7 +50,7 @@ export class ProductsGateway {
   private readonly PRODUCTS_SERVICE_URL =
     process.env.PRODUCTS_SERVICE_URL || 'http://localhost:3102';
   private readonly AUTH_SERVICE_URL =
-    process.env.AUTH_SERVICE_URL || 'http://localhost:3001';
+    process.env.AUTH_SERVICE_URL || 'http://localhost:3101';
 
   constructor() {
     Logger.log('ProductsGateway chargé correctement', 'API-GATEWAY');

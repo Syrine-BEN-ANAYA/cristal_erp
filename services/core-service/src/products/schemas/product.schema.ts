@@ -11,16 +11,16 @@ export class Product {
   @Prop({ required: true })
   price: number;
 
-  @Prop({ required: true, default: 0 })
+  @Prop({ default: 0 })
   initialQuantity: number;
 
-  @Prop({ required: true, default: 0 })
+  @Prop({ default: 0 })
   stock: number;
 
   @Prop({ default: 10 })
   threshold: number;
 
-  @Prop({ type: Types.ObjectId, ref: 'Supplier' })
+  @Prop({ type: Types.ObjectId, ref: 'Supplier', required: false })
   supplierId?: Types.ObjectId;
 }
 

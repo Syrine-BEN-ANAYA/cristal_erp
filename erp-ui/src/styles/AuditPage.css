@@ -12,6 +12,7 @@
   background: #f5f7fa;
   min-height: 100vh;
   padding: 24px;
+  font-size: 16px;
 }
 
 /* ========== TOAST ========== */
@@ -27,7 +28,7 @@
   background: #10b981;
   color: white;
   border-radius: 10px;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   animation: slideIn 0.3s ease;
@@ -232,7 +233,7 @@
 }
 
 .audit-stat-label {
-  font-size: 11px;
+  font-size: 12px;
   color: #5a6a7a;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -348,7 +349,7 @@
   padding: 14px 16px;
   background: #f8fafc;
   font-weight: 600;
-  font-size: 12px;
+  font-size: 14px;
   color: #475569;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -358,7 +359,7 @@
 .audit-table td {
   padding: 14px 16px;
   border-bottom: 1px solid #e2e8f0;
-  font-size: 13px;
+  font-size: 14px;
   color: #334155;
   vertical-align: middle;
 }

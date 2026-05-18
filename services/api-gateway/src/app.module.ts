@@ -15,6 +15,11 @@ import { CustomersGateway } from './routes/customers.gateway';
 import { PurchasesGateway } from './routes/purchase.gateway';
 import { HealthController } from './health.controller';
 import { AuditGateway } from './routes/audit.gateway';
+import { EmployeesGateway } from './routes/employees.gateway';
+import { DepartmentsGateway } from './routes/departments.gateway';
+import { ContractsGateway } from './routes/contracts.gateway';
+import { LeavesGateway } from './routes/leaves.gateway';
+import { PayrollGateway } from './routes/payroll.gateway';
 
 @Module({
   controllers: [
@@ -27,6 +32,11 @@ import { AuditGateway } from './routes/audit.gateway';
     PurchasesGateway,
     HealthController,
     AuditGateway,
+    EmployeesGateway,
+    DepartmentsGateway,
+    ContractsGateway,
+    LeavesGateway,
+    PayrollGateway,
   ],
   providers: [
     {

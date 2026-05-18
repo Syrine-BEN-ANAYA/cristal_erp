@@ -22,10 +22,9 @@ import {
   Cell
 } from 'recharts';
 import { 
-  FiPackage, FiShoppingCart, FiAlertTriangle, FiShoppingBag, 
-  FiCalendar, FiBarChart2, FiDownload, FiGlobe, FiTrendingUp, 
-  FiTrendingDown, FiDollarSign, FiPieChart, FiRefreshCw,
-  FiCheckCircle, FiXCircle
+  FiAlertTriangle, 
+  FiCalendar, FiBarChart2, FiDownload, FiGlobe, FiTrendingUp, FiPieChart, FiRefreshCw,
+  FiCheckCircle
 } from 'react-icons/fi';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -34,7 +33,7 @@ import '../styles/ReportingPage.css';
 
 const ReportingPage = () => {
   const token = localStorage.getItem('token');
-  const { language, toggleLanguage, t, isRTL } = useLanguage();
+  const { language, toggleLanguage } = useLanguage();
 
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
@@ -417,20 +416,17 @@ const ReportingPage = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="reporting-page-modern">
-        <div className="error-state">
-          <FiXCircle size={48} />
-          <h3>{currentLang.error}</h3>
-          <p>{error}</p>
-          <button onClick={() => fetchAllData()} className="btn-retry">
-            <FiRefreshCw /> Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
+ if (error) {
+  return (
+    <div className="error-state">
+      <h3>{currentLang.error}</h3>
+      <p>{typeof error === 'string' ? error : error?.message || 'Erreur inconnue'}</p>
+      <button onClick={() => fetchAllData()} className="btn-retry">
+        <FiRefreshCw /> Retry
+      </button>
+    </div>
+  );
+}
 
   return (
     <div className={`reporting-page-modern ${isRTLPage ? 'rtl' : 'ltr'}`} dir={isRTLPage ? 'rtl' : 'ltr'}>

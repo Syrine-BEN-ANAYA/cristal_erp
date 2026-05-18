@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from "react";
 import {
   FiCalendar,
-  FiUsers,
   FiActivity,
   FiServer,
-  FiMapPin,
   FiDownload,
   FiRefreshCw,
   FiTrash2,
   FiAlertCircle,
   FiCheckCircle,
-  FiXCircle,
   FiClock,
   FiDatabase,
   FiArchive,
@@ -46,7 +43,6 @@ const translations = {
     date: "Date",
     user: "User",
     action: "Action",
-    ip: "IP Address",
     noLogs: "No audit logs found",
     previous: "Previous",
     next: "Next",
@@ -80,7 +76,6 @@ const translations = {
     date: "التاريخ",
     user: "المستخدم",
     action: "الإجراء",
-    ip: "عنوان IP",
     noLogs: "لا توجد سجلات",
     previous: "السابق",
     next: "التالي",
@@ -243,9 +238,6 @@ const AuditPage = ({ token, user }) => {
       LOGIN_FAILED: "Login failed",
       LOGOUT: "Logout",
       REGISTER: "Register",
-      CREATE_PRODUCT: "Product created",
-      UPDATE_PRODUCT: "Product updated",
-      DELETE_PRODUCT: "Product deleted",
       CREATE_ORDER: "Order created",
       UPDATE_ORDER: "Order updated",
       DELETE_ORDER: "Order deleted",
@@ -359,7 +351,6 @@ const AuditPage = ({ token, user }) => {
             <option value="">{t.all}</option>
             <option value="AUTH">Authentication</option>
             <option value="USER">User</option>
-            <option value="PRODUCT">Product</option>
             <option value="ORDER">Order</option>
             <option value="CUSTOMER">Customer</option>
             <option value="PURCHASE">Purchase</option>
@@ -415,7 +406,6 @@ const AuditPage = ({ token, user }) => {
                 <th>{t.date}</th>
                 <th>{t.user}</th>
                 <th>{t.action}</th>
-                <th>{t.ip}</th>
               </tr>
             </thead>
             <tbody>
@@ -445,9 +435,6 @@ const AuditPage = ({ token, user }) => {
                         {getActionIcon(log.action)}
                         {getActionLabel(log.action)}
                       </span>
-                    </td>
-                    <td>
-                      <code className="audit-ip">{log.ip || "-"}</code>
                     </td>
                   </tr>
                 );

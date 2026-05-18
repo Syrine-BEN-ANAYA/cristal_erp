@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards, Req, Query, ForbiddenException, Delete, Res, Param } from '@nestjs/common';
+import { Controller, Get, UseGuards, Req, Query, ForbiddenException, Delete, Res, Param, Post, Body,Headers   } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { AuditService } from './audit.service';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -40,6 +40,49 @@ export class AuditController {
 
     return this.auditService.findByUser(userId, pageNum, limitNum);
   }
+  
+  @Post('remote-log')
+  async remoteLog(
+    @Body() data: {
+      userId: string;
+      username: string;
+      action: string;
+      entity: string;
+      ip?: string;
+      endpoint?: string;
+      details?: any;
+    },
+    @Headers('x-internal-token') token: string,
+    @Req() req: Request,
+  ) {
+    // Vérification du token interne
+    const internalToken = process.env.INTERNAL_API_KEY || 'internal-secret';
+    if (token !== internalToken) {
+      throw new ForbiddenException('Invalid internal token');
+    }
+
+    // Logger l'audit reçu
+    console.log(`📝 Remote audit: ${data.action} - ${data.entity} by ${data.username}`);
+
+    // Sauvegarder dans la base de données
+    await this.auditService.log({
+      userId: data.userId,
+      username: data.username,
+      action: data.action,
+      entity: data.entity,
+      ip: data.ip,
+      endpoint: data.endpoint,
+      details: data.details,
+    });
+
+    return { 
+      success: true, 
+      message: 'Audit log received',
+      timestamp: new Date().toISOString()
+    };
+  }
+
+
 
   /* =========================
      GET ALL AUDIT LOGS

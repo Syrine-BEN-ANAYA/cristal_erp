@@ -4,45 +4,51 @@ import { Model, Types } from 'mongoose';
 import { ProductsService } from '../products/products.service';
 import { Order, OrderDocument, OrderItem } from './schemas/order.schema';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { AuditClient } from '../audit/audit.client';
 
 @Injectable()
 export class OrdersService {
   constructor(
     @InjectModel(Order.name) private orderModel: Model<OrderDocument>,
     private productService: ProductsService,
-    private auditClient: AuditClient, // ✅ Injecter l'audit
   ) {}
 
   // ---------------- CREATE ORDER ----------------
-  async createOrder(dto: CreateOrderDto, user?: any, req?: any): Promise<OrderDocument> {
+  async createOrder(dto: CreateOrderDto): Promise<OrderDocument> {
     const { customerId, items } = dto;
 
-    if (!Types.ObjectId.isValid(customerId)) throw new BadRequestException('ID client invalide');
-    if (!items || items.length === 0) throw new BadRequestException('Aucun produit dans la commande');
+    if (!Types.ObjectId.isValid(customerId)) {
+      throw new BadRequestException('ID client invalide');
+    }
+
+    if (!items || items.length === 0) {
+      throw new BadRequestException('Aucun produit dans la commande');
+    }
 
     let totalAmount = 0;
-    const productDetails = [];
 
     // Vérifie chaque produit et met à jour le stock
     for (const item of items) {
       const product = await this.productService.findOne(item.productId);
-      if (!product) throw new NotFoundException(`Produit ${item.productId} non trouvé`);
-      if (product.stock < item.quantity)
-        throw new BadRequestException(`Stock insuffisant pour ${product.name}`);
 
-      await this.productService.removeStock(item.productId, item.quantity);
+      if (!product) {
+        throw new NotFoundException(`Produit ${item.productId} non trouvé`);
+      }
+
+      if (product.stock < item.quantity) {
+        throw new BadRequestException(
+          `Stock insuffisant pour ${product.name}`,
+        );
+      }
+
+      await this.productService.removeStock(
+        item.productId,
+        item.quantity,
+      );
+
       totalAmount += product.price * item.quantity;
-      
-      productDetails.push({
-        productId: item.productId,
-        productName: product.name,
-        quantity: item.quantity,
-        price: product.price,
-      });
     }
 
-    const orderItems: OrderItem[] = items.map(i => ({
+    const orderItems: OrderItem[] = items.map((i) => ({
       productId: new Types.ObjectId(i.productId),
       quantity: i.quantity,
     }));
@@ -53,27 +59,10 @@ export class OrdersService {
       totalAmount,
     });
 
-    const savedOrder = await order.save();
-
-    // ✅ Audit: Création commande
-    await this.auditClient.log({
-      userId: user?._id?.toString() || 'system',
-      username: user?.username || 'system',
-      action: 'CREATE_ORDER',
-      entity: 'ORDER',
-      ip: req?.ip,
-      endpoint: req?.originalUrl || '/orders',
-      details: {
-        orderId: savedOrder._id.toString(),
-        customerId,
-        totalAmount,
-        items: productDetails,
-      },
-    });
-
-    return savedOrder;
+    return await order.save();
   }
 
+  // ---------------- FIND ALL DETAILED ----------------
   async findAllDetailed() {
     return this.orderModel
       .find()
@@ -83,32 +72,19 @@ export class OrdersService {
   }
 
   // ---------------- FIND ALL ORDERS ----------------
-  async findAll(user?: any, req?: any): Promise<OrderDocument[]> {
-    const orders = await this.orderModel
+  async findAll(): Promise<OrderDocument[]> {
+    return this.orderModel
       .find()
       .populate('items.productId')
       .populate('customerId')
       .exec();
-
-    // ✅ Audit: Consultation liste commandes
-    if (user) {
-      await this.auditClient.log({
-        userId: user._id?.toString(),
-        username: user.username,
-        action: 'VIEW_ALL_ORDERS',
-        entity: 'ORDER',
-        ip: req?.ip,
-        endpoint: req?.originalUrl || '/orders',
-        details: { count: orders.length },
-      });
-    }
-
-    return orders;
   }
 
   // ---------------- FIND ONE ORDER ----------------
-  async findOne(orderId: string, user?: any, req?: any): Promise<OrderDocument> {
-    if (!Types.ObjectId.isValid(orderId)) throw new BadRequestException('ID commande invalide');
+  async findOne(orderId: string): Promise<OrderDocument> {
+    if (!Types.ObjectId.isValid(orderId)) {
+      throw new BadRequestException('ID commande invalide');
+    }
 
     const order = await this.orderModel
       .findById(orderId)
@@ -116,60 +92,68 @@ export class OrdersService {
       .populate('items.productId')
       .exec();
 
-    if (!order) throw new NotFoundException('Commande non trouvée');
-
-    // ✅ Audit: Consultation commande spécifique
-    if (user) {
-      await this.auditClient.log({
-        userId: user._id?.toString(),
-        username: user.username,
-        action: 'VIEW_ONE_ORDER',
-        entity: 'ORDER',
-        ip: req?.ip,
-        endpoint: req?.originalUrl || `/orders/${orderId}`,
-        details: {
-          orderId,
-          customerId: order.customerId,
-          totalAmount: order.totalAmount,
-          itemsCount: order.items.length,
-        },
-      });
+    if (!order) {
+      throw new NotFoundException('Commande non trouvée');
     }
 
     return order;
   }
 
   // ---------------- UPDATE ORDER ----------------
-  async updateOrder(orderId: string, dto: CreateOrderDto, user?: any, req?: any): Promise<OrderDocument> {
-    if (!Types.ObjectId.isValid(orderId)) throw new BadRequestException('ID commande invalide');
-    if (!Array.isArray(dto.items) || dto.items.length === 0)
-      throw new BadRequestException('Le champ items doit être un tableau non vide');
+  async updateOrder(
+    orderId: string,
+    dto: CreateOrderDto,
+  ): Promise<OrderDocument> {
+    if (!Types.ObjectId.isValid(orderId)) {
+      throw new BadRequestException('ID commande invalide');
+    }
+
+    if (!Array.isArray(dto.items) || dto.items.length === 0) {
+      throw new BadRequestException(
+        'Le champ items doit être un tableau non vide',
+      );
+    }
 
     const order = await this.orderModel.findById(orderId).exec();
-    if (!order) throw new NotFoundException('Commande non trouvée');
+
+    if (!order) {
+      throw new NotFoundException('Commande non trouvée');
+    }
 
     const oldItems = [...order.items];
-    const oldTotal = order.totalAmount;
+
+    // Remettre le stock des anciens items
+    for (const oldItem of oldItems) {
+      await this.productService.addStock(
+        oldItem.productId.toString(),
+        oldItem.quantity,
+      );
+    }
+
     let totalAmount = 0;
     const updatedItems: OrderItem[] = [];
-    const productDetails = [];
 
     for (const item of dto.items) {
       const product = await this.productService.findOne(item.productId);
-      if (!product) throw new NotFoundException(`Produit ${item.productId} non trouvé`);
-      if (product.stock < item.quantity)
-        throw new BadRequestException(`Stock insuffisant pour ${product.name}`);
 
-      await this.productService.removeStock(item.productId, item.quantity);
+      if (!product) {
+        throw new NotFoundException(
+          `Produit ${item.productId} non trouvé`,
+        );
+      }
+
+      if (product.stock < item.quantity) {
+        throw new BadRequestException(
+          `Stock insuffisant pour ${product.name}`,
+        );
+      }
+
+      await this.productService.removeStock(
+        item.productId,
+        item.quantity,
+      );
 
       totalAmount += product.price * item.quantity;
-
-      productDetails.push({
-        productId: item.productId,
-        productName: product.name,
-        quantity: item.quantity,
-        price: product.price,
-      });
 
       updatedItems.push({
         productId: new Types.ObjectId(item.productId),
@@ -177,83 +161,44 @@ export class OrdersService {
       });
     }
 
-    // Remettre le stock des anciens items
-    for (const oldItem of oldItems) {
-      await this.productService.addStock(oldItem.productId.toString(), oldItem.quantity);
-    }
-
     order.items = updatedItems;
     order.customerId = new Types.ObjectId(dto.customerId);
     order.totalAmount = totalAmount;
 
-    const updatedOrder = await order.save();
-
-    // ✅ Audit: Modification commande
-    await this.auditClient.log({
-      userId: user?._id?.toString(),
-      username: user?.username,
-      action: 'UPDATE_ORDER',
-      entity: 'ORDER',
-      ip: req?.ip,
-      endpoint: req?.originalUrl || `/orders/${orderId}`,
-      details: {
-        orderId,
-        oldTotal,
-        newTotal: totalAmount,
-        customerId: dto.customerId,
-        items: productDetails,
-      },
-    });
-
-    return updatedOrder;
+    return await order.save();
   }
 
   // ---------------- DELETE ORDER ----------------
-  async removeOrder(orderId: string, user?: any, req?: any): Promise<void> {
+  async removeOrder(orderId: string): Promise<void> {
+    if (!Types.ObjectId.isValid(orderId)) {
+      throw new BadRequestException('ID commande invalide');
+    }
+
     const order = await this.orderModel.findById(orderId).exec();
-    if (!order) throw new NotFoundException('Commande non trouvée');
+
+    if (!order) {
+      throw new NotFoundException('Commande non trouvée');
+    }
 
     // Remettre le stock
     for (const item of order.items) {
-      await this.productService.addStock(item.productId.toString(), item.quantity);
+      await this.productService.addStock(
+        item.productId.toString(),
+        item.quantity,
+      );
     }
 
     await this.orderModel.findByIdAndDelete(orderId).exec();
-
-    // ✅ Audit: Suppression commande
-    await this.auditClient.log({
-      userId: user?._id?.toString(),
-      username: user?.username,
-      action: 'DELETE_ORDER',
-      entity: 'ORDER',
-      ip: req?.ip,
-      endpoint: req?.originalUrl || `/orders/${orderId}`,
-      details: {
-        orderId,
-        customerId: order.customerId,
-        totalAmount: order.totalAmount,
-        itemsCount: order.items.length,
-      },
-    });
   }
 
   // ---------------- TOTAL REVENUE ----------------
-  async getTotalOrderAmount(user?: any, req?: any): Promise<{ totalOrderAmount: number }> {
+  async getTotalOrderAmount(): Promise<{ totalOrderAmount: number }> {
     const orders = await this.orderModel.find().exec();
-    const totalOrderAmount = orders.reduce((sum, order) => sum + order.totalAmount, 0);
 
-    // ✅ Audit: Consultation revenu total
-    if (user) {
-      await this.auditClient.log({
-        userId: user._id?.toString(),
-        username: user.username,
-        action: 'VIEW_TOTAL_REVENUE',
-        entity: 'ORDER',
-        ip: req?.ip,
-        endpoint: req?.originalUrl || '/orders/total',
-        details: { totalOrderAmount },
-      });
-    }
+    const totalOrderAmount = orders.reduce(
+      (sum, order) => sum + order.totalAmount,
+      0,
+    );
 
     return { totalOrderAmount };
   }

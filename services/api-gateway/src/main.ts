@@ -1,4 +1,6 @@
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 import { AppModule } from './app.module';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
@@ -7,7 +9,12 @@ import * as client from 'prom-client';
 import { Request, Response } from 'express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // ✅ Servir les fichiers statiques (images uploadées)
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/uploads/',
+  });
 
   // --- Activer CORS pour le front ---
   app.enableCors({
@@ -31,13 +38,14 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
 
   // --- Metrics Prometheus ---
-  client.collectDefaultMetrics(); // collecte métriques Node.js par défaut
+  client.collectDefaultMetrics();
 
   app.use('/metrics', async (req: Request, res: Response) => {
     res.setHeader('Content-Type', client.register.contentType);
     res.end(await client.register.metrics());
   });
-  const PORT = 3104; // adapte selon ton service
+
+  const PORT = 3104;
   await app.listen(PORT);
 
   Logger.log(`🚀 API-Gateway démarrée sur le port ${PORT}`);

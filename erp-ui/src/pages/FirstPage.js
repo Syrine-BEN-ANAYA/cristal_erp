@@ -103,7 +103,7 @@ export default function FirstPage({ onLogout, user }) {
       descriptionAR: 'إدارة الموظفين، التوظيف، كشوف المرتبات',
       path: '/user/hr',
       accessType: 'all',
-      isUnderDevelopment: true,
+      isUnderDevelopment: false,
       stats: { modules: 6, employees: 8 },
       modulesEN: ['Employee Management', 'Recruitment', 'Payroll', 'Training', 'Performance Review', 'Leave Management'],
       modulesAR: ['إدارة الموظفين', 'التوظيف', 'كشوف المرتبات', 'التدريب', 'تقييم الأداء', 'إدارة الإجازات'],
@@ -211,20 +211,20 @@ export default function FirstPage({ onLogout, user }) {
   }), []);
 
   const handleModuleClick = (dept) => {
-    console.log("Department clicked:", dept.id);
-    
-    localStorage.setItem('selectedDepartment', dept.id);
-    localStorage.setItem('selectedDepartmentType', dept.accessType);
-    localStorage.setItem('selectedDepartmentName', getDepartmentName(dept));
-    
-    const accessibleDepartments = ['ADMIN', 'SALES'];
-    
-    if (accessibleDepartments.includes(dept.id)) {
-      window.location.href = '/login';
-    } else {
-      window.location.href = '/under-construction';
-    }
-  };
+  console.log("Department clicked:", dept.id);
+  
+  localStorage.setItem('selectedDepartment', dept.id);
+  localStorage.setItem('selectedDepartmentType', dept.accessType);
+  localStorage.setItem('selectedDepartmentName', getDepartmentName(dept));
+  
+  const accessibleDepartments = ['ADMIN', 'SALES', 'HR'];  // ← MODIFICATION ICI
+  
+  if (accessibleDepartments.includes(dept.id)) {
+    window.location.href = '/login';
+  } else {
+    window.location.href = '/under-construction';
+  }
+};
 
   const toggleLanguage = () => {
     setLanguage(language === 'EN' ? 'AR' : 'EN');

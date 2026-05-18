@@ -1,5 +1,5 @@
 // PurchasesPage.js - Version avec contexte global
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import {
   getPurchases,
@@ -13,9 +13,9 @@ import { getSuppliers } from '../api/suppliersService';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { 
-  FiTrash2, FiDownload, FiPlus, FiX, FiDollarSign, FiShoppingBag, 
+  FiTrash2, FiDownload, FiPlus, FiShoppingBag, 
   FiEdit2, FiCheckCircle, FiGlobe, FiAlertCircle, FiRefreshCw,
-  FiPackage, FiTruck, FiCalendar, FiTrendingUp
+  FiPackage, FiTruck, FiCalendar
 } from 'react-icons/fi';
 import '../styles/PurchasesPage.css';
 
@@ -130,7 +130,7 @@ export default function PurchasesPage({ token }) {
   const [purchases, setPurchases] = useState([]);
   const [products, setProducts] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
-  const [totalPurchaseAmount, setTotalPurchaseAmount] = useState(0);
+  const [setTotalPurchaseAmount] = useState(0);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(true);
@@ -214,7 +214,7 @@ export default function PurchasesPage({ token }) {
     } catch (err) {
       console.error('Failed to load total purchase amount:', err.message);
     }
-  }, [token]);
+  }, [setTotalPurchaseAmount, token]);
 
   const loadAllData = useCallback(async (showRefresh = false) => {
     if (!token) return;

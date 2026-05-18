@@ -20,8 +20,7 @@ import { AuditModule } from './audit/audit.module';
         }
         return {
           uri,
-          // useNewUrlParser et useUnifiedTopology sont implicites dans Nest 9+
-          // options supplémentaires de sécurité si besoin
+       
         };
       },
     }),
