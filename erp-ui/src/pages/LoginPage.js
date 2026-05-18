@@ -1,4 +1,4 @@
-// LoginPage.js - Version avec contexte global
+// LoginPage.js - Version avec contexte global (corrigée)
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from '../context/LanguageContext';
@@ -196,12 +196,15 @@ const LoginPage = ({ onLogin }) => {
         return;
       }
 
-      // ✅ REDIRECTION CORRIGÉE
+      // ✅ REDIRECTION CORRIGÉE (insensible à la casse)
       let redirectPath = "/user/reporting";
 
-      if (selectedDeptType === 'admin') {
+      // Normalisation : comparer en minuscules
+      const normalizedDeptType = selectedDeptType ? selectedDeptType.toLowerCase() : null;
+      
+      if (normalizedDeptType === 'admin') {
         redirectPath = "/admin";
-      } else if (selectedDeptId === 'HR') {
+      } else if (selectedDeptId && selectedDeptId.toLowerCase() === 'hr') {
         redirectPath = "/user/hr";
       }
 

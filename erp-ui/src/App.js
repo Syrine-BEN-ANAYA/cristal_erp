@@ -93,7 +93,15 @@ function AppContent() {
           <Navigate to="/" />
         )
       } />
- 
+ <Route path="/admin" element={
+  user && (user.role === "ADMIN" || user.role === "SUPER_ADMIN") ? (
+    <Layout user={user} onLogout={handleLogout}>
+      <AdminPage token={token} user={user} />
+    </Layout>
+  ) : (
+    <Navigate to="/" />
+  )
+} />
    <Route path="/user/hr/*" element={
   user ? (
     <Layout user={user} onLogout={handleLogout}>
