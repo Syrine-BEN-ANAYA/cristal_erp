@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   FiPackage, FiShoppingCart, FiTag, FiUsers, FiTruck, FiBarChart, 
-  FiLogOut, FiMenu, FiX, FiGrid, FiClipboard, FiGlobe, FiUserCheck,FiDollarSign, FiCalendar
+  FiLogOut, FiMenu, FiX, FiGrid, FiClipboard, FiGlobe, FiUserCheck,FiDollarSign, FiCalendar,FiCpu
 } from 'react-icons/fi';
 import { useLanguage } from '../context/LanguageContext';
 import '../styles/Layout.css';
@@ -28,6 +28,8 @@ const Layout = ({ children, user, onLogout }) => {
     { path: '/user/customers', label: t.customers, icon: FiUsers },
     { path: '/user/suppliers', label: t.suppliers, icon: FiTruck },
     { path: '/user/products', label: t.products, icon: FiPackage },
+      { path: '/user/ai', label: 'AI Assistant', icon: FiCpu },
+
   ];
 
   // ✅ Menu items pour HR

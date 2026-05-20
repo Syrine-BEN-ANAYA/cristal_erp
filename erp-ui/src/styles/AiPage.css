@@ -1,0 +1,285 @@
+.ai-page {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 120px);
+  background: #f4f7fb;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+/* ================= HEADER ================= */
+
+.ai-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.ai-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ai-icon-wrapper {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.ai-header h1 {
+  margin: 0;
+  font-size: 28px;
+  color: #111827;
+}
+
+.ai-header p {
+  margin-top: 6px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* ================= CLEAR BUTTON ================= */
+
+.clear-btn {
+  border: none;
+  background: #ef4444;
+  color: white;
+  padding: 12px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+.clear-btn:hover {
+  opacity: 0.9;
+}
+
+/* ================= SUGGESTIONS ================= */
+
+.suggestions-container {
+  display: flex;
+  gap: 12px;
+  padding: 18px 24px;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  flex-wrap: wrap;
+}
+
+.suggestions-container button {
+  border: none;
+  background: #2563eb;
+  color: white;
+  padding: 10px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.2s;
+}
+
+.suggestions-container button:hover {
+  transform: translateY(-2px);
+}
+
+/* ================= CHAT ================= */
+
+.chat-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ================= EMPTY ================= */
+
+.empty-chat {
+  margin: auto;
+  text-align: center;
+  color: #6b7280;
+}
+
+.empty-chat svg {
+  color: #2563eb;
+  margin-bottom: 16px;
+}
+
+.empty-chat h2 {
+  margin-bottom: 10px;
+  color: #111827;
+}
+
+/* ================= MESSAGE ================= */
+
+.message {
+  display: flex;
+}
+
+.message.user {
+  justify-content: flex-end;
+}
+
+.message.ai {
+  justify-content: flex-start;
+}
+
+.message-bubble {
+  max-width: 80%;
+  padding: 18px;
+  border-radius: 18px;
+  line-height: 1.5;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.06);
+}
+
+.message.user .message-bubble {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  border-bottom-right-radius: 6px;
+}
+
+.message.ai .message-bubble {
+  background: white;
+  color: #111827;
+  border-bottom-left-radius: 6px;
+}
+
+/* ================= LOADING ================= */
+
+.loading-bubble {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.5;
+  }
+}
+
+/* ================= INPUT ================= */
+
+.input-container {
+  display: flex;
+  gap: 14px;
+  padding: 20px;
+  background: white;
+  border-top: 1px solid #e5e7eb;
+}
+
+.input-container input {
+  flex: 1;
+  border: 1px solid #d1d5db;
+  border-radius: 14px;
+  padding: 16px;
+  font-size: 15px;
+  outline: none;
+  transition: 0.2s;
+}
+
+.input-container input:focus {
+  border-color: #2563eb;
+}
+
+.input-container button {
+  border: none;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  color: white;
+  padding: 0 24px;
+  border-radius: 14px;
+  cursor: pointer;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+.input-container button:hover {
+  transform: translateY(-2px);
+}
+
+/* ================= CHART ================= */
+
+.chart-container {
+  width: 100%;
+  height: 320px;
+  margin-top: 20px;
+  background: #f9fafb;
+  border-radius: 16px;
+  padding: 10px;
+}
+
+/* ================= TABLE ================= */
+
+.table-wrapper {
+  margin-top: 20px;
+  overflow-x: auto;
+}
+
+.ai-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.ai-table th {
+  background: #2563eb;
+  color: white;
+  padding: 12px;
+  text-align: left;
+}
+
+.ai-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.ai-table tr:hover {
+  background: #f9fafb;
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 768px) {
+
+  .ai-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .message-bubble {
+    max-width: 100%;
+  }
+
+  .input-container {
+    flex-direction: column;
+  }
+
+  .input-container button {
+    justify-content: center;
+    height: 52px;
+  }
+}

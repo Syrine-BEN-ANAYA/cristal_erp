@@ -9,6 +9,7 @@ import ProductsPage from "./pages/ProductsPage";
 import OrdersPage from "./pages/OrdersPage";
 import CustomersPage from "./pages/CustomersPage";
 import SuppliersPage from "./pages/SuppliersPage";
+import AiPage from "./pages/AiPage";
 
 
 import AdminPage from "./pages/AdminPage";
@@ -111,6 +112,18 @@ function AppContent() {
     <Navigate to="/" />
   )
 } />
+<Route
+  path="/user/ai"
+  element={
+    user ? (
+      <Layout user={user} onLogout={handleLogout}>
+        <AiPage token={token} />
+      </Layout>
+    ) : (
+      <Navigate to="/" />
+    )
+  }
+/>
    <Route path="/user/hr/payroll/*" element={
   user ? (
     <Layout user={user} onLogout={handleLogout}>

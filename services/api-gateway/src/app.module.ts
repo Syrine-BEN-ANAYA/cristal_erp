@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { HttpModule } from '@nestjs/axios';
 
-// Interceptors & Guards
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 
-// Gateways (controllers qui forward vers les microservices)
 import { AuthGateway } from './routes/auth.gateway';
 import { UsersGateway } from './routes/users.gateway';
 import { ProductsGateway } from './routes/products.gateway';
@@ -20,8 +19,11 @@ import { DepartmentsGateway } from './routes/departments.gateway';
 import { ContractsGateway } from './routes/contracts.gateway';
 import { LeavesGateway } from './routes/leaves.gateway';
 import { PayrollGateway } from './routes/payroll.gateway';
+import { AiGateway } from './routes/ai.gateway';
 
 @Module({
+  imports: [HttpModule],
+
   controllers: [
     AuthGateway,
     UsersGateway,
@@ -37,13 +39,15 @@ import { PayrollGateway } from './routes/payroll.gateway';
     ContractsGateway,
     LeavesGateway,
     PayrollGateway,
+    AiGateway,
   ],
+
   providers: [
     {
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,
     },
-    JwtAuthGuard, // injecté si nécessaire dans d’autres providers
+    JwtAuthGuard,
   ],
 })
 export class AppModule {}
