@@ -19,7 +19,6 @@ import {
   FiAlertCircle,
   FiCheck,
   FiRefreshCw,
-  FiSearch
 } from "react-icons/fi";
 import "../styles/EmployeesPage.css";
 
@@ -42,6 +41,8 @@ export default function EmployeesPage() {
     hireDate: "",
     skills: "",
     isActive: true,
+     accountStatus: "requested",
+
   });
 
   // ================= FORMAT DATE =================
@@ -106,6 +107,7 @@ export default function EmployeesPage() {
       hireDate: "",
       skills: "",
       isActive: true,
+     accountStatus: "requested",
     });
     setEditingId(null);
     setError(null);
@@ -146,22 +148,7 @@ export default function EmployeesPage() {
     }
   };
 
-  // ================= DELETE =================
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this employee?")) return;
-
-    try {
-      await employeesService.deleteEmployee(id);
-      setSuccess("Employee deleted successfully!");
-      loadEmployees();
-      setTimeout(() => setSuccess(null), 3000);
-    } catch (err) {
-      console.error(err);
-      setError("Error deleting employee");
-      setTimeout(() => setError(null), 3000);
-    }
-  };
-
+ 
   // ================= EDIT =================
   const handleEdit = (emp) => {
     setEditingId(emp._id);
@@ -175,6 +162,8 @@ export default function EmployeesPage() {
       hireDate: emp.hireDate?.split("T")[0] || "",
       skills: Array.isArray(emp.skills) ? emp.skills.join(", ") : "",
       isActive: emp.isActive !== false,
+        accountStatus: emp.accountStatus || "none",
+
     });
     setError(null);
   };
@@ -361,7 +350,21 @@ export default function EmployeesPage() {
               </label>
             </div>
           </div>
+<div className="input-group">
+  <label>
+    <FiRefreshCw size={14} /> Account Status
+  </label>
 
+  <select
+    name="accountStatus"
+    value={form.accountStatus}
+    onChange={handleChange}
+    className="form-select"
+  >
+    <option value="none">None</option>
+    <option value="requested">Requested</option>
+  </select>
+</div>
           <div className="form-actions">
             <button type="submit" className="btn-submit">
               {editingId ? <><FiEdit2 size={16} /> Update Employee</> : <><FiUserPlus size={16} /> Create Employee</>}
@@ -401,6 +404,7 @@ export default function EmployeesPage() {
                   <th>Position</th>
                   <th>Hire Date</th>
                   <th>Status</th>
+                  <th>Account Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -442,6 +446,11 @@ export default function EmployeesPage() {
                         {emp.isActive ? " Active" : " Inactive"}
                       </span>
                     </td>
+                   <td>
+  {emp.accountStatus === "requested" && "🟡 Requested"}
+  {emp.accountStatus === "created" && "🟢 Created"}
+  {emp.accountStatus === "none" && "⚪ None"}
+</td>
                     <td data-label="Actions" className="actions-cell">
                       <button className="action-icon edit" onClick={() => handleEdit(emp)} title="Edit">
                         <FiEdit2 size={16} />
@@ -454,9 +463,7 @@ export default function EmployeesPage() {
                       >
                         {downloadingId === emp._id ? <div className="spinner-small" /> : <FiDownload size={16} />}
                       </button>
-                      <button className="action-icon delete" onClick={() => handleDelete(emp._id)} title="Delete">
-                        <FiTrash2 size={16} />
-                      </button>
+                    
                     </td>
                   </tr>
                 ))}

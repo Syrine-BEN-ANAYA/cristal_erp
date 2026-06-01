@@ -1,30 +1,47 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { getUsers, createUser, updateUser, deleteUser, changePassword } from '../api/authService';
+import {
+  getUsers,
+  createUser,
+  updateUser,
+  deleteUser,
+  changePassword,
+  getPendingEmployees,
+  createUserFromEmployee
+} from '../api/authService';
+
 import { useLanguage } from '../context/LanguageContext';
-import { 
-  FiPlus, FiEdit2, FiTrash2, FiLock, FiUser, FiShield, 
-  FiSave, FiRefreshCw, FiSearch, FiX, FiCheckCircle,
-  FiAlertCircle, FiUsers, FiStar, FiUserCheck
+import {
+  FiEdit2, FiTrash2, FiLock, FiShield, FiStar, FiUserCheck, FiUsers
 } from 'react-icons/fi';
+
 import '../styles/UsersManagement.css';
 
 const UsersManagement = ({ user, token }) => {
   const { t, isRTL } = useLanguage();
 
   const [users, setUsers] = useState([]);
+  const [pendingEmployees, setPendingEmployees] = useState([]);
+  const [employeeForms, setEmployeeForms] = useState({});
+
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   const [newUsername, setNewUsername] = useState('');
-  const [newRole, setNewRole] = useState('USER');
+  const [newRole, setNewRole] = useState('PROD_USER'); // rôle par défaut
   const [newPassword, setNewPassword] = useState('');
+
   const [editingUser, setEditingUser] = useState(null);
   const [editForm, setEditForm] = useState({ username: '', role: '' });
+
   const [changingPasswordUser, setChangingPasswordUser] = useState(null);
-  const [passwordForm, setPasswordForm] = useState({ newPassword: '', confirmPassword: '' });
+  const [passwordForm, setPasswordForm] = useState({
+    newPassword: '',
+    confirmPassword: ''
+  });
 
   const showError = (message) => {
     setError(message);
@@ -37,68 +54,53 @@ const UsersManagement = ({ user, token }) => {
   };
 
   const isUsernameExists = (username, excludeUserId = null) => {
-    return users.some(u => 
-      u.username.toLowerCase() === username.toLowerCase() && 
-      u.id !== excludeUserId
+    return users.some(
+      u =>
+        u.username.toLowerCase() === username.toLowerCase() &&
+        u.id !== excludeUserId
     );
   };
 
+  // === Affichage des rôles ===
   const getRoleDisplayName = (role) => {
-    switch(role) {
-      case 'SUPER_ADMIN': return t.superAdminRole;
-      case 'ADMIN': return t.adminRole;
-      default: return t.userRole;
+    switch (role) {
+      case 'SUPER_ADMIN': return 'Super Admin';
+      case 'ADMIN': return 'Admin';
+      case 'PROD_USER': return 'PROD User';
+      case 'HR_USER': return 'HR User';
+      default: return role;
     }
   };
 
   const getRoleIcon = (role) => {
-    switch(role) {
+    switch (role) {
       case 'SUPER_ADMIN': return <FiStar />;
       case 'ADMIN': return <FiShield />;
+      case 'PROD_USER': return <FiUserCheck />;
+      case 'HR_USER': return <FiUsers />;
       default: return <FiUserCheck />;
     }
   };
 
   const getRoleColor = (role) => {
-    switch(role) {
+    switch (role) {
       case 'SUPER_ADMIN': return '#f59e0b';
       case 'ADMIN': return '#3b82f6';
+      case 'PROD_USER': return '#10b981';
+      case 'HR_USER': return '#8b5cf6';
       default: return '#10b981';
     }
   };
 
-  const matchesSearchTerm = (user, term) => {
-    const lowercasedTerm = term.toLowerCase();
-    return user.username.toLowerCase().includes(lowercasedTerm) ||
-           getRoleDisplayName(user.role).toLowerCase().includes(lowercasedTerm) ||
-           user.role.toLowerCase().includes(lowercasedTerm);
-  };
-
   const handleSearch = useCallback((term) => {
     setSearchTerm(term);
-    if (!term.trim()) {
-      setFilteredUsers(users);
-      return;
-    }
-    const filtered = users.filter(user => matchesSearchTerm(user, term));
-    setFilteredUsers(filtered);
+    if (!term.trim()) return setFilteredUsers(users);
+    setFilteredUsers(
+      users.filter(u =>
+        u.username.toLowerCase().includes(term.toLowerCase())
+      )
+    );
   }, [users]);
-
-  const clearSearch = () => {
-    setSearchTerm('');
-    setFilteredUsers(users);
-  };
-
-  const getRoleOptions = () => {
-    const options = [{ value: 'USER', label: t.userRole }];
-    if (user.role === 'SUPER_ADMIN') {
-      options.push({ value: 'ADMIN', label: t.adminRole });
-      options.push({ value: 'SUPER_ADMIN', label: t.superAdminRole });
-    } else if (user.role === 'ADMIN') {
-      options.push({ value: 'ADMIN', label: t.adminRole });
-    }
-    return options;
-  };
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -107,38 +109,76 @@ const UsersManagement = ({ user, token }) => {
       const usersWithId = data.map(u => ({ ...u, id: u._id }));
       setUsers(usersWithId);
       setFilteredUsers(usersWithId);
-      setError('');
     } catch (err) {
-      const errorMsg = err?.response?.data?.message || err?.message || 'Failed to fetch users';
-      showError(errorMsg);
+      showError(err?.message || 'Failed to fetch users');
     } finally {
       setLoading(false);
     }
   }, [token]);
 
-  useEffect(() => {
-    if (token) fetchUsers();
-  }, [token, fetchUsers]);
-
-  useEffect(() => {
-    if (searchTerm) {
-      handleSearch(searchTerm);
-    } else {
-      setFilteredUsers(users);
+  const fetchPendingEmployees = useCallback(async () => {
+    try {
+      const data = await getPendingEmployees(token);
+      setPendingEmployees(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error(err);
     }
-  }, [users, searchTerm, handleSearch]);
+  }, [token]);
 
-  const handleDelete = async (id, username) => {
-    const confirmed = window.confirm(`${t.confirmDelete} "${username}"? ${t.deleteConfirm}`);
-    if (!confirmed) return;
+  useEffect(() => {
+    if (token) {
+      fetchUsers();
+      fetchPendingEmployees();
+    }
+  }, [token, fetchUsers, fetchPendingEmployees]);
+
+  const updateEmployeeForm = (id, field, value) => {
+    setEmployeeForms(prev => ({
+      ...prev,
+      [id]: {
+        ...prev[id],
+        [field]: value
+      }
+    }));
+  };
+
+  const handleCreateFromEmployee = async (employeeId) => {
+    const form = employeeForms[employeeId];
+    if (!form?.username || !form?.password) {
+      return showError("Username et password requis");
+    }
 
     try {
-      await deleteUser(id, token);
-      setUsers(prevUsers => prevUsers.filter(u => u.id !== id));
-      showSuccess(`${t.userDeleted}: "${username}"`);
+      await createUserFromEmployee(
+        employeeId,
+        {
+          username: form.username,
+          password: form.password,
+          role: form.role || 'PROD_USER'
+        },
+        token
+      );
+      showSuccess("User créé depuis employee");
+      setPendingEmployees(prev => prev.filter(e => e._id !== employeeId));
+      setEmployeeForms(prev => {
+        const copy = { ...prev };
+        delete copy[employeeId];
+        return copy;
+      });
+      fetchUsers();
     } catch (err) {
-      const errorMsg = err?.response?.data?.message || err?.message || "Delete failed";
-      showError(errorMsg);
+      showError(err?.message || "Error creating user from employee");
+    }
+  };
+
+  const handleDelete = async (id, username) => {
+    if (!window.confirm(`${t.confirmDelete} "${username}"?`)) return;
+    try {
+      await deleteUser(id, token);
+      setUsers(prev => prev.filter(u => u.id !== id));
+      showSuccess(t.userDeleted);
+    } catch (err) {
+      showError(err?.message || "Delete failed");
     }
   };
 
@@ -149,31 +189,20 @@ const UsersManagement = ({ user, token }) => {
 
   const handleUpdateSubmit = async (e) => {
     e.preventDefault();
-    
-    if (user.role === 'ADMIN' && editForm.role !== 'USER') {
-      showError(t.adminRestricted);
-      return;
-    }
-
     if (isUsernameExists(editForm.username, editingUser.id)) {
-      showError(t.usernameExists);
-      return;
+      return showError(t.usernameExists);
     }
-
     try {
       const updated = await updateUser(editingUser.id, editForm, token);
-      setUsers(prevUsers => prevUsers.map(u => 
-        u.id === editingUser.id ? { ...updated, id: updated._id } : u
-      ));
+      setUsers(prev =>
+        prev.map(u =>
+          u.id === editingUser.id ? { ...updated, id: updated._id } : u
+        )
+      );
       setEditingUser(null);
-      showSuccess(`${t.userUpdated}: "${editForm.username}"`);
+      showSuccess(t.userUpdated);
     } catch (err) {
-      const errorMsg = err?.response?.data?.message || err?.message || 'Update failed';
-      if (errorMsg.toLowerCase().includes('username') && errorMsg.toLowerCase().includes('exists')) {
-        showError(t.usernameExists);
-      } else {
-        showError(errorMsg);
-      }
+      showError(err?.message || "Update failed");
     }
   };
 
@@ -185,404 +214,208 @@ const UsersManagement = ({ user, token }) => {
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      showError(t.passwordsDontMatch);
-      return;
-    }
-    if (passwordForm.newPassword.length < 8) {
-      showError(t.passwordMinLength);
-      return;
+      return showError(t.passwordsDontMatch);
     }
     try {
       await changePassword(changingPasswordUser.id, passwordForm.newPassword, token);
-      showSuccess(`${t.passwordUpdated} for "${changingPasswordUser.username}"`);
       setChangingPasswordUser(null);
+      showSuccess(t.passwordUpdated);
     } catch (err) {
-      const errorMsg = err?.response?.data?.message || err?.message || 'Password change failed';
-      showError(errorMsg);
+      showError(err?.message || "Password update failed");
     }
   };
 
   const handleCreate = async (e) => {
     e.preventDefault();
-    
-    if (!newUsername.trim() || !newPassword.trim() || !newRole) {
-      showError(t.allFieldsRequired);
-      return;
+    if (!newUsername || !newPassword) {
+      return showError(t.allFieldsRequired);
     }
-    
-    if (newPassword.length < 8) {
-      showError(t.passwordMinLength);
-      return;
-    }
-    
-    if (user.role === 'ADMIN' && newRole !== 'USER') {
-      showError(t.adminRestricted);
-      return;
-    }
-
-    if (isUsernameExists(newUsername)) {
-      showError(t.usernameExists);
-      return;
-    }
-
     try {
       const created = await createUser(
         { username: newUsername, password: newPassword, role: newRole },
         token
       );
-      const newUser = { ...created, id: created._id };
-      setUsers(prevUsers => [...prevUsers, newUser]);
+      setUsers(prev => [...prev, { ...created, id: created._id }]);
       setNewUsername('');
       setNewPassword('');
-      setNewRole('USER');
-      showSuccess(`${t.userCreated}: "${newUsername}"`);
+      setNewRole('PROD_USER');
+      showSuccess(t.userCreated);
     } catch (err) {
-      const errorMsg = err?.response?.data?.message || err?.message || 'Create failed';
-      if (errorMsg.toLowerCase().includes('username') && errorMsg.toLowerCase().includes('exists')) {
-        showError(t.usernameExists);
-      } else {
-        showError(errorMsg);
-      }
+      showError(err?.message || "Create failed");
     }
   };
 
+  // Stats basées sur les nouveaux rôles
   const stats = {
     total: users.length,
     admins: users.filter(u => u.role === 'ADMIN' || u.role === 'SUPER_ADMIN').length,
-    usersCount: users.filter(u => u.role === 'USER').length
+    prodUsers: users.filter(u => u.role === 'PROD_USER').length,
+    hrUsers: users.filter(u => u.role === 'HR_USER').length
   };
 
   if (loading) {
     return (
-      <div className="users-container" dir={isRTL ? 'rtl' : 'ltr'}>
-        <div className="loading-screen">
-          <div className="loading-spinner"></div>
-          <p>{t.loading}</p>
-        </div>
+      <div className="users-container">
+        <p>{t.loading}</p>
       </div>
     );
   }
 
   return (
-    <div className={`users-container ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Header */}
-      <div className="users-header">
-        <div className="users-header-left">
-          <div className="users-header-icon">
-            <FiUsers size={28} />
-          </div>
-          <div>
-            <h1>{t.userManagement}</h1>
-            <p>{t.manageUsers}</p>
-          </div>
-        </div>
-      </div>
+    <div className={`users-container ${isRTL ? 'rtl' : 'ltr'}`}>
 
-      {/* Stats Cards */}
-      <div className="users-stats">
-        <div className="users-stat-card">
-          <div className="users-stat-icon" style={{ background: '#667eea' }}>
-            <FiUsers />
-          </div>
-          <div>
-            <div className="users-stat-value">{stats.total}</div>
-            <div className="users-stat-label">{t.totalUsers}</div>
-          </div>
-        </div>
-        <div className="users-stat-card">
-          <div className="users-stat-icon" style={{ background: '#f093fb' }}>
-            <FiShield />
-          </div>
-          <div>
-            <div className="users-stat-value">{stats.admins}</div>
-            <div className="users-stat-label">{t.administrators}</div>
-          </div>
-        </div>
-        <div className="users-stat-card">
-          <div className="users-stat-icon" style={{ background: '#4facfe' }}>
-            <FiUserCheck />
-          </div>
-          <div>
-            <div className="users-stat-value">{stats.usersCount}</div>
-            <div className="users-stat-label">{t.activeUsers}</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Messages */}
-      {error && (
-        <div className="users-toast error">
-          <FiAlertCircle />
-          <span>{error}</span>
-          <button onClick={() => setError('')}>
-            <FiX />
-          </button>
-        </div>
-      )}
-      {success && (
-        <div className="users-toast success">
-          <FiCheckCircle />
-          <span>{success}</span>
-          <button onClick={() => setSuccess('')}>
-            <FiX />
-          </button>
-        </div>
-      )}
-
-      {/* Create User Form */}
+      {/* =========================
+          EMPLOYEES REQUESTED
+      ========================== */}
       <div className="users-form-card">
-        <div className="users-form-header">
-          <h3>
-            <FiPlus /> {t.createUser}
-          </h3>
-        </div>
+        <h3>Pending Employees</h3>
+        {pendingEmployees.length === 0 ? (
+          <p>No pending employees</p>
+        ) : (
+          pendingEmployees.map(emp => (
+            <div key={emp._id} style={{ padding: 10, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+              <strong>{emp.firstName} {emp.lastName}</strong>
+              <div>{emp.email}</div>
+              <div className="users-form-grid">
+                <input
+                  placeholder="username"
+                  value={employeeForms[emp._id]?.username || ''}
+                  onChange={(e) => updateEmployeeForm(emp._id, 'username', e.target.value)}
+                />
+                <input
+                  type="password"
+                  placeholder="password"
+                  value={employeeForms[emp._id]?.password || ''}
+                  onChange={(e) => updateEmployeeForm(emp._id, 'password', e.target.value)}
+                />
+                <select
+                  value={employeeForms[emp._id]?.role || 'PROD_USER'}
+                  onChange={(e) => updateEmployeeForm(emp._id, 'role', e.target.value)}
+                >
+                  <option value="PROD_USER">PROD_USER</option>
+                  <option value="HR_USER">HR_USER</option>
+                  <option value="ADMIN">ADMIN</option>
+                </select>
+                <button className="users-btn-primary" onClick={() => handleCreateFromEmployee(emp._id)}>
+                  Create User
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* =========================
+          CREATE USER (manual)
+      ========================== */}
+      <div className="users-form-card">
+        <h3>{t.createUser}</h3>
         <form onSubmit={handleCreate}>
-          <div className="users-form-grid">
-            <div className="users-input-group">
-              <label>
-                <FiUser /> {t.username}
-              </label>
-              <input 
-                type="text" 
-                placeholder={t.username} 
-                value={newUsername} 
-                onChange={e => setNewUsername(e.target.value)} 
-                required 
-              />
-              {newUsername && isUsernameExists(newUsername) && (
-                <span className="users-field-error">
-                  <FiAlertCircle size={12} /> {t.usernameExists}
-                </span>
-              )}
-            </div>
-            <div className="users-input-group">
-              <label>
-                <FiLock /> {t.password}
-              </label>
-              <input 
-                type="password" 
-                placeholder={`${t.password} (min 8)`} 
-                value={newPassword} 
-                onChange={e => setNewPassword(e.target.value)} 
-                required 
-              />
-            </div>
-            <div className="users-input-group">
-              <label>
-                <FiShield /> {t.role}
-              </label>
-              <select value={newRole} onChange={e => setNewRole(e.target.value)}>
-                {getRoleOptions().map(option => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <div className="users-form-actions">
-            <button 
-              type="submit" 
-              className="users-btn-primary" 
-              disabled={newUsername && isUsernameExists(newUsername)}
-            >
-              <FiPlus /> {t.create}
-            </button>
-            <button type="button" className="users-btn-secondary" onClick={fetchUsers}>
-              <FiRefreshCw /> {t.refresh}
-            </button>
-          </div>
+          <input
+            placeholder={t.username}
+            value={newUsername}
+            onChange={(e) => setNewUsername(e.target.value)}
+          />
+          <input
+            type="password"
+            placeholder={t.password}
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+          />
+          <select value={newRole} onChange={(e) => setNewRole(e.target.value)}>
+            <option value="PROD_USER">PROD_USER</option>
+            <option value="HR_USER">HR_USER</option>
+            <option value="ADMIN">ADMIN</option>
+            <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+          </select>
+          <button type="submit" className="users-btn-primary">{t.create}</button>
         </form>
       </div>
 
-      {/* Users Table */}
+      {/* =========================
+          USERS TABLE
+      ========================== */}
       <div className="users-table-card">
-        <div className="users-table-header">
-          <h3>{t.userList}</h3>
-          <div className="users-search">
-            <FiSearch />
-            <input 
-              type="text" 
-              placeholder={t.search} 
-              value={searchTerm} 
-              onChange={(e) => handleSearch(e.target.value)} 
-            />
-            {searchTerm && (
-              <button onClick={clearSearch}>
-                <FiX />
-              </button>
-            )}
-          </div>
-        </div>
-        <div className="users-table-responsive">
-          <table className="users-table">
-            <thead>
-              <tr>
-                <th>{t.username}</th>
-                <th>{t.role}</th>
-                <th>{t.actions}</th>
+        <h3>{t.userList}</h3>
+        <input
+          placeholder={t.search}
+          value={searchTerm}
+          onChange={(e) => handleSearch(e.target.value)}
+        />
+        <table className="users-table">
+          <thead>
+            <tr>
+              <th>{t.username}</th>
+              <th>{t.role}</th>
+              <th>{t.actions}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredUsers.map(u => (
+              <tr key={u.id}>
+                <td>{u.username}</td>
+                <td style={{ color: getRoleColor(u.role) }}>
+                  {getRoleIcon(u.role)} {getRoleDisplayName(u.role)}
+                </td>
+                <td>
+                  <button onClick={() => openEditModal(u)}><FiEdit2 /></button>
+                  <button onClick={() => openPasswordModal(u)}><FiLock /></button>
+                  <button onClick={() => handleDelete(u.id, u.username)}><FiTrash2 /></button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {filteredUsers.length === 0 ? (
-                <tr>
-                  <td colSpan="3" className="users-empty">
-                    <FiUsers size={40} />
-                    <p>{searchTerm ? t.noSearchResults : t.noUsers}</p>
-                    {searchTerm && (
-                      <button onClick={clearSearch}>{t.clearSearch}</button>
-                    )}
-                  </td>
-                </tr>
-              ) : (
-                filteredUsers.map(u => (
-                  <tr key={u.id}>
-                    <td>
-                      <div className="users-avatar">{u.username.charAt(0).toUpperCase()}</div>
-                      <span>{u.username}</span>
-                    </td>
-                    <td>
-                      <span 
-                        className="users-role-badge" 
-                        style={{ background: `${getRoleColor(u.role)}20`, color: getRoleColor(u.role) }}
-                      >
-                        {getRoleIcon(u.role)} {getRoleDisplayName(u.role)}
-                      </span>
-                    </td>
-                    <td className="users-actions">
-                      <button 
-                        className="users-action-btn edit" 
-                        onClick={() => openEditModal(u)} 
-                        title={t.edit}
-                      >
-                        <FiEdit2 />
-                      </button>
-                      <button 
-                        className="users-action-btn password" 
-                        onClick={() => openPasswordModal(u)} 
-                        title={t.changePassword}
-                      >
-                        <FiLock />
-                      </button>
-                      <button 
-                        className="users-action-btn delete" 
-                        onClick={() => handleDelete(u.id, u.username)} 
-                        title={t.delete}
-                      >
-                        <FiTrash2 />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      {/* Edit Modal */}
+      {/* =========================
+          EDIT MODAL
+      ========================== */}
       {editingUser && (
-        <div className="users-modal-overlay" onClick={() => setEditingUser(null)}>
-          <div className="users-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="users-modal-header">
-              <h3>
-                <FiEdit2 /> {t.editUser}
-              </h3>
-              <button className="users-modal-close" onClick={() => setEditingUser(null)}>×</button>
-            </div>
-            <form onSubmit={handleUpdateSubmit}>
-              <div className="users-input-group">
-                <label>
-                  <FiUser /> {t.username}
-                </label>
-                <input 
-                  type="text" 
-                  value={editForm.username} 
-                  onChange={e => setEditForm({ ...editForm, username: e.target.value })} 
-                  required 
-                />
-                {editForm.username && isUsernameExists(editForm.username, editingUser.id) && (
-                  <span className="users-field-error">
-                    <FiAlertCircle size={12} /> {t.usernameExists}
-                  </span>
-                )}
-              </div>
-              <div className="users-input-group">
-                <label>
-                  <FiShield /> {t.role}
-                </label>
-                <select 
-                  value={editForm.role} 
-                  onChange={e => setEditForm({ ...editForm, role: e.target.value })}
-                >
-                  {getRoleOptions().map(option => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="users-form-actions">
-                <button 
-                  type="submit" 
-                  className="users-btn-primary" 
-                  disabled={editForm.username && isUsernameExists(editForm.username, editingUser.id)}
-                >
-                  <FiSave /> {t.save}
-                </button>
-                <button type="button" className="users-btn-secondary" onClick={() => setEditingUser(null)}>
-                  {t.cancel}
-                </button>
-              </div>
-            </form>
-          </div>
+        <div className="modal">
+          <form onSubmit={handleUpdateSubmit}>
+            <h3>Edit User</h3>
+            <input
+              value={editForm.username}
+              onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
+            />
+            <select
+              value={editForm.role}
+              onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
+            >
+              <option value="PROD_USER">PROD_USER</option>
+              <option value="HR_USER">HR_USER</option>
+              <option value="ADMIN">ADMIN</option>
+              <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+            </select>
+            <button type="submit">{t.save}</button>
+            <button type="button" onClick={() => setEditingUser(null)}>Cancel</button>
+          </form>
         </div>
       )}
 
-      {/* Password Modal */}
+      {/* =========================
+          PASSWORD MODAL
+      ========================== */}
       {changingPasswordUser && (
-        <div className="users-modal-overlay" onClick={() => setChangingPasswordUser(null)}>
-          <div className="users-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="users-modal-header">
-              <h3>
-                <FiLock /> {t.changePassword}
-              </h3>
-              <button className="users-modal-close" onClick={() => setChangingPasswordUser(null)}>×</button>
-            </div>
-            <form onSubmit={handlePasswordSubmit}>
-              <div className="users-user-info">
-                <strong>{changingPasswordUser.username}</strong>
-              </div>
-              <div className="users-input-group">
-                <label>
-                  <FiLock /> {t.newPassword}
-                </label>
-                <input 
-                  type="password" 
-                  placeholder={t.newPassword} 
-                  value={passwordForm.newPassword} 
-                  onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} 
-                  required 
-                />
-              </div>
-              <div className="users-input-group">
-                <label>
-                  <FiLock /> {t.confirmPassword}
-                </label>
-                <input 
-                  type="password" 
-                  placeholder={t.confirmPassword} 
-                  value={passwordForm.confirmPassword} 
-                  onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })} 
-                  required 
-                />
-              </div>
-              <div className="users-form-actions">
-                <button type="submit" className="users-btn-primary">
-                  <FiSave /> {t.updatePassword}
-                </button>
-                <button type="button" className="users-btn-secondary" onClick={() => setChangingPasswordUser(null)}>
-                  {t.cancel}
-                </button>
-              </div>
-            </form>
-          </div>
+        <div className="modal">
+          <form onSubmit={handlePasswordSubmit}>
+            <h3>Change Password</h3>
+            <input
+              type="password"
+              placeholder="new password"
+              value={passwordForm.newPassword}
+              onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+            />
+            <input
+              type="password"
+              placeholder="confirm password"
+              value={passwordForm.confirmPassword}
+              onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+            />
+            <button type="submit">{t.save}</button>
+            <button type="button" onClick={() => setChangingPasswordUser(null)}>Cancel</button>
+          </form>
         </div>
       )}
     </div>

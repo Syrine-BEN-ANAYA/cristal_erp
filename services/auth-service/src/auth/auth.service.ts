@@ -31,40 +31,51 @@ export class AuthService {
   }
 
   async login(user: any) {
-  const payload = { sub: user._id, role: user.role, mustChangePassword: user.mustChangePassword };
+    // 🔥 Conversion explicite de _id en string pour éviter les erreurs 400
+    const payload = { 
+      sub: user._id.toString(), 
+      role: user.role, 
+      mustChangePassword: user.mustChangePassword 
+    };
 
-  await this.auditService.log({
-    userId: user._id.toString(),
-    action: 'LOGIN',
-    entity: 'USER',
-  });
+    await this.auditService.log({
+      userId: user._id.toString(),
+      action: 'LOGIN',
+      entity: 'USER',
+    });
 
-  return {
-    access_token: this.jwtService.sign(payload),
-    user: {
-      id: user._id,
-      role: user.role,
-      mustChangePassword: user.mustChangePassword || false, // ← maintenant dans user
-    },
-  };
-}
+    return {
+      access_token: this.jwtService.sign(payload),
+      user: {
+        id: user._id.toString(),   // 🔥 id en string
+        role: user.role,
+        mustChangePassword: user.mustChangePassword || false,
+      },
+    };
+  }
 
-  // ✅ Création sécurisée d'un utilisateur
   async createUser(dto: { username: string; password: string; role?: UserRole }, requester: any) {
     if (!dto.username || !dto.password)
       throw new BadRequestException('Username et mot de passe requis');
 
-    // Vérification du rôle selon requester
-    let roleToAssign = UserRole.USER; // par défaut
-    if (requester.role === UserRole.SUPER_ADMIN) {
-      roleToAssign = dto.role || UserRole.USER;
-    } else if (requester.role === UserRole.ADMIN) {
-      // ADMIN ne peut pas créer SUPER_ADMIN ou ADMIN
+    let roleToAssign = UserRole.PROD_USER; // 🔥 valeur par défaut adaptée
+    const requesterRole = requester.role;
+
+    // 🔥 Gestion des rôles selon le demandeur
+    if (requesterRole === UserRole.SUPER_ADMIN) {
+      roleToAssign = dto.role || UserRole.PROD_USER;
+    } 
+    else if (requesterRole === UserRole.ADMIN) {
+      // ADMIN peut créer PROD_USER et HR_USER, mais pas ADMIN ni SUPER_ADMIN
       if (dto.role === UserRole.SUPER_ADMIN || dto.role === UserRole.ADMIN) {
         throw new ForbiddenException('Vous ne pouvez pas créer ce rôle');
       }
-      roleToAssign = dto.role || UserRole.USER;
-    } else {
+      if (dto.role && ![UserRole.PROD_USER, UserRole.HR_USER].includes(dto.role)) {
+        throw new ForbiddenException('Rôle non autorisé');
+      }
+      roleToAssign = dto.role || UserRole.PROD_USER;
+    }
+    else {
       throw new ForbiddenException('Vous n\'avez pas la permission de créer des utilisateurs');
     }
 
@@ -75,10 +86,10 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(dto.password, 12);
 
     const newUser = new this.userModel({
-  username: dto.username, // ← utiliser dto.username
+      username: dto.username,
       password: hashedPassword,
       role: roleToAssign,
-      mustChangePassword: true, // mot de passe à changer au premier login
+      mustChangePassword: true,
     });
 
     const user = await newUser.save();

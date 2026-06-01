@@ -4,7 +4,8 @@ import { Document } from 'mongoose';
 export enum UserRole {
   SUPER_ADMIN = 'SUPER_ADMIN',
   ADMIN = 'ADMIN',
-  USER = 'USER',
+  PROD_USER = 'PROD_USER',
+  HR_USER = 'HR_USER',
 }
 
 export type UserDocument = User & Document;
@@ -18,7 +19,7 @@ export class User {
   @Prop({ required: true, select: false })
   password!: string;
 
-  @Prop({ type: String, enum: UserRole, default: UserRole.USER })
+  @Prop({ type: String, enum: UserRole, default: UserRole.PROD_USER })
   role!: UserRole;
 
   @Prop({ default: true })

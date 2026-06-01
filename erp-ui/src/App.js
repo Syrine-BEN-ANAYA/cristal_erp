@@ -28,10 +28,6 @@ import LeavesPage from "./pages/LeavesPage";
 
 import PayrollPage from "./pages/PayrollPage";
 
-
-
-
-// ✅ Composant qui contient toute la logique de l'app (avec useLanguage)
 function AppContent() {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState("");

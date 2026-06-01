@@ -10,7 +10,7 @@ export class CreateUserDto {
   @MinLength(6)
   password!: string;
 
-  @IsEnum(UserRole, { message: 'Le rôle doit être USER, MANAGER ou ADMIN' })
-  @IsNotEmpty({ message: 'Le rôle est obligatoire' })
-  role!: UserRole; // ✅ obligatoire maintenant
+  @IsEnum(UserRole, { message: 'Role should be PROD_USER, HR_USER, ADMIN or SUPERADMIN' })
+  @IsNotEmpty({ message: 'Role is required' })
+  role!: UserRole; 
 }

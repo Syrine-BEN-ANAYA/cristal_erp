@@ -8,7 +8,7 @@ export class RegisterDto {
   @MinLength(8)
   password!: string;
 
-  @IsEnum(UserRole, { message: 'Le rôle doit être USER, MANAGER ou ADMIN' })
-  @IsNotEmpty({ message: 'Le rôle est obligatoire' })
-  role!: UserRole; // ✅ obligatoire maintenant
+  @IsEnum(UserRole, { message: 'Role must be PROD_USER,HR_USER, ADMIN or SUPERADMIN' })
+  @IsNotEmpty({ message: 'Role is required' })
+  role!: UserRole; 
 }

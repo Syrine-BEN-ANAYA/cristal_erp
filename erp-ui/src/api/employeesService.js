@@ -1,39 +1,41 @@
-// employeesService.js
 import axios from 'axios';
 
-const API_GATEWAY_URL = process.env.REACT_APP_API_GATEWAY_URL || 'http://localhost:3104';
+const API_GATEWAY_URL =
+  process.env.REACT_APP_API_GATEWAY_URL || 'http://localhost:3104';
 
-// Récupérer le token d'authentification depuis localStorage
+// ================= AUTH =================
 const getAuthToken = () => {
   const token = localStorage.getItem('auth_token');
-  return token || '';
+  return token ? `Bearer ${token}` : '';
 };
 
-// Headers par défaut
+// ================= HEADERS =================
 const getHeaders = () => ({
-  'Authorization': getAuthToken(),
+  Authorization: getAuthToken(),
   'Content-Type': 'application/json',
 });
 
-// Gestionnaire d'erreurs
+// ================= ERROR HANDLER =================
 const handleError = (error, defaultMessage) => {
   if (error.response) {
-    const message = error.response.data?.message || error.response.data || defaultMessage;
+    const message =
+      error.response.data?.message ||
+      error.response.data ||
+      defaultMessage;
+
     throw new Error(message);
-  } else if (error.request) {
-    throw new Error('Impossible de contacter le serveur');
-  } else {
-    throw new Error(error.message || defaultMessage);
   }
+
+  if (error.request) {
+    throw new Error('Impossible de contacter le serveur');
+  }
+
+  throw new Error(error.message || defaultMessage);
 };
 
-/**
- * Service pour la gestion des employés
- */
+// ================= SERVICE =================
 const employeesService = {
-  /**
-   * Créer un nouvel employé
-   */
+  // ================= CREATE =================
   async createEmployee(employeeData) {
     try {
       const response = await axios.post(
@@ -47,40 +49,31 @@ const employeesService = {
     }
   },
 
-  /**
-   * Récupérer tous les employés
-   */
+  // ================= GET ALL =================
   async getAllEmployees() {
     try {
       const response = await axios.get(
         `${API_GATEWAY_URL}/employees`,
         { headers: getHeaders() }
       );
-      
-      // Vérifier si la réponse est un tableau ou un objet avec une propriété data
-      let employeesData = response.data;
-      
-      // Si c'est un objet avec une propriété data qui est un tableau
-      if (employeesData && employeesData.data && Array.isArray(employeesData.data)) {
-        employeesData = employeesData.data;
-      }
-      // Si ce n'est pas un tableau, retourner un tableau vide
-      if (!Array.isArray(employeesData)) {
-        console.warn('La réponse API n\'est pas un tableau:', employeesData);
-        return [];
-      }
-      
-      return employeesData;
+
+      const data = response.data;
+
+      // API Gateway safe handling
+      if (Array.isArray(data)) return data;
+
+      if (Array.isArray(data?.data)) return data.data;
+
+      console.warn('API response is not an array:', data);
+      return [];
     } catch (error) {
-      console.error('Erreur dans getAllEmployees:', error);
+      console.error('getAllEmployees error:', error);
       handleError(error, 'Erreur lors de la récupération des employés');
-      return []; // Retourner un tableau vide en cas d'erreur
+      return [];
     }
   },
 
-  /**
-   * Récupérer un employé par son ID
-   */
+  // ================= GET BY ID =================
   async getEmployeeById(id) {
     try {
       const response = await axios.get(
@@ -93,9 +86,7 @@ const employeesService = {
     }
   },
 
-  /**
-   * Mettre à jour un employé
-   */
+  // ================= UPDATE =================
   async updateEmployee(id, employeeData) {
     try {
       const response = await axios.put(
@@ -109,58 +100,74 @@ const employeesService = {
     }
   },
 
-  /**
-   * Supprimer un employé
-   */
-  async deleteEmployee(id) {
+ 
+  // ================= APPROVE EMPLOYEE (IMPORTANT ERP FLOW) =================
+  async approveEmployee(id) {
     try {
-      const response = await axios.delete(
-        `${API_GATEWAY_URL}/employees/${id}`,
+      const response = await axios.post(
+        `${API_GATEWAY_URL}/employees/${id}/approve`,
+        {},
         { headers: getHeaders() }
       );
       return response.data;
     } catch (error) {
-      handleError(error, 'Erreur lors de la suppression de l’employé');
+      handleError(error, 'Erreur lors de l’approbation de l’employé');
     }
   },
 
-  /**
-   * Formater les données d'un employé pour l'affichage
-   */
+  // ================= ACCOUNT STATUS =================
+  async updateAccountStatus(id, accountStatus) {
+    try {
+      const response = await axios.patch(
+        `${API_GATEWAY_URL}/employees/${id}/account-status`,
+        { accountStatus },
+        { headers: getHeaders() }
+      );
+      return response.data;
+    } catch (error) {
+      handleError(error, 'Erreur lors de la mise à jour du statut');
+    }
+  },
+
+  // ================= FORMAT ONE EMPLOYEE =================
   formatEmployee(employee) {
     if (!employee) return null;
-    
+
     return {
       ...employee,
+
       fullName: `${employee.firstName || ''} ${employee.lastName || ''}`.trim(),
-      fullNameAr: employee.firstNameAr && employee.lastNameAr 
-        ? `${employee.firstNameAr} ${employee.lastNameAr}`.trim()
-        : `${employee.firstName || ''} ${employee.lastName || ''}`.trim(),
-      formattedHireDate: employee.hireDate 
+
+      formattedHireDate: employee.hireDate
         ? new Date(employee.hireDate).toLocaleDateString('fr-FR')
         : 'Non spécifié',
+
       formattedCreatedAt: employee.createdAt
         ? new Date(employee.createdAt).toLocaleDateString('fr-FR')
         : 'N/A',
+
       skillsList: Array.isArray(employee.skills) ? employee.skills : [],
+
       displayStatus: employee.isActive ? 'Actif' : 'Inactif',
       statusColor: employee.isActive ? '#10b981' : '#ef4444',
+
+      accountStatusLabel:
+        employee.accountStatus === 'CREATED'
+          ? 'Compte créé'
+          : employee.accountStatus === 'PENDING'
+          ? 'En attente'
+          : 'Non défini',
     };
   },
 
-  /**
-   * Formater la liste des employés - VÉRIFICATION DE SÉCURITÉ
-   */
+  // ================= FORMAT LIST =================
   formatEmployees(employees) {
-    // Vérifier si employees est un tableau
-    if (!employees || !Array.isArray(employees)) {
-      console.warn('formatEmployees: employees n\'est pas un tableau:', employees);
-      return [];
-    }
-    
-    // Formater chaque employé
-    return employees.map(emp => this.formatEmployee(emp)).filter(emp => emp !== null);
-  }
+    if (!Array.isArray(employees)) return [];
+
+    return employees
+      .map(this.formatEmployee)
+      .filter(Boolean);
+  },
 };
 
 export default employeesService;

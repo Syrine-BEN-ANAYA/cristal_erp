@@ -37,6 +37,9 @@ export class Employee {
 
   @Prop({ default: true })
   isActive!: boolean;
+
+  @Prop({ enum: ['none', 'requested', 'created'], default: 'requested' })
+  accountStatus!: 'none' | 'requested' | 'created';
 }
 
 export const EmployeeSchema = SchemaFactory.createForClass(Employee);

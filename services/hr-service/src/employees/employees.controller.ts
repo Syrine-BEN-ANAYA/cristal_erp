@@ -1,76 +1,57 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Put,
-  Delete,
-  HttpCode,
-  HttpStatus,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import { EmployeesService } from './employees.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
-import { EmployeesService } from './employees.service';
 
 @Controller('employees')
 export class EmployeesController {
   constructor(private readonly employeesService: EmployeesService) {}
 
-  // 🟢 CREATE employee
+  // =====================================================
+  // CREATE (HR)
+  // =====================================================
   @Post()
-  @HttpCode(HttpStatus.CREATED)
-  async create(@Body() dto: CreateEmployeeDto) {
-    const data = await this.employeesService.create(dto);
-    return {
-      statusCode: HttpStatus.CREATED,
-      message: 'Employee created successfully',
-      data,
-    };
+  create(@Body() dto: CreateEmployeeDto) {
+    return this.employeesService.create(dto);
   }
 
-  // 🔵 GET all employees
+  // =====================================================
+  // GET ALL EMPLOYEES
+  // =====================================================
   @Get()
-  async findAll() {
-    const data = await this.employeesService.findAll();
-    return {
-      statusCode: HttpStatus.OK,
-      message: 'Employees retrieved successfully',
-      data,
-    };
+  findAll() {
+    return this.employeesService.findAll();
   }
 
-  // 🔵 GET one employee by ID
+  // =====================================================
+  // GET ONE EMPLOYEE
+  // =====================================================
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const data = await this.employeesService.findOne(id);
-    return {
-      statusCode: HttpStatus.OK,
-      message: 'Employee retrieved successfully',
-      data,
-    };
+  findOne(@Param('id') id: string) {
+    return this.employeesService.findOne(id);
   }
 
-  // 🟡 UPDATE employee
+  // =====================================================
+  // UPDATE BY HR (restricted rules)
+  // =====================================================
+  @Put('hr/:id')
+  updateByHr(@Param('id') id: string, @Body() dto: UpdateEmployeeDto) {
+    return this.employeesService.updateByHr(id, dto);
+  }
+
+  // =====================================================
+  // UPDATE GENERAL (ADMIN / SYSTEM)
+  // =====================================================
   @Put(':id')
-  async update(@Param('id') id: string, @Body() dto: UpdateEmployeeDto) {
-    const data = await this.employeesService.update(id, dto);
-    return {
-      statusCode: HttpStatus.OK,
-      message: 'Employee updated successfully',
-      data,
-    };
+  update(@Param('id') id: string, @Body() dto: UpdateEmployeeDto) {
+    return this.employeesService.update(id, dto);
   }
 
-  // 🔴 DELETE employee
-  @Delete(':id')
-  @HttpCode(HttpStatus.OK)
-  async remove(@Param('id') id: string) {
-    const data = await this.employeesService.remove(id);
-    return {
-      statusCode: HttpStatus.OK,
-      message: 'Employee deleted successfully',
-      data,
-    };
+  // =====================================================
+  // GET EMPLOYEES WAITING FOR ACCOUNT CREATION
+  // =====================================================
+  @Get('accounts/pending')
+  findPendingAccounts() {
+    return this.employeesService.findPendingAccounts();
   }
 }

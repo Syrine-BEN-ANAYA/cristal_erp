@@ -1,9 +1,6 @@
 import { Controller, Post, Body, Req, UseGuards, BadRequestException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
-import { RegisterDto } from './dto/register.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { UserRole } from '../users/schemas/user.schema';
 import { LoginDto } from './dto/login.dto';
 
 @Controller('auth')

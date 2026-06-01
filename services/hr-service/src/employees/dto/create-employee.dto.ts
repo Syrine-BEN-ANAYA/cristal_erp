@@ -3,11 +3,12 @@ import {
   IsBoolean,
   IsDateString,
   IsEmail,
+  IsEnum,
+  IsIn,
   IsMongoId,
   IsNotEmpty,
   IsOptional,
   IsString,
-  IsIn,
 } from 'class-validator';
 
 export class CreateEmployeeDto {
@@ -26,7 +27,6 @@ export class CreateEmployeeDto {
   @IsOptional()
   phoneNumber?: string;
 
-  @IsString()
   @IsIn(['male', 'female'])
   @IsOptional()
   gender?: string;
@@ -39,13 +39,9 @@ export class CreateEmployeeDto {
   @IsNotEmpty()
   position!: string;
 
-  @IsString()
-  @IsOptional()
-  status?: string;
-
   @IsDateString()
   @IsOptional()
-  hireDate?: Date;
+  hireDate?: string;
 
   @IsArray()
   @IsOptional()
@@ -54,4 +50,8 @@ export class CreateEmployeeDto {
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
+
+  @IsEnum(['none', 'requested', 'created'])
+  @IsOptional()
+  accountStatus?: 'none' | 'requested' | 'created';
 }

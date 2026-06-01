@@ -15,324 +15,144 @@ import {
 import axios, { AxiosError } from 'axios';
 import type { Request } from 'express';
 
-// ---------------- DTO ----------------
-
-interface CreateEmployeeDto {
-  firstName: string;
-  lastName: string;
-  email: string;
-
-  phoneNumber?: string;
-
-  gender?: 'male' | 'female';
-
-  departmentId?: string;
-
-  position: string;
-
-  status?: string;
-
-  hireDate?: Date;
-
-  skills?: string[];
-
-  isActive?: boolean;
-}
-
-interface UpdateEmployeeDto {
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-
-  phoneNumber?: string;
-
-  gender?: 'male' | 'female';
-
-  departmentId?: string;
-
-  position?: string;
-
-  status?: string;
-
-  hireDate?: Date;
-
-  skills?: string[];
-
-  isActive?: boolean;
-}
-
-// ---------------- MODEL ----------------
-
-interface Employee {
-  _id: string;
-
-  firstName: string;
-
-  lastName: string;
-
-  email: string;
-
-  phoneNumber?: string;
-
-  gender?: string;
-
-  departmentId?: string;
-
-  position?: string;
-
-  status?: string;
-
-  hireDate?: string;
-
-  skills?: string[];
-
-  isActive?: boolean;
-
-  createdAt?: string;
-
-  updatedAt?: string;
-}
-
+// =====================================================
+// CONFIG
+// =====================================================
 @Controller('employees')
 export class EmployeesGateway {
-  private readonly HR_SERVICE_URL =
+  private readonly HR_SERVICE =
     process.env.HR_SERVICE_URL || 'http://localhost:3106';
 
-  private readonly AUTH_SERVICE_URL =
-    process.env.AUTH_SERVICE_URL || 'http://localhost:3101';
-
   constructor() {
-    Logger.log('EmployeesGateway chargé correctement', 'API-GATEWAY');
+    Logger.log('EmployeesGateway loaded', 'API-GATEWAY');
   }
 
-  // ---------------- ERROR HANDLER ----------------
-
-  private handleAxiosError(err: AxiosError, defaultMsg: string): never {
-    const errResponse = err.response?.data;
-
-    let message = defaultMsg;
-
-    if (errResponse) {
-      if (typeof errResponse === 'string') {
-        message = errResponse;
-      } else if ((errResponse as any).message) {
-        message = (errResponse as any).message;
-      } else {
-        message = JSON.stringify(errResponse);
-      }
-    } else if (err.message) {
-      message = err.message;
-    }
+  // =====================================================
+  // ERROR HANDLER
+  // =====================================================
+  private handleError(error: AxiosError, msg: string): never {
+    const message =
+      (error.response?.data as any)?.message || error.message || msg;
 
     throw new HttpException(
       message,
-      err.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
     );
   }
 
-  // ---------------- HEADERS ----------------
-
-  private getHeaders(req: Request) {
+  // =====================================================
+  // HEADERS
+  // =====================================================
+  private headers(req: Request) {
     return {
       Authorization: req.headers.authorization || '',
     };
   }
 
-  // ---------------- AUDIT LOG ----------------
-
-  private async sendAuditLog(data: {
-    userId: string;
-    username: string;
-    action: string;
-    entity: string;
-    ip?: string;
-    endpoint?: string;
-    details?: any;
-  }) {
-    try {
-      await axios.post(
-        `${this.AUTH_SERVICE_URL}/audits/remote-log`,
-        data,
-        {
-          headers: {
-            'x-internal-token':
-              process.env.INTERNAL_API_KEY || 'internal-secret',
-          },
-        },
-      );
-    } catch (error) {
-      Logger.error('Failed to send audit log', 'EmployeesGateway');
-    }
-  }
-
-  // ---------------- CREATE ----------------
-
+  // =====================================================
+  // CREATE EMPLOYEE
+  // =====================================================
   @Post()
-  async create(
-    @Body() dto: CreateEmployeeDto,
-    @Req() req: Request,
-  ): Promise<Employee> {
+  async create(@Body() dto: any, @Req() req: Request) {
     try {
-      const response = await axios.post<Employee>(
-        `${this.HR_SERVICE_URL}/employees`,
+      const { data } = await axios.post(
+        `${this.HR_SERVICE}/employees`,
         dto,
-        {
-          headers: this.getHeaders(req),
-        },
+        { headers: this.headers(req) },
       );
-
-      const user = (req as any).user;
-
-      if (user) {
-        await this.sendAuditLog({
-          userId: user._id?.toString() || user.id,
-          username: user.username || user.email,
-          action: 'CREATE_EMPLOYEE',
-          entity: 'EMPLOYEE',
-          ip: req.ip || req.socket?.remoteAddress,
-          endpoint: req.originalUrl || '/employees',
-
-          details: {
-            employeeId: response.data._id,
-            email: response.data.email,
-            fullName: `${response.data.firstName} ${response.data.lastName}`,
-          },
-        });
-      }
-
-      return response.data;
+      return data;
     } catch (error) {
-      this.handleAxiosError(
-        error as AxiosError,
-        'Erreur lors de la création de l’employé',
-      );
+      this.handleError(error as AxiosError, 'Error creating employee');
     }
   }
 
-  // ---------------- FIND ALL ----------------
-
+  // =====================================================
+  // GET ALL EMPLOYEES
+  // =====================================================
   @Get()
-  async findAll(@Req() req: Request): Promise<Employee[]> {
+  async findAll(@Req() req: Request) {
     try {
-      const response = await axios.get<Employee[]>(
-        `${this.HR_SERVICE_URL}/employees`,
-        {
-          headers: this.getHeaders(req),
-        },
+      const { data } = await axios.get(
+        `${this.HR_SERVICE}/employees`,
+        { headers: this.headers(req) },
       );
-
-      return response.data;
+      return data;
     } catch (error) {
-      this.handleAxiosError(
-        error as AxiosError,
-        'Erreur lors de la récupération des employés',
-      );
+      this.handleError(error as AxiosError, 'Error fetching employees');
     }
   }
 
-  // ---------------- FIND ONE ----------------
-
+  // =====================================================
+  // GET ONE EMPLOYEE
+  // =====================================================
   @Get(':id')
-  async findOne(
-    @Param('id') id: string,
-    @Req() req: Request,
-  ): Promise<Employee> {
+  async findOne(@Param('id') id: string, @Req() req: Request) {
     try {
-      const response = await axios.get<Employee>(
-        `${this.HR_SERVICE_URL}/employees/${id}`,
-        {
-          headers: this.getHeaders(req),
-        },
+      const { data } = await axios.get(
+        `${this.HR_SERVICE}/employees/${id}`,
+        { headers: this.headers(req) },
       );
-
-      return response.data;
+      return data;
     } catch (error) {
-      this.handleAxiosError(
-        error as AxiosError,
-        'Erreur lors de la récupération de l’employé',
-      );
+      this.handleError(error as AxiosError, 'Error fetching employee');
     }
   }
 
-  // ---------------- UPDATE ----------------
-
+  // =====================================================
+  // UPDATE EMPLOYEE (ADMIN / SYSTEM)
+  // =====================================================
   @Put(':id')
   async update(
     @Param('id') id: string,
-    @Body() dto: UpdateEmployeeDto,
+    @Body() dto: any,
     @Req() req: Request,
-  ): Promise<Employee> {
+  ) {
     try {
-      const response = await axios.put<Employee>(
-        `${this.HR_SERVICE_URL}/employees/${id}`,
+      const { data } = await axios.put(
+        `${this.HR_SERVICE}/employees/${id}`,
         dto,
-        {
-          headers: this.getHeaders(req),
-        },
+        { headers: this.headers(req) },
       );
-
-      const user = (req as any).user;
-
-      if (user) {
-        await this.sendAuditLog({
-          userId: user._id?.toString() || user.id,
-          username: user.username || user.email,
-          action: 'UPDATE_EMPLOYEE',
-          entity: 'EMPLOYEE',
-          ip: req.ip || req.socket?.remoteAddress,
-          endpoint: req.originalUrl || `/employees/${id}`,
-
-          details: {
-            employeeId: id,
-            updatedFields: dto,
-          },
-        });
-      }
-
-      return response.data;
+      return data;
     } catch (error) {
-      this.handleAxiosError(
-        error as AxiosError,
-        'Erreur lors de la mise à jour de l’employé',
-      );
+      this.handleError(error as AxiosError, 'Error updating employee');
     }
   }
 
-  // ---------------- DELETE ----------------
-
-  @Delete(':id')
-  async remove(@Param('id') id: string, @Req() req: Request) {
+  // =====================================================
+  // HR UPDATE (restricted rule)
+  // =====================================================
+  @Put('hr/:id')
+  async updateHr(
+    @Param('id') id: string,
+    @Body() dto: any,
+    @Req() req: Request,
+  ) {
     try {
-      const response = await axios.delete<{ message: string }>(
-        `${this.HR_SERVICE_URL}/employees/${id}`,
-        {
-          headers: this.getHeaders(req),
-        },
+      const { data } = await axios.put(
+        `${this.HR_SERVICE}/employees/hr/${id}`,
+        dto,
+        { headers: this.headers(req) },
       );
-
-      const user = (req as any).user;
-
-      if (user) {
-        await this.sendAuditLog({
-          userId: user._id?.toString() || user.id,
-          username: user.username || user.email,
-          action: 'DELETE_EMPLOYEE',
-          entity: 'EMPLOYEE',
-          ip: req.ip || req.socket?.remoteAddress,
-          endpoint: req.originalUrl || `/employees/${id}`,
-
-          details: {
-            employeeId: id,
-          },
-        });
-      }
-
-      return response.data;
+      return data;
     } catch (error) {
-      this.handleAxiosError(
-        error as AxiosError,
-        'Erreur lors de la suppression de l’employé',
+      this.handleError(error as AxiosError, 'Error HR update employee');
+    }
+  }
+
+  // =====================================================
+  // PENDING EMPLOYEES (requested)
+  // =====================================================
+  @Get('accounts/pending')
+  async findPending(@Req() req: Request) {
+    try {
+      const { data } = await axios.get(
+        `${this.HR_SERVICE}/employees/accounts/pending`,
+        { headers: this.headers(req) },
       );
+      return data;
+    } catch (error) {
+      this.handleError(error as AxiosError, 'Error fetching pending employees');
     }
   }
 }
