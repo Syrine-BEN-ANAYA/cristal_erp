@@ -1,4 +1,4 @@
-/* UsersManagement.css */
+/* UsersManagement.css - Version claire */
 
 /* ===== Container principal ===== */
 .users-container {
@@ -6,26 +6,34 @@
   max-width: 1400px;
   margin: 0 auto;
   min-height: calc(100vh - 80px);
+  background: #f8fafc;
 }
 
 /* ===== Cartes ===== */
 .users-form-card,
 .users-table-card {
-  background: rgba(10, 43, 78, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 1rem;
   padding: 1.5rem;
   margin-bottom: 2rem;
-  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transition: box-shadow 0.2s;
+}
+
+.users-form-card:hover,
+.users-table-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
 }
 
 .users-form-card h3,
 .users-table-card h3 {
-  color: white;
+  color: #1e293b;
   font-size: 1.3rem;
   margin-bottom: 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid #e2e8f0;
   padding-bottom: 0.75rem;
+  font-weight: 600;
 }
 
 /* ===== Grille formulaire ===== */
@@ -41,10 +49,10 @@
 .users-container select {
   width: 100%;
   padding: 0.75rem 1rem;
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
   border-radius: 0.5rem;
-  color: white;
+  color: #0f172a;
   font-size: 0.9rem;
   transition: all 0.2s;
 }
@@ -52,12 +60,12 @@
 .users-container input:focus,
 .users-container select:focus {
   outline: none;
-  border-color: #d4af37;
-  background: rgba(0, 0, 0, 0.6);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .users-container input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
+  color: #94a3b8;
 }
 
 /* ===== Boutons ===== */
@@ -66,19 +74,20 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #1a4b7a, #0a2b4e);
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
   border: none;
   border-radius: 0.5rem;
   color: white;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .users-btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  background: linear-gradient(135deg, #0f3a5e, #071c33);
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* ===== Tableau ===== */
@@ -91,56 +100,58 @@
 .users-table thead th {
   text-align: left;
   padding: 1rem;
-  color: #d4af37;
+  color: #475569;
   font-weight: 600;
   font-size: 0.85rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid #e2e8f0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  background-color: #f8fafc;
 }
 
 .users-table tbody td {
   padding: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  color: #e2e8f0;
+  border-bottom: 1px solid #f1f5f9;
+  color: #1e293b;
   font-size: 0.9rem;
   vertical-align: middle;
+  background-color: #ffffff;
 }
 
-.users-table tbody tr:hover {
-  background: rgba(255, 255, 255, 0.05);
+.users-table tbody tr:hover td {
+  background-color: #f8fafc;
 }
 
 /* Boutons d'action dans le tableau */
 .users-table tbody td button {
-  background: rgba(0, 0, 0, 0.3);
+  background: #f1f5f9;
   border: none;
   padding: 0.5rem;
   border-radius: 0.5rem;
   cursor: pointer;
   transition: all 0.2s;
-  color: #e2e8f0;
+  color: #475569;
   margin-right: 0.5rem;
+  font-size: 0.9rem;
 }
 
 .users-table tbody td button:hover {
-  transform: scale(1.1);
+  transform: translateY(-2px);
 }
 
-/* Couleurs spécifiques par bouton (optionnel) */
 .users-table tbody td button:first-child:hover {
-  background: rgba(59, 130, 246, 0.4);
-  color: #93c5fd;
+  background: #dbeafe;
+  color: #1e40af;
 }
 
 .users-table tbody td button:nth-child(2):hover {
-  background: rgba(212, 175, 55, 0.4);
-  color: #fbbf24;
+  background: #fef9c3;
+  color: #854d0e;
 }
 
 .users-table tbody td button:last-child:hover {
-  background: rgba(239, 68, 68, 0.4);
-  color: #fca5a5;
+  background: #fee2e2;
+  color: #b91c1c;
 }
 
 /* ===== Modals ===== */
@@ -150,34 +161,48 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(4px);
 }
 
 .modal form {
-  background: #0a2b4e;
+  background: #ffffff;
   border-radius: 1rem;
   width: 90%;
   max-width: 450px;
   padding: 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
   animation: modalSlideIn 0.2s ease;
 }
 
 .modal h3 {
-  color: white;
+  color: #0f172a;
   margin-bottom: 1rem;
   font-size: 1.3rem;
+  font-weight: 600;
 }
 
 .modal input,
 .modal select {
   width: 100%;
   margin-bottom: 1rem;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  padding: 0.7rem;
+  color: #0f172a;
+}
+
+.modal input:focus,
+.modal select:focus {
+  border-color: #3b82f6;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
 .modal button {
@@ -191,29 +216,29 @@
 }
 
 .modal button[type="submit"] {
-  background: linear-gradient(135deg, #1a4b7a, #0a2b4e);
+  background: #3b82f6;
   color: white;
 }
 
 .modal button[type="submit"]:hover {
-  background: linear-gradient(135deg, #0f3a5e, #071c33);
-  transform: translateY(-2px);
+  background: #2563eb;
+  transform: translateY(-1px);
 }
 
 .modal button[type="button"] {
-  background: rgba(255, 255, 255, 0.1);
-  color: #e2e8f0;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #f1f5f9;
+  color: #1e293b;
+  border: 1px solid #e2e8f0;
 }
 
 .modal button[type="button"]:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: #e2e8f0;
 }
 
 @keyframes modalSlideIn {
   from {
     opacity: 0;
-    transform: translateY(-20px);
+    transform: translateY(-15px);
   }
   to {
     opacity: 1;
@@ -228,25 +253,27 @@
   border-radius: 0.75rem;
   margin-bottom: 1rem;
   text-align: center;
+  font-weight: 500;
 }
 
 .error-message {
-  background: rgba(220, 38, 38, 0.15);
-  border: 1px solid #ef4444;
-  color: #fca5a5;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
 }
 
 .success-message {
-  background: rgba(34, 197, 94, 0.15);
-  border: 1px solid #22c55e;
-  color: #86efac;
+  background: #dcfce7;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
 }
 
 /* ===== Loading ===== */
 .users-container p {
-  color: white;
+  color: #475569;
   text-align: center;
   padding: 2rem;
+  font-style: italic;
 }
 
 /* ===== RTL Support ===== */

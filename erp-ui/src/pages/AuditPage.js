@@ -34,10 +34,8 @@ const translations = {
   EN: {
     title: "Audit Trail",
     subtitle: "Track all system activities",
-    export: "Export CSV",
-    refresh: "Refresh",
+    export: "Export",
     filters: "Filters",
-    apply: "Apply",
     clear: "Clear",
     all: "All",
     date: "Date",
@@ -50,12 +48,11 @@ const translations = {
     totalLogs: "Total Logs",
     oldestLog: "Oldest",
     newestLog: "Newest",
-    autoCleanup: "Cleanup",
-    resetAll: "Reset All",
+    autoCleanup: "Clean",
+    resetAll: "Reset ",
     deleteByDate: "Delete by date",
     startDate: "Start",
     endDate: "End",
-    delete: "Delete",
     success: "Success",
     error: "Error",
     page: "Page",
@@ -375,11 +372,7 @@ const AuditPage = ({ token, user }) => {
             </button>
           </div>
         </div>
-        <div className="audit-filters-footer">
-          <button className="audit-btn-apply" onClick={loadAudits}>
-            <FiSliders size={14} /> {t.apply}
-          </button>
-        </div>
+       
       </div>
 
       {/* Results */}

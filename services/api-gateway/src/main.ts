@@ -11,7 +11,6 @@ import { Request, Response } from 'express';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  // ✅ Servir les fichiers statiques (images uploadées)
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
     prefix: '/uploads/',
   });
