@@ -12,34 +12,34 @@ export class CustomersController {
   constructor(private readonly customersService: CustomersService) {}
 
   @Post()
-  @Roles('SUPER_ADMIN', 'USER')
+  @Roles('SUPER_ADMIN', 'PROD_USER')
   create(@Body() dto: CreateCustomerDto) {
     return this.customersService.create(dto);
   }
 
   @Get()
-    @Roles('SUPER_ADMIN', 'USER')
+    @Roles('SUPER_ADMIN', 'PROD_USER')
 
   findAll() {
     return this.customersService.findAll();
   }
 
   @Get(':id')
-    @Roles('SUPER_ADMIN', 'USER')
+    @Roles('SUPER_ADMIN', 'PROD_USER')
 
   findOne(@Param('id') id: string) {
     return this.customersService.findOne(id);
   }
 
   @Put(':id')
-    @Roles('SUPER_ADMIN', 'USER')
+    @Roles('SUPER_ADMIN', 'PROD_USER')
 
   update(@Param('id') id: string, @Body() dto: UpdateCustomerDto) {
     return this.customersService.update(id, dto);
   }
 
   @Delete(':id')
-    @Roles('SUPER_ADMIN', 'USER')
+    @Roles('SUPER_ADMIN', 'PROD_USER')
 
   remove(@Param('id') id: string) {
     return this.customersService.remove(id);

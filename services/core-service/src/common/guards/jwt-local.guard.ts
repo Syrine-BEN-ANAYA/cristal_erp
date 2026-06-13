@@ -4,8 +4,7 @@ import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class JwtLocalGuard implements CanActivate {
-  // ✅ Ajouter ADMIN pour tests gateway
-  private readonly allowedRoles = ['USER', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'];
+  private readonly allowedRoles = ['HR_USER', 'PROD_USER', 'ADMIN', 'SUPER_ADMIN'];
 
   canActivate(context: ExecutionContext): boolean {
     const req = context.switchToHttp().getRequest();
@@ -23,7 +22,7 @@ export class JwtLocalGuard implements CanActivate {
     try {
       const payload: any = jwt.verify(
         token,
-        process.env.JWT_SECRET || 'defaultsecret'
+        process.env.JWT_SECRET || 'devsecret'
       );
 
       // Vérifie que le rôle est autorisé

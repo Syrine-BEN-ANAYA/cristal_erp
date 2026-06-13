@@ -26,20 +26,21 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
-    // ⚠️ validation minimale du payload
-    if (!payload?.sub) {
+    if (!payload || typeof payload !== 'object') {
       throw new UnauthorizedException('Invalid token payload');
     }
-
-    const user = await this.userModel.findById(payload.sub);
-
+  
+    if (!payload.sub) {
+      throw new UnauthorizedException('Invalid token payload (missing sub)');
+    }
+  
+    const user = await this.userModel.findById(payload.sub).exec();
+  
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
-
-    // 🔒 suppression du password
+  
     const { password, ...result } = user.toObject();
-
     return result;
   }
 }

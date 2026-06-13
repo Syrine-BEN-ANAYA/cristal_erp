@@ -91,7 +91,9 @@ export class ProductsGateway {
   }) {
     try {
       await axios.post(`${this.AUTH_SERVICE_URL}/audits/remote-log`, data, {
-        headers: { 'x-internal-token': process.env.INTERNAL_API_KEY || 'internal-secret' }
+        headers: {
+          'x-internal-token': process.env.INTERNAL_API_KEY || 'internal-secret',
+        },
       });
     } catch (error) {
       Logger.error('Failed to send audit log', 'ProductsGateway');

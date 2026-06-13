@@ -20,6 +20,7 @@ import { ContractsGateway } from './routes/contracts.gateway';
 import { LeavesGateway } from './routes/leaves.gateway';
 import { PayrollGateway } from './routes/payroll.gateway';
 import { AiGateway } from './routes/ai.gateway';
+import { ReportGateway } from './routes/report.gateway';
 
 @Module({
   imports: [HttpModule],
@@ -40,6 +41,7 @@ import { AiGateway } from './routes/ai.gateway';
     LeavesGateway,
     PayrollGateway,
     AiGateway,
+    ReportGateway,
   ],
 
   providers: [

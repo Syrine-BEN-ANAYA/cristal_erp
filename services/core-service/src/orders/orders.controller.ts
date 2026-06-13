@@ -14,28 +14,28 @@ export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Post()
-    @Roles('SUPER_ADMIN', 'USER')
+    @Roles('SUPER_ADMIN', 'PROD_USER')
   
   async create(@Body() dto: CreateOrderDto) {
     return this.ordersService.createOrder(dto);
   }
 
   @Get('total')
-    @Roles('SUPER_ADMIN', 'USER')
+    @Roles('SUPER_ADMIN', 'PROD_USER')
 
   async getTotalOrderAmount() {
     return this.ordersService.getTotalOrderAmount();
   }
 
   @Get()
-    @Roles('SUPER_ADMIN', 'USER')
+    @Roles('SUPER_ADMIN', 'PROD_USER')
 
   async findAll() {
     return this.ordersService.findAll();
   }
 
   @Put(':id')
-    @Roles('SUPER_ADMIN', 'USER')
+    @Roles('SUPER_ADMIN', 'PROD_USER')
 
   async update(
     @Param('id') id: string,
@@ -45,14 +45,14 @@ export class OrdersController {
   }
 
   @Get(':id')
-    @Roles('SUPER_ADMIN', 'USER')
+    @Roles('SUPER_ADMIN', 'PROD_USER')
 
   async findOne(@Param('id') id: string) {
     return this.ordersService.findOne(id);
   }
 
   @Delete(':id')
-    @Roles('SUPER_ADMIN', 'USER')
+    @Roles('SUPER_ADMIN', 'PROD_USER')
 
   async remove(@Param('id') id: string) {
     return this.ordersService.removeOrder(id);
@@ -60,7 +60,7 @@ export class OrdersController {
 
   // --- Endpoint de facture PDF ---
   @Get(':id/invoice')
-    @Roles('SUPER_ADMIN', 'USER')
+    @Roles('SUPER_ADMIN', 'PROD_USER')
 
   async getInvoice(@Param('id') orderId: string, @Res() res: express.Response) {
     // Utiliser le service pour récupérer la commande (qui popule déjà customerId et items.productId)
