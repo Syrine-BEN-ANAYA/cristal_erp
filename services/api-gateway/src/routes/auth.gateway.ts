@@ -52,9 +52,8 @@ export class AuthGateway {
     Logger.log('AuthGateway chargé correctement', 'API-GATEWAY');
   }
 
-  // ---------------------------
   // LOGIN → forward vers auth-service
-  // ---------------------------
+
   @Post('login')
   async login(@Body() body: LoginDto): Promise<LoginResponse> {
     try {
@@ -72,9 +71,8 @@ export class AuthGateway {
     }
   }
 
-  // ---------------------------
   // REGISTER → nécessite JWT pour vérifier rôle
-  // ---------------------------
+
   @Post('register')
   async register(
     @Body() body: RegisterDto,

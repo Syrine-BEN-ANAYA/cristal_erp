@@ -1,4 +1,4 @@
-/* EmployeesPage.css - Thème Bleu Diamant / Or / Blanc */
+/* EmployeesPage.css - Thème Bleu Diamant / Or / Blanc - POLICES TRÈS AGRANDIES */
 
 :root {
   --diamond: #1a4b7a;
@@ -34,10 +34,11 @@
 .employees-page {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 28px;
   background: var(--gray-bg);
   min-height: 100vh;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 18px; /* base encore plus grande */
 }
 
 /* Page Header */
@@ -45,20 +46,20 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 32px;
-  padding: 24px 0;
+  margin-bottom: 36px;
+  padding: 28px 0;
   border-bottom: 2px solid var(--gray-border);
 }
 
 .header-content {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 24px;
 }
 
 .header-icon {
-  width: 56px;
-  height: 56px;
+  width: 72px; /* augmenté */
+  height: 72px;
   background: linear-gradient(135deg, var(--diamond), var(--diamond-dark));
   border-radius: var(--radius-lg);
   display: flex;
@@ -67,28 +68,33 @@
   color: var(--white);
   box-shadow: var(--shadow-md);
 }
+.header-icon svg {
+  width: 36px;
+  height: 36px;
+}
 
 .page-header h1 {
-  font-size: 28px;
+  font-size: 40px; /* était 34px */
   font-weight: 700;
   margin: 0;
   color: var(--text-dark);
 }
 
 .page-header p {
-  margin: 4px 0 0;
+  margin: 8px 0 0;
   color: var(--text-muted);
-  font-size: 14px;
+  font-size: 20px; /* était 18px */
 }
 
 /* Alerts */
 .alert {
-  padding: 16px 20px;
+  padding: 20px 28px;
   border-radius: var(--radius-md);
-  margin-bottom: 24px;
+  margin-bottom: 28px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
+  font-size: 18px; /* était 16px */
   animation: slideDown 0.3s ease;
 }
 
@@ -115,12 +121,12 @@
   }
 }
 
-/* Form Card */
+/* Form Card & Filters Card */
 .form-card, .filters-card {
   background: var(--white);
   border-radius: var(--radius-xl);
-  padding: 28px;
-  margin-bottom: 24px;
+  padding: 36px;
+  margin-bottom: 32px;
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--gray-border);
 }
@@ -129,32 +135,32 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
+  margin-bottom: 32px;
+  padding-bottom: 20px;
   border-bottom: 2px solid var(--gray-border);
 }
 
 .form-card-header h3 {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   margin: 0;
   color: var(--diamond);
-  font-size: 20px;
+  font-size: 28px; /* était 24px */
 }
 
 .cancel-edit {
   background: var(--gray-bg);
   border: none;
-  padding: 8px 16px;
+  padding: 12px 24px;
   border-radius: var(--radius-md);
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
   color: var(--text-muted);
   transition: all 0.3s ease;
-  font-size: 14px;
+  font-size: 18px; /* était 16px */
 }
 
 .cancel-edit:hover {
@@ -165,9 +171,9 @@
 /* Form Grid */
 .form-grid, .filters-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 24px;
-  margin-bottom: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 32px;
+  margin-bottom: 32px;
 }
 
 .input-group {
@@ -178,11 +184,11 @@
 .input-group label {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   color: var(--text-dark);
-  font-size: 14px;
+  font-size: 18px; /* était 16px */
 }
 
 .required {
@@ -191,10 +197,10 @@
 
 .form-input, .form-select {
   width: 100%;
-  padding: 12px 16px;
+  padding: 16px 20px;
   border: 1px solid var(--gray-border);
   border-radius: var(--radius-md);
-  font-size: 14px;
+  font-size: 18px; /* était 16px */
   transition: all 0.3s ease;
   background: var(--white);
 }
@@ -213,21 +219,22 @@
 .checkbox-group label {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
   cursor: pointer;
   margin-bottom: 0;
+  font-size: 18px; /* était 16px */
 }
 
 .checkbox-group input {
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   cursor: pointer;
 }
 
 /* Form Actions */
 .form-actions {
   display: flex;
-  gap: 16px;
+  gap: 20px;
   align-items: center;
   justify-content: flex-end;
 }
@@ -236,15 +243,15 @@
   background: linear-gradient(135deg, var(--diamond), var(--diamond-dark));
   color: var(--white);
   border: none;
-  padding: 12px 28px;
+  padding: 16px 36px;
   border-radius: var(--radius-md);
   font-weight: 600;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   transition: all 0.3s ease;
-  font-size: 14px;
+  font-size: 19px; /* était 17px */
 }
 
 .btn-submit:hover {
@@ -255,11 +262,12 @@
 .btn-cancel {
   background: var(--gray-bg);
   border: 1px solid var(--gray-border);
-  padding: 10px 20px;
+  padding: 14px 28px;
   border-radius: var(--radius-md);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
+  font-size: 18px; /* était 16px */
 }
 
 .btn-cancel:hover {
@@ -270,7 +278,7 @@
 .table-card {
   background: var(--white);
   border-radius: var(--radius-xl);
-  padding: 28px;
+  padding: 36px;
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--gray-border);
 }
@@ -279,23 +287,23 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
+  margin-bottom: 32px;
+  padding-bottom: 20px;
   border-bottom: 2px solid var(--gray-border);
 }
 
 .table-header h3 {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   margin: 0;
   color: var(--diamond);
-  font-size: 20px;
+  font-size: 28px; /* était 24px */
 }
 
 .table-stats {
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: 18px; /* était 16px */
   font-weight: 500;
 }
 
@@ -311,19 +319,19 @@
 
 .employees-table th {
   text-align: left;
-  padding: 14px 12px;
+  padding: 20px 18px;
   background: linear-gradient(135deg, var(--diamond), var(--diamond-dark));
   color: var(--white);
   font-weight: 600;
-  font-size: 13px;
+  font-size: 18px; /* était 16px */
   border-bottom: 2px solid var(--gold);
 }
 
 .employees-table td {
-  padding: 16px 12px;
+  padding: 22px 18px;
   border-bottom: 1px solid var(--gray-border);
   vertical-align: middle;
-  font-size: 14px;
+  font-size: 18px; /* était 16px */
   background: var(--white);
 }
 
@@ -339,12 +347,12 @@
 .employee-cell {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
 }
 
 .employee-avatar {
-  width: 40px;
-  height: 40px;
+  width: 54px; /* était 48px */
+  height: 54px;
   border-radius: var(--radius-md);
   background: linear-gradient(135deg, var(--diamond), var(--diamond-dark));
   display: flex;
@@ -352,20 +360,20 @@
   justify-content: center;
   color: var(--white);
   font-weight: 600;
-  font-size: 16px;
+  font-size: 24px; /* était 20px */
   box-shadow: var(--shadow-sm);
 }
 
 .employee-name {
   font-weight: 600;
   color: var(--text-dark);
-  font-size: 14px;
+  font-size: 19px; /* était 17px */
 }
 
 .employee-department {
-  font-size: 11px;
+  font-size: 16px; /* était 14px */
   color: var(--text-muted);
-  margin-top: 2px;
+  margin-top: 4px;
 }
 
 /* Email Link */
@@ -373,11 +381,12 @@
   color: var(--diamond);
   text-decoration: none;
   font-weight: 500;
-  padding: 4px 8px;
+  padding: 8px 14px;
   background: var(--diamond-light);
   border-radius: var(--radius-sm);
   display: inline-block;
   transition: all 0.3s ease;
+  font-size: 17px; /* était 15px */
 }
 
 .email-link:hover {
@@ -391,10 +400,10 @@
 .status-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
+  gap: 10px;
+  padding: 10px 18px;
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 17px; /* était 15px */
   font-weight: 600;
   width: fit-content;
 }
@@ -417,13 +426,13 @@
 /* Actions */
 .actions-cell {
   display: flex;
-  gap: 8px;
+  gap: 12px;
 }
 
 .action-icon {
   background: var(--white);
   border: 1px solid var(--gray-border);
-  padding: 8px;
+  padding: 12px;
   cursor: pointer;
   border-radius: var(--radius-sm);
   transition: all 0.3s ease;
@@ -492,8 +501,8 @@
 
 /* Spinner */
 .spinner-small {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   border: 2px solid var(--gold);
   border-top-color: transparent;
   border-radius: 50%;
@@ -508,28 +517,28 @@
 /* Loading State */
 .loading-state {
   text-align: center;
-  padding: 60px 20px;
+  padding: 70px 20px;
 }
 
 .spinner {
-  width: 50px;
-  height: 50px;
+  width: 70px;
+  height: 70px;
   border: 3px solid var(--gray-border);
   border-top-color: var(--diamond);
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin: 0 auto 20px;
+  margin: 0 auto 24px;
 }
 
 /* Empty State */
 .empty-state {
   text-align: center;
-  padding: 60px 20px;
+  padding: 70px 20px;
   color: var(--text-muted);
 }
 
 .empty-state svg {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   opacity: 0.5;
   color: var(--diamond);
 }
@@ -553,7 +562,7 @@
   background: var(--white);
   border-radius: var(--radius-xl);
   width: 90%;
-  max-width: 800px;
+  max-width: 820px;
   max-height: 80vh;
   overflow: hidden;
   display: flex;
@@ -581,7 +590,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
+  padding: 28px 32px;
   border-bottom: 2px solid var(--gray-border);
   background: linear-gradient(135deg, var(--diamond), var(--diamond-dark));
   color: var(--white);
@@ -589,13 +598,13 @@
 
 .modal-header h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: 26px; /* était 22px */
 }
 
 .modal-close {
   background: none;
   border: none;
-  font-size: 24px;
+  font-size: 32px;
   cursor: pointer;
   color: var(--white);
   transition: all 0.3s ease;
@@ -606,13 +615,14 @@
 }
 
 .modal-body {
-  padding: 24px;
+  padding: 32px;
   overflow-y: auto;
   flex: 1;
+  font-size: 18px; /* était 16px */
 }
 
 .modal-footer {
-  padding: 16px 24px;
+  padding: 20px 28px;
   border-top: 1px solid var(--gray-border);
   display: flex;
   justify-content: flex-end;
@@ -625,21 +635,24 @@
 
 .contracts-table-modal th {
   text-align: left;
-  padding: 12px;
+  padding: 16px 14px;
   background: var(--diamond-light);
   color: var(--diamond);
   font-weight: 600;
+  font-size: 18px; /* était 16px */
 }
 
 .contracts-table-modal td {
-  padding: 12px;
+  padding: 16px 14px;
   border-bottom: 1px solid var(--gray-border);
+  font-size: 17px; /* était 15px */
 }
 
 .no-data {
   text-align: center;
-  padding: 40px;
+  padding: 50px;
   color: var(--text-muted);
+  font-size: 18px; /* était 16px */
 }
 
 /* RTL Support */
@@ -676,19 +689,28 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .employees-page {
-    padding: 16px;
+    padding: 18px;
+    font-size: 16px;
   }
 
   .page-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 16px;
+    gap: 18px;
+  }
+
+  .page-header h1 {
+    font-size: 30px;
+  }
+
+  .page-header p {
+    font-size: 17px;
   }
 
   .form-grid,
   .filters-grid {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 20px;
   }
 
   .employees-table thead {
@@ -697,10 +719,10 @@
 
   .employees-table tr {
     display: block;
-    margin-bottom: 16px;
+    margin-bottom: 22px;
     border: 1px solid var(--gray-border);
     border-radius: var(--radius-lg);
-    padding: 12px;
+    padding: 18px;
     background: var(--white);
   }
 
@@ -709,22 +731,23 @@
     justify-content: space-between;
     align-items: center;
     border: none;
-    padding: 10px 8px;
+    padding: 14px 10px;
+    font-size: 16px;
   }
 
   .employees-table td::before {
     content: attr(data-label);
     font-weight: 700;
-    margin-right: 12px;
+    margin-right: 14px;
     color: var(--diamond);
-    font-size: 12px;
+    font-size: 15px;
     min-width: 100px;
   }
 
   .form-card,
   .filters-card,
   .table-card {
-    padding: 20px;
+    padding: 22px;
   }
 
   .form-actions {
@@ -734,6 +757,7 @@
   .btn-submit {
     width: 100%;
     justify-content: center;
+    font-size: 17px;
   }
 
   .actions-cell {
@@ -747,6 +771,62 @@
   .modal-content {
     width: 95%;
     margin: 16px;
+  }
+  
+  .form-card-header h3 {
+    font-size: 22px;
+  }
+  
+  .table-header h3 {
+    font-size: 22px;
+  }
+  
+  .employees-table td {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header h1 {
+    font-size: 26px;
+  }
+  
+  .header-icon {
+    width: 56px;
+    height: 56px;
+  }
+  
+  .header-icon svg {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .form-card-header h3 {
+    font-size: 20px;
+  }
+  
+  .table-header h3 {
+    font-size: 20px;
+  }
+  
+  .employees-table td {
+    font-size: 15px;
+    padding: 10px 8px;
+  }
+  
+  .employee-avatar {
+    width: 42px;
+    height: 42px;
+    font-size: 18px;
+  }
+  
+  .employee-name {
+    font-size: 16px;
+  }
+  
+  .btn-submit {
+    font-size: 16px;
+    padding: 14px 24px;
   }
 }
 

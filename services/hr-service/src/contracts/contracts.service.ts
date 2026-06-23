@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Contract, ContractDocument } from './schemas/contract.schema';
@@ -12,7 +16,9 @@ export class ContractsService {
   ) {}
 
   // CREATE - Créer un contrat
-  async create(createContractDto: CreateContractDto): Promise<ContractDocument> {
+  async create(
+    createContractDto: CreateContractDto,
+  ): Promise<ContractDocument> {
     // Vérifier que endDate est après startDate
     if (
       createContractDto.endDate &&

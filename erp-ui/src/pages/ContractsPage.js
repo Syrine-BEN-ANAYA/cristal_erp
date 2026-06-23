@@ -119,7 +119,7 @@ export default function ContractsPage() {
       };
 
       if (editingId) {
-        await contractsService.updateContract(editingId, payload);
+await contractsService.fullUpdateContract(editingId, payload);
         setSuccess("Contract updated successfully!");
       } else {
         await contractsService.createContract(payload);
@@ -131,7 +131,15 @@ export default function ContractsPage() {
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.message || "Error saving contract");
+      // --- CORRECTION : on s'assure que le message d'erreur est une chaîne ---
+      let errorMsg = "Error saving contract";
+      const apiMsg = err.response?.data?.message;
+      if (apiMsg) {
+        errorMsg = typeof apiMsg === 'string' ? apiMsg : "Error saving contract";
+      } else if (err.message && typeof err.message === 'string') {
+        errorMsg = err.message;
+      }
+      setError(errorMsg);
       setTimeout(() => setError(null), 3000);
     }
   };
@@ -165,36 +173,7 @@ export default function ContractsPage() {
     setError(null);
   };
 
-  const handleTerminate = async (id) => {
-    if (!window.confirm("Are you sure you want to terminate this contract?")) return;
-
-    try {
-      await contractsService.terminateContract(id);
-      setSuccess("Contract terminated successfully!");
-      loadContracts();
-      setTimeout(() => setSuccess(null), 3000);
-    } catch (err) {
-      console.error(err);
-      setError("Error terminating contract");
-      setTimeout(() => setError(null), 3000);
-    }
-  };
-
-  const handleRenew = async (id) => {
-    const newEndDate = prompt("Enter new end date (YYYY-MM-DD):");
-    if (newEndDate) {
-      try {
-        await contractsService.renewContract(id, newEndDate);
-        setSuccess("Contract renewed successfully!");
-        loadContracts();
-        setTimeout(() => setSuccess(null), 3000);
-      } catch (err) {
-        console.error(err);
-        setError("Error renewing contract");
-        setTimeout(() => setError(null), 3000);
-      }
-    }
-  };
+ 
 
   const getStatusClass = (status) => {
     switch (status?.toLowerCase()) {
@@ -369,7 +348,8 @@ export default function ContractsPage() {
         </div>
       </div>
 
-      {error && (
+      {/* Affichage conditionnel pour éviter de rendre un objet */}
+      {error && typeof error === 'string' && (
         <div className="alert error">
           <span>{error}</span>
         </div>
@@ -569,24 +549,6 @@ export default function ContractsPage() {
                       >
                         Edit
                       </button>
-                      {c.status === "active" && (
-                        <>
-                          <button
-                            className="action-icon terminate"
-                            onClick={() => handleTerminate(c._id)}
-                            title="Terminate"
-                          >
-                            Terminate
-                          </button>
-                          <button
-                            className="action-icon renew"
-                            onClick={() => handleRenew(c._id)}
-                            title="Renew"
-                          >
-                            Renew
-                          </button>
-                        </>
-                      )}
                       <button
                         className="action-icon download"
                         onClick={() => downloadSimplePDF(c)}

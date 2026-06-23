@@ -2,12 +2,11 @@ import {
   Controller,
   Get,
   Post,
-  Put,
+  Patch,
   Delete,
   Body,
   Param,
   Req,
-  Patch,
   HttpException,
   HttpStatus,
   Logger,
@@ -104,16 +103,11 @@ export class LeavesGateway {
     details?: any;
   }) {
     try {
-      await axios.post(
-        `${this.AUTH_SERVICE_URL}/audits/remote-log`,
-        data,
-        {
+      await axios.post(`${this.AUTH_SERVICE_URL}/audits/remote-log`, data, {
           headers: {
-            'x-internal-token':
-              process.env.INTERNAL_API_KEY || 'internal-secret',
-          },
+          'x-internal-token': process.env.INTERNAL_API_KEY || 'internal-secret',
         },
-      );
+      });
     } catch (error) {
       Logger.error('Failed to send audit log', 'LeavesGateway');
     }
@@ -123,7 +117,10 @@ export class LeavesGateway {
   // CREATE LEAVE
   // =========================
   @Post()
-  async create(@Body() dto: CreateLeaveDto, @Req() req: Request): Promise<Leave> {
+  async create(
+    @Body() dto: CreateLeaveDto,
+    @Req() req: Request,
+  ): Promise<Leave> {
     try {
       const response = await axios.post<Leave>(
         `${this.HR_SERVICE_URL}/leaves`,
@@ -225,43 +222,43 @@ export class LeavesGateway {
   // =========================
   // UPDATE LEAVE
   // =========================
-  @Put(':id')
+  @Patch(':id')
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateLeaveDto,
     @Req() req: Request,
   ): Promise<Leave> {
     try {
-      const response = await axios.put<Leave>(
+      const response = await axios.patch<Leave>(
         `${this.HR_SERVICE_URL}/leaves/${id}`,
         dto,
         { headers: this.getHeaders(req) },
       );
 
-      const user = (req as any).user;
-      if (user) {
-        await this.sendAuditLog({
-          userId: user._id?.toString() || user.id,
+    const user = (req as any).user;
+    if (user) {
+      await this.sendAuditLog({
+        userId: user._id?.toString() || user.id,
           username: user.username || user.email,
           action: 'UPDATE_LEAVE',
           entity: 'LEAVE',
           ip: req.ip || req.socket?.remoteAddress,
           endpoint: req.originalUrl || `/leaves/${id}`,
-          details: {
+        details: {
             leaveId: id,
             updatedFields: dto,
-          },
-        });
+        },
+      });
       }
 
-      return response.data;
-    } catch (error) {
-      this.handleAxiosError(
-        error as AxiosError,
-        'Erreur lors de la mise à jour du congé',
-      );
-    }
+    return response.data;
+  } catch (error) {
+    this.handleAxiosError(
+      error as AxiosError,
+      'Erreur lors de la mise à jour du congé',
+    );
   }
+}
 
   // =========================
   // UPDATE LEAVE STATUS

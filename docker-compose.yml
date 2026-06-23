@@ -30,11 +30,11 @@ services:
   auth-service:
     build: ./services/auth-service
     image: auth-service:latest
-    ports:
-      - "3201:3101"
+  
     restart: unless-stopped
     environment:
       MONGO_URI: mongodb://mongo:27017/auth-service
+      PORT:  "3101"
     depends_on:
       mongo:
         condition: service_healthy
@@ -47,11 +47,12 @@ services:
     restart: unless-stopped
     environment:
       MONGO_URI: mongodb://mongo:27017/core-service
+      PORT:  "3102"
+
     depends_on:
       mongo:
         condition: service_healthy
-    ports:
-      - "3202:3102"
+    
     networks:
       - erp-network
 
@@ -61,11 +62,10 @@ services:
     restart: unless-stopped
     environment:
       MONGO_URI: mongodb://mongo:27017/hr-service
+      PORT:  "3106"
     depends_on:
       mongo:
         condition: service_healthy
-    ports:
-      - "3206:3106"
     networks:
       - erp-network
 
@@ -87,7 +87,7 @@ services:
     image: erp-ui:latest
     restart: unless-stopped
     ports:
-      - "3205:3105"
+      - "3205:80"
     depends_on:
       - api-gateway
     networks:

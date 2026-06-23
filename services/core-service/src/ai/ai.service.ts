@@ -10,9 +10,7 @@ export class AiService {
     private readonly analyticsService: AnalyticsService,
   ) {}
 
-  // =====================================================
   // MAIN AI ENTRY
-  // =====================================================
   async ask(question: string) {
 
     const q = question.toLowerCase().trim();
@@ -34,9 +32,7 @@ export class AiService {
     };
   }
 
-  // =====================================================
   // DETECT INTENT + ENTITIES
-  // =====================================================
   private detectIntent(q: string): any {
 
     // ================= TOTAL REVENUE =================

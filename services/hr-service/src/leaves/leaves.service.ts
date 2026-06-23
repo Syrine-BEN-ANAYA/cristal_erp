@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Leave, LeaveDocument } from './schemas/leave.schema';
@@ -31,13 +35,20 @@ export class LeavesService {
 
   async findOne(id: string): Promise<LeaveDocument> {
     const objectId = this.validateId(id);
-    const leave = await this.leaveModel.findById(objectId).populate('employeeId').exec();
+    const leave = await this.leaveModel
+      .findById(objectId)
+      .populate('employeeId')
+      .exec();
     if (!leave) throw new NotFoundException('Leave not found');
     return leave;
   }
 
   async findByEmployee(employeeId: string): Promise<LeaveDocument[]> {
-    if (!employeeId || employeeId.trim() === '' || !Types.ObjectId.isValid(employeeId)) {
+    if (
+      !employeeId ||
+      employeeId.trim() === '' ||
+      !Types.ObjectId.isValid(employeeId)
+    ) {
       return [];
     }
     return this.leaveModel
@@ -46,10 +57,16 @@ export class LeavesService {
       .exec();
   }
 
-  async update(id: string, updateLeaveDto: UpdateLeaveDto): Promise<LeaveDocument> {
+  async update(
+    id: string,
+    updateLeaveDto: UpdateLeaveDto,
+  ): Promise<LeaveDocument> {
     const objectId = this.validateId(id);
     const leave = await this.leaveModel
-      .findByIdAndUpdate(objectId, updateLeaveDto, { new: true, runValidators: true })
+      .findByIdAndUpdate(objectId, updateLeaveDto, {
+        new: true,
+        runValidators: true,
+      })
       .populate('employeeId')
       .exec();
     if (!leave) throw new NotFoundException('Leave not found');

@@ -1,4 +1,4 @@
-/* AuditPage.css - Design cohérent */
+/* AuditPage.css - Design cohérent - POLICES AGRANDIES */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 * {
@@ -11,8 +11,8 @@
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background: #f5f7fa;
   min-height: 100vh;
-  padding: 24px;
-  font-size: 16px;
+  padding: 28px; /* augmenté */
+  font-size: 18px; /* était 16px */
 }
 
 /* ========== TOAST ========== */
@@ -23,12 +23,12 @@
   z-index: 1000;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 20px;
+  gap: 12px; /* augmenté */
+  padding: 14px 24px; /* augmenté */
   background: #10b981;
   color: white;
   border-radius: 10px;
-  font-size: 15px;
+  font-size: 17px; /* était 15px */
   font-weight: 500;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   animation: slideIn 0.3s ease;
@@ -54,20 +54,20 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 28px; /* augmenté */
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 18px; /* augmenté */
 }
 
 .audit-header-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 18px; /* augmenté */
 }
 
 .audit-header-icon {
-  width: 48px;
-  height: 48px;
+  width: 56px; /* était 48px */
+  height: 56px;
   background: linear-gradient(135deg, #1a4b7a, #0f2e4a);
   border-radius: 14px;
   display: flex;
@@ -75,34 +75,38 @@
   justify-content: center;
   color: #d4af37;
 }
+.audit-header-icon svg {
+  width: 28px;
+  height: 28px;
+}
 
 .audit-header-left h1 {
-  font-size: 22px;
+  font-size: 28px; /* était 22px */
   font-weight: 700;
   color: #1a2a3a;
   margin: 0;
 }
 
 .audit-header-left p {
-  font-size: 13px;
+  font-size: 16px; /* était 13px */
   color: #5a6a7a;
-  margin: 4px 0 0;
+  margin: 6px 0 0; /* augmenté */
 }
 
 .audit-header-right {
   display: flex;
-  gap: 10px;
+  gap: 12px; /* augmenté */
 }
 
 /* ========== BUTTONS ========== */
 .audit-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
+  gap: 8px; /* augmenté */
+  padding: 10px 20px; /* augmenté */
   border: none;
   border-radius: 8px;
-  font-size: 13px;
+  font-size: 16px; /* était 13px */
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
@@ -115,7 +119,7 @@
 
 .audit-btn-export:hover {
   background: #c49f20;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
 .audit-btn-refresh {
@@ -125,7 +129,7 @@
 
 .audit-btn-refresh:hover {
   background: #0f2e4a;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
 .audit-btn-lang {
@@ -142,11 +146,11 @@
   color: white;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
+  gap: 8px;
+  padding: 10px 16px;
   border: none;
   border-radius: 8px;
-  font-size: 12px;
+  font-size: 15px; /* était 12px */
   font-weight: 500;
   cursor: pointer;
 }
@@ -156,11 +160,11 @@
   color: white;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
+  gap: 8px;
+  padding: 10px 16px;
   border: none;
   border-radius: 8px;
-  font-size: 12px;
+  font-size: 15px; /* était 12px */
   font-weight: 500;
   cursor: pointer;
 }
@@ -170,11 +174,11 @@
   color: white;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
+  gap: 8px;
+  padding: 10px 16px;
   border: none;
   border-radius: 8px;
-  font-size: 12px;
+  font-size: 15px; /* était 12px */
   font-weight: 500;
   cursor: pointer;
 }
@@ -185,10 +189,10 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 20px;
+  padding: 10px 24px;
   border: none;
   border-radius: 8px;
-  font-size: 13px;
+  font-size: 16px; /* était 13px */
   font-weight: 500;
   cursor: pointer;
 }
@@ -197,7 +201,7 @@
 .audit-btn-danger:hover,
 .audit-btn-delete:hover,
 .audit-btn-apply:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
   filter: brightness(0.95);
 }
 
@@ -205,35 +209,35 @@
 .audit-stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: 18px; /* augmenté */
+  margin-bottom: 28px; /* augmenté */
 }
 
 .audit-stat-card {
   background: white;
-  padding: 16px;
+  padding: 20px; /* augmenté */
   border-radius: 14px;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px; /* augmenté */
   border: 1px solid #e2e8f0;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .audit-stat-card svg {
-  width: 36px;
-  height: 36px;
+  width: 40px; /* était 36px */
+  height: 40px;
   color: #1a4b7a;
 }
 
 .audit-stat-value {
-  font-size: 24px;
+  font-size: 28px; /* était 24px */
   font-weight: 700;
   color: #1a2a3a;
 }
 
 .audit-stat-label {
-  font-size: 12px;
+  font-size: 14px; /* était 12px */
   color: #5a6a7a;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -242,7 +246,7 @@
 
 .audit-stat-actions {
   display: flex;
-  gap: 8px;
+  gap: 10px; /* augmenté */
   justify-content: flex-end;
 }
 
@@ -250,7 +254,7 @@
 .audit-filters {
   background: white;
   border-radius: 14px;
-  margin-bottom: 20px;
+  margin-bottom: 24px; /* augmenté */
   border: 1px solid #e2e8f0;
   overflow: hidden;
 }
@@ -258,12 +262,12 @@
 .audit-filters-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
+  gap: 10px; /* augmenté */
+  padding: 14px 20px; /* augmenté */
   background: #f8fafc;
   border-bottom: 1px solid #e2e8f0;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 16px; /* était 13px */
   color: #334155;
 }
 
@@ -271,7 +275,7 @@
   margin-left: auto;
   background: none;
   border: none;
-  font-size: 12px;
+  font-size: 15px; /* était 12px */
   color: #94a3b8;
   cursor: pointer;
 }
@@ -281,42 +285,42 @@
 }
 
 .audit-filters-body {
-  padding: 16px;
+  padding: 20px; /* augmenté */
   display: flex;
-  gap: 16px;
+  gap: 18px; /* augmenté */
   flex-wrap: wrap;
   align-items: flex-end;
 }
 
 .audit-filters-body select {
   flex: 1;
-  min-width: 180px;
-  padding: 10px 12px;
+  min-width: 200px; /* augmenté */
+  padding: 12px 16px; /* augmenté */
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  font-size: 13px;
+  font-size: 16px; /* était 13px */
   background: white;
 }
 
 .audit-date-range {
   flex: 2;
   display: flex;
-  gap: 10px;
+  gap: 12px; /* augmenté */
   align-items: center;
   flex-wrap: wrap;
 }
 
 .audit-date-range input {
   flex: 1;
-  min-width: 130px;
-  padding: 10px 12px;
+  min-width: 150px; /* augmenté */
+  padding: 12px 16px; /* augmenté */
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  font-size: 13px;
+  font-size: 16px; /* était 13px */
 }
 
 .audit-filters-footer {
-  padding: 12px 16px;
+  padding: 14px 20px; /* augmenté */
   background: #f8fafc;
   border-top: 1px solid #e2e8f0;
   display: flex;
@@ -325,9 +329,9 @@
 
 /* ========== RESULTS ========== */
 .audit-results {
-  font-size: 12px;
+  font-size: 15px; /* était 12px */
   color: #64748b;
-  margin-bottom: 12px;
+  margin-bottom: 14px; /* augmenté */
 }
 
 /* ========== TABLE ========== */
@@ -346,10 +350,10 @@
 
 .audit-table th {
   text-align: left;
-  padding: 14px 16px;
+  padding: 16px 18px; /* augmenté */
   background: #f8fafc;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 16px; /* était 14px */
   color: #475569;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -357,9 +361,9 @@
 }
 
 .audit-table td {
-  padding: 14px 16px;
+  padding: 16px 18px; /* augmenté */
   border-bottom: 1px solid #e2e8f0;
-  font-size: 14px;
+  font-size: 16px; /* était 14px */
   color: #334155;
   vertical-align: middle;
 }
@@ -377,10 +381,11 @@
 .audit-date-day {
   font-weight: 600;
   color: #1a2a3a;
+  font-size: 16px; /* ajouté */
 }
 
 .audit-date-time {
-  font-size: 11px;
+  font-size: 14px; /* était 11px */
   color: #94a3b8;
   font-family: monospace;
 }
@@ -389,12 +394,12 @@
 .audit-user {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px; /* augmenté */
 }
 
 .audit-avatar {
-  width: 34px;
-  height: 34px;
+  width: 40px; /* était 34px */
+  height: 40px;
   background: linear-gradient(135deg, #1a4b7a, #0f2e4a);
   border-radius: 8px;
   display: flex;
@@ -402,17 +407,18 @@
   justify-content: center;
   color: #d4af37;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 17px; /* était 14px */
   flex-shrink: 0;
 }
 
 .audit-username {
   font-weight: 600;
   color: #1a2a3a;
+  font-size: 16px; /* ajouté */
 }
 
 .audit-userid {
-  font-size: 10px;
+  font-size: 13px; /* était 10px */
   color: #94a3b8;
   font-family: monospace;
 }
@@ -421,11 +427,11 @@
 .audit-action-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
+  gap: 8px;
+  padding: 6px 14px; /* augmenté */
   background: #f1f5f9;
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 15px; /* était 12px */
   font-weight: 500;
   color: #475569;
 }
@@ -433,9 +439,9 @@
 /* IP code */
 .audit-ip {
   font-family: monospace;
-  font-size: 12px;
+  font-size: 15px; /* était 12px */
   background: #f1f5f9;
-  padding: 4px 8px;
+  padding: 4px 10px; /* augmenté */
   border-radius: 6px;
   display: inline-block;
 }
@@ -446,14 +452,19 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
-  gap: 12px;
+  padding: 70px 20px; /* augmenté */
+  gap: 16px; /* augmenté */
   color: #94a3b8;
 }
 
+.audit-loading p,
+.audit-empty p {
+  font-size: 17px; /* ajouté */
+}
+
 .audit-spinner {
-  width: 32px;
-  height: 32px;
+  width: 40px; /* était 32px */
+  height: 40px;
   border: 2px solid #e2e8f0;
   border-top-color: #d4af37;
   border-radius: 50%;
@@ -469,16 +480,16 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 12px;
-  margin-top: 20px;
+  gap: 14px; /* augmenté */
+  margin-top: 24px; /* augmenté */
 }
 
 .audit-pagination button {
-  padding: 8px 16px;
+  padding: 10px 20px; /* augmenté */
   background: white;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  font-size: 13px;
+  font-size: 16px; /* était 13px */
   cursor: pointer;
   transition: all 0.2s;
   color: #334155;
@@ -496,25 +507,34 @@
 }
 
 .audit-pagination span {
-  font-size: 13px;
+  font-size: 16px; /* était 13px */
   color: #64748b;
 }
 
 /* ========== RESPONSIVE ========== */
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .audit-stats {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 768px) {
   .audit-page {
-    padding: 16px;
+    padding: 18px;
+    font-size: 16px;
   }
   
   .audit-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+  
+  .audit-header-left h1 {
+    font-size: 24px;
+  }
+  
+  .audit-header-left p {
+    font-size: 15px;
   }
   
   .audit-header-right {
@@ -524,10 +544,21 @@
   .audit-header-right button {
     flex: 1;
     justify-content: center;
+    font-size: 15px;
+    padding: 10px 14px;
   }
   
   .audit-stats {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  
+  .audit-stat-card {
+    padding: 16px;
+  }
+  
+  .audit-stat-value {
+    font-size: 24px;
   }
   
   .audit-stat-actions {
@@ -541,19 +572,23 @@
   
   .audit-filters-body {
     flex-direction: column;
+    padding: 16px;
   }
   
   .audit-filters-body select,
   .audit-date-range {
     width: 100%;
+    min-width: auto;
   }
   
   .audit-date-range {
     flex-direction: column;
+    gap: 10px;
   }
   
   .audit-date-range input {
     width: 100%;
+    min-width: auto;
   }
   
   .audit-date-range button {
@@ -561,19 +596,213 @@
     justify-content: center;
   }
   
+  .audit-filters-footer {
+    padding: 12px 16px;
+  }
+  
+  .audit-filters-footer button {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .audit-table-wrapper {
+    overflow-x: auto;
+  }
+  
+  .audit-table {
+    min-width: 600px;
+  }
+  
   .audit-table th,
   .audit-table td {
-    padding: 10px 12px;
+    padding: 12px 14px;
+    font-size: 15px;
   }
   
   .audit-user {
-    flex-direction: column;
-    text-align: center;
-    gap: 6px;
+    flex-direction: row;
+    text-align: left;
+    gap: 10px;
+  }
+  
+  .audit-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 15px;
   }
   
   .audit-action-badge {
     white-space: normal;
     word-break: break-word;
+    font-size: 14px;
+    padding: 4px 12px;
+  }
+  
+  .audit-pagination {
+    flex-wrap: wrap;
+  }
+  
+  .audit-pagination button {
+    padding: 8px 16px;
+    font-size: 15px;
+  }
+  
+  .audit-pagination span {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .audit-page {
+    padding: 12px;
+    font-size: 15px;
+  }
+  
+  .audit-header {
+    gap: 12px;
+  }
+  
+  .audit-header-left {
+    gap: 12px;
+  }
+  
+  .audit-header-icon {
+    width: 44px;
+    height: 44px;
+  }
+  
+  .audit-header-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+  
+  .audit-header-left h1 {
+    font-size: 20px;
+  }
+  
+  .audit-header-left p {
+    font-size: 14px;
+  }
+  
+  .audit-header-right button {
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+  
+  .audit-stats {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .audit-stat-card {
+    padding: 14px;
+  }
+  
+  .audit-stat-value {
+    font-size: 22px;
+  }
+  
+  .audit-stat-label {
+    font-size: 13px;
+  }
+  
+  .audit-filters-header {
+    font-size: 15px;
+    padding: 12px 16px;
+  }
+  
+  .audit-filters-body {
+    padding: 12px;
+    gap: 12px;
+  }
+  
+  .audit-filters-body select,
+  .audit-date-range input {
+    font-size: 15px;
+    padding: 10px 14px;
+  }
+  
+  .audit-table th,
+  .audit-table td {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+  
+  .audit-table th {
+    font-size: 14px;
+  }
+  
+  .audit-date-day {
+    font-size: 14px;
+  }
+  
+  .audit-date-time {
+    font-size: 12px;
+  }
+  
+  .audit-username {
+    font-size: 14px;
+  }
+  
+  .audit-userid {
+    font-size: 11px;
+  }
+  
+  .audit-action-badge {
+    font-size: 13px;
+    padding: 4px 10px;
+  }
+  
+  .audit-ip {
+    font-size: 13px;
+    padding: 3px 8px;
+  }
+  
+  .audit-btn {
+    font-size: 14px;
+    padding: 8px 14px;
+  }
+  
+  .audit-btn-apply {
+    font-size: 14px;
+    padding: 8px 16px;
+  }
+  
+  .audit-pagination button {
+    padding: 6px 14px;
+    font-size: 14px;
+  }
+  
+  .audit-pagination span {
+    font-size: 14px;
+  }
+}
+
+/* ========== PRINT STYLES ========== */
+@media print {
+  .audit-page {
+    padding: 0;
+    background: white;
+  }
+  
+  .audit-header-right,
+  .audit-filters,
+  .audit-stat-actions,
+  .audit-pagination {
+    display: none;
+  }
+  
+  .audit-table-wrapper {
+    border: 1px solid #e2e8f0;
+    box-shadow: none;
+  }
+  
+  .audit-table th {
+    background: #f1f5f9;
+  }
+  
+  .audit-stat-card {
+    border: 1px solid #e2e8f0;
+    box-shadow: none;
   }
 }

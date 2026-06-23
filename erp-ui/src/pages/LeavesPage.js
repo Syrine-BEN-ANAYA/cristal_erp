@@ -14,6 +14,7 @@ export default function LeavesPage() {
   const [editingId, setEditingId] = useState(null);
   const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0, rejected: 0 });
   const [filterStatus, setFilterStatus] = useState("all");
+  const [updatingStatus, setUpdatingStatus] = useState(null);
 
   const [form, setForm] = useState({
     employeeId: "",
@@ -31,8 +32,12 @@ export default function LeavesPage() {
       const formattedData = leavesService.formatLeaves(data);
       setLeaves(formattedData);
       
-      const statsData = await leavesService.getLeaveStatistics();
-      setStats(statsData);
+      // Calculer les statistiques localement
+      const total = formattedData.length;
+      const pending = formattedData.filter(l => l.status === 'pending').length;
+      const approved = formattedData.filter(l => l.status === 'approved').length;
+      const rejected = formattedData.filter(l => l.status === 'rejected').length;
+      setStats({ total, pending, approved, rejected });
     } catch (err) {
       console.error(err);
       setError(t.errorLoadingLeaves || "Error loading leaves");
@@ -122,17 +127,27 @@ export default function LeavesPage() {
     }
   };
 
-  // ================= UPDATE STATUS =================
+  // ================= UPDATE STATUS (using updateLeave instead of updateLeaveStatus) =================
   const handleStatusUpdate = async (id, status) => {
+    if (updatingStatus === id) return;
+
     try {
-      await leavesService.updateLeaveStatus(id, status);
+      setUpdatingStatus(id);
+      console.log(`🔄 Updating leave ${id} to status: ${status}`);
+      
+      // Utiliser updateLeave avec le champ status
+      await leavesService.updateLeave(id, { status });
+      console.log(`✅ Status updated to ${status}`);
+      
+      await loadLeaves();
       setSuccess(t.leaveStatusUpdated || `Leave ${status} successfully!`);
-      loadLeaves();
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      console.error(err);
-      setError(t.errorUpdatingStatus || "Error updating status");
+      console.error("❌ Error updating status:", err);
+      setError(err.message || t.errorUpdatingStatus || "Error updating status");
       setTimeout(() => setError(null), 3000);
+    } finally {
+      setUpdatingStatus(null);
     }
   };
 
@@ -149,35 +164,42 @@ export default function LeavesPage() {
     setError(null);
   };
 
-  // ================= FILTER LEAVES =================
-  const filteredLeaves = leaves.filter(leave => {
+  // ================= FILTER =================
+  const filteredLeaves = leaves.filter((leave) => {
     if (filterStatus === "all") return true;
     return leave.status === filterStatus;
   });
 
-  // ================= GET STATUS CLASS =================
+  // ================= HELPER FUNCTIONS =================
   const getStatusClass = (status) => {
     switch (status) {
-      case "approved": return "status-badge approved";
-      case "rejected": return "status-badge rejected";
-      default: return "status-badge pending";
+      case "approved":
+        return "status-badge approved";
+      case "rejected":
+        return "status-badge rejected";
+      default:
+        return "status-badge pending";
     }
   };
 
   const getStatusLabel = (status) => {
     switch (status) {
-      case "approved": return "Approved";
-      case "rejected": return "Rejected";
-      default: return "Pending";
+      case "approved":
+        return "Approved";
+      case "rejected":
+        return "Rejected";
+      default:
+        return "Pending";
     }
   };
 
+  // ================= RENDER =================
   return (
-    <div className="leaves-page" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="leaves-page" dir={isRTL ? "rtl" : "ltr"}>
       {/* Page Header */}
       <div className="page-header">
         <div className="header-content">
-          <div className="header-icon"></div>
+          <div className="header-icon">📋</div>
           <div>
             <h1>{t.leaves || "Leave Management"}</h1>
             <p>{t.manageLeaves || "Manage employee leave requests"}</p>
@@ -193,19 +215,19 @@ export default function LeavesPage() {
             <p>{t.totalLeaves || "Total Leaves"}</p>
           </div>
         </div>
-        <div className="stat-card">
+        <div className="stat-card pending">
           <div className="stat-info">
             <h3>{stats.pending || 0}</h3>
             <p>{t.pendingLeaves || "Pending"}</p>
           </div>
         </div>
-        <div className="stat-card">
+        <div className="stat-card approved">
           <div className="stat-info">
             <h3>{stats.approved || 0}</h3>
             <p>{t.approvedLeaves || "Approved"}</p>
           </div>
         </div>
-        <div className="stat-card">
+        <div className="stat-card rejected">
           <div className="stat-info">
             <h3>{stats.rejected || 0}</h3>
             <p>{t.rejectedLeaves || "Rejected"}</p>
@@ -213,24 +235,18 @@ export default function LeavesPage() {
         </div>
       </div>
 
-      {/* Error Alert */}
-      {error && (
-        <div className="alert error">
-          <span>{error}</span>
-        </div>
-      )}
-
-      {/* Success Alert */}
-      {success && (
-        <div className="alert success">
-          <span>{success}</span>
-        </div>
-      )}
+      {/* Alerts */}
+      {error && <div className="alert error">{error}</div>}
+      {success && <div className="alert success">{success}</div>}
 
       {/* Form Card */}
       <div className="form-card">
         <div className="form-card-header">
-          <h3>{editingId ? (t.editLeave || "Edit Leave Request") : (t.newLeave || "New Leave Request")}</h3>
+          <h3>
+            {editingId
+              ? t.editLeave || "Edit Leave Request"
+              : t.newLeave || "New Leave Request"}
+          </h3>
           {editingId && (
             <button className="cancel-edit" onClick={resetForm}>
               {t.cancel || "Cancel"}
@@ -241,7 +257,9 @@ export default function LeavesPage() {
         <form onSubmit={handleSubmit}>
           <div className="form-grid">
             <div className="input-group">
-              <label>{t.employee || "Employee"} <span className="required">*</span></label>
+              <label>
+                {t.employee || "Employee"} <span className="required">*</span>
+              </label>
               <select
                 name="employeeId"
                 value={form.employeeId}
@@ -259,7 +277,9 @@ export default function LeavesPage() {
             </div>
 
             <div className="input-group">
-              <label>{t.leaveType || "Leave Type"} <span className="required">*</span></label>
+              <label>
+                {t.leaveType || "Leave Type"} <span className="required">*</span>
+              </label>
               <select
                 name="type"
                 value={form.type}
@@ -276,7 +296,9 @@ export default function LeavesPage() {
             </div>
 
             <div className="input-group">
-              <label>{t.startDate || "Start Date"} <span className="required">*</span></label>
+              <label>
+                {t.startDate || "Start Date"} <span className="required">*</span>
+              </label>
               <input
                 type="date"
                 name="startDate"
@@ -288,7 +310,9 @@ export default function LeavesPage() {
             </div>
 
             <div className="input-group">
-              <label>{t.endDate || "End Date"} <span className="required">*</span></label>
+              <label>
+                {t.endDate || "End Date"} <span className="required">*</span>
+              </label>
               <input
                 type="date"
                 name="endDate"
@@ -305,16 +329,18 @@ export default function LeavesPage() {
                 name="reason"
                 value={form.reason}
                 onChange={handleChange}
-                placeholder={t.reasonPlaceholder || "Enter reason for leave (optional)"}
                 className="form-textarea"
                 rows="3"
+                placeholder={t.leaveReasonPlaceholder || "Provide a reason for the leave..."}
               />
             </div>
           </div>
 
           <div className="form-actions">
             <button type="submit" className="btn-submit">
-              {editingId ? (t.updateLeave || "Update Leave") : (t.createLeave || "Create Leave Request")}
+              {editingId
+                ? t.updateLeave || "Update Leave"
+                : t.createLeave || "Create Leave Request"}
             </button>
           </div>
         </form>
@@ -401,7 +427,8 @@ export default function LeavesPage() {
                     </td>
                     <td data-label={t.duration}>
                       <span className="duration-badge">
-                        {leave.duration} {leave.duration > 1 ? (t.days || "days") : (t.day || "day")}
+                        {leave.duration}{" "}
+                        {leave.duration > 1 ? t.days || "days" : t.day || "day"}
                       </span>
                     </td>
                     <td data-label={t.status}>
@@ -410,23 +437,15 @@ export default function LeavesPage() {
                       </span>
                     </td>
                     <td data-label={t.actions} className="actions-cell">
-                      {leave.status === 'pending' && (
-                        <>
-                          <button
-                            className="action-icon approve"
-                            onClick={() => handleStatusUpdate(leave._id, 'approved')}
-                            title={t.approve || "Approve"}
-                          >
-                            Approve
-                          </button>
-                          <button
-                            className="action-icon reject"
-                            onClick={() => handleStatusUpdate(leave._id, 'rejected')}
-                            title={t.reject || "Reject"}
-                          >
-                            Reject
-                          </button>
-                        </>
+                      {leave.status === "pending" && (
+                        <button
+                          className="action-icon approve"
+                          onClick={() => handleStatusUpdate(leave._id, "approved")}
+                          disabled={updatingStatus === leave._id}
+                          title={updatingStatus === leave._id ? "Updating..." : t.approve || "Approve"}
+                        >
+                          {updatingStatus === leave._id ? "⏳" : "Approve"}
+                        </button>
                       )}
                       <button
                         className="action-icon edit"

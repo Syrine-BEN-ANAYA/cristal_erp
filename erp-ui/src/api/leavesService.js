@@ -116,14 +116,15 @@ const leavesService = {
   },
 
   /**
-   * Mettre à jour un congé
+   * Mettre à jour un congé (utilise PATCH)
    * @param {string} id - ID du congé
    * @param {Object} leaveData - Données à mettre à jour
    * @returns {Promise<Object>} - Congé mis à jour
    */
   async updateLeave(id, leaveData) {
     try {
-      const response = await axios.put(
+      // ✅ Utilisation de PATCH au lieu de PUT pour correspondre au gateway
+      const response = await axios.patch(
         `${API_GATEWAY_URL}/leaves/${id}`,
         leaveData,
         { headers: getHeaders() }
@@ -321,16 +322,16 @@ const leavesService = {
    * @returns {Array} - Liste des types de congés
    */
   getLeaveTypes() {
-  return [
-  { value: 'annual', label: 'Annual Leave', color: '#10b981' },
-  { value: 'sick', label: 'Sick Leave',color: '#ef4444' },
-  { value: 'unpaid', label: 'Unpaid Leave', color: '#f59e0b' },
-  { value: 'maternity', label: 'Maternity Leave', color: '#ec489a' },
-  { value: 'paternity', label: 'Paternity Leave', color: '#3b82f6' },
-  { value: 'bereavement', label: 'Bereavement Leave', color: '#6b7280' },
-  { value: 'emergency', label: 'Emergency Leave', color: '#f97316' },
-  { value: 'training', label: 'Training Leave', color: '#8b5cf6' },
-];
+    return [
+      { value: 'annual', label: 'Annual Leave', color: '#10b981' },
+      { value: 'sick', label: 'Sick Leave', color: '#ef4444' },
+      { value: 'unpaid', label: 'Unpaid Leave', color: '#f59e0b' },
+      { value: 'maternity', label: 'Maternity Leave', color: '#ec489a' },
+      { value: 'paternity', label: 'Paternity Leave', color: '#3b82f6' },
+      { value: 'bereavement', label: 'Bereavement Leave', color: '#6b7280' },
+      { value: 'emergency', label: 'Emergency Leave', color: '#f97316' },
+      { value: 'training', label: 'Training Leave', color: '#8b5cf6' },
+    ];
   },
 
   /**

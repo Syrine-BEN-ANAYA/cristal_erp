@@ -11,7 +11,8 @@ import { AuditModule } from './audit/audit.module';
     ConfigModule.forRoot({ isGlobal: true }),
 
     MongooseModule.forRootAsync({
-      imports: [ConfigModule],
+      imports: [ConfigModule,
+],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
         const uri = config.get<string>('MONGO_URI');
@@ -24,7 +25,6 @@ import { AuditModule } from './audit/audit.module';
         };
       },
     }),
-
     AuthModule,
     UsersModule,
     AuditModule,

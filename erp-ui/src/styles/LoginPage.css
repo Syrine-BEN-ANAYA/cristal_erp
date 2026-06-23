@@ -9,6 +9,7 @@
   min-height: 100vh;
   background: linear-gradient(135deg, #0a2b4e 0%, #1a4b7a 100%);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px; /* base agrandie */
 }
 
 /* RTL Support */
@@ -22,7 +23,7 @@
 }
 
 .login-page.rtl .input-field {
-  padding: 0.8rem 2.8rem 0.8rem 1rem;
+  padding: 0.9rem 3rem 0.9rem 1rem;
 }
 
 .login-page.rtl .form-options {
@@ -46,7 +47,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  padding: 3rem;
   color: white;
   position: relative;
   overflow: hidden;
@@ -64,14 +65,14 @@
 }
 
 .brand-content {
-  max-width: 450px;
+  max-width: 500px;
   text-align: center;
   z-index: 1;
 }
 
-/* Titre anglais */
+/* Titre anglais - AGRANDI */
 .brand-title {
-  font-size: 2.5rem;
+  font-size: 3.2rem; /* était 2.5rem */
   font-weight: 300;
   letter-spacing: 1px;
   line-height: 1.2;
@@ -86,31 +87,31 @@
   margin: 0 0.3rem;
 }
 
-/* Titre arabe */
+/* Titre arabe - AGRANDI */
 .brand-title-ar {
-  font-size: 2.2rem;
+  font-size: 2.8rem; /* était 2.2rem */
   font-family: 'Amiri', 'Traditional Arabic', serif;
   color: #d4e6f1;
-  margin: 0.25rem 0 1rem;
+  margin: 0.25rem 0 1.2rem;
   line-height: 1.4;
   font-weight: 400;
 }
 
 /* Divider fin */
 .brand-divider {
-  width: 80px;
-  height: 1px;
+  width: 100px;
+  height: 2px;
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
-  margin: 1rem auto;
+  margin: 1.2rem auto;
 }
 
-/* Descriptif bilingue */
+/* Descriptif bilingue - AGRANDI */
 .brand-description {
-  font-size: 1rem;
+  font-size: 1.2rem; /* était 1rem */
   color: rgba(255,255,255,0.8);
   text-transform: uppercase;
   letter-spacing: 2px;
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
   word-spacing: 4px;
 }
 
@@ -118,12 +119,12 @@
 .brand-decoration {
   display: flex;
   justify-content: center;
-  gap: 1.5rem;
-  margin-top: 1.5rem;
+  gap: 2rem;
+  margin-top: 2rem;
 }
 
 .olive-branch {
-  font-size: 2.5rem;
+  font-size: 3rem; /* était 2.5rem */
   animation: float 4s ease-in-out infinite;
   display: inline-block;
   opacity: 0.9;
@@ -144,18 +145,19 @@
   align-items: center;
   justify-content: center;
   background: white;
-  padding: 2rem;
+  padding: 2.5rem;
   border-radius: 3rem 0 0 3rem;
   box-shadow: -10px 0 30px rgba(0,0,0,0.1);
 }
 
 .login-card {
   width: 100%;
-  max-width: 400px;
+  max-width: 440px;
 }
 
+/* Titre du formulaire - AGRANDI */
 .form-title {
-  font-size: 2rem;
+  font-size: 2.4rem; /* était 2rem */
   font-weight: 600;
   color: #1a2b3c;
   margin-bottom: 0.5rem;
@@ -163,21 +165,21 @@
 
 .form-subtitle {
   color: #5f6b7a;
-  margin-bottom: 2rem;
-  font-size: 1rem;
+  margin-bottom: 2.2rem;
+  font-size: 1.2rem; /* était 1rem */
 }
 
 /* Input groups */
 .input-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.8rem;
 }
 
 .input-label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.6rem;
   font-weight: 500;
   color: #2d3e50;
-  font-size: 0.9rem;
+  font-size: 1.05rem; /* était 0.9rem */
 }
 
 .input-wrapper {
@@ -188,18 +190,18 @@
 
 .input-icon {
   position: absolute;
-  left: 1rem;
+  left: 1.2rem;
   color: #8a9bb5;
-  font-size: 1.2rem;
+  font-size: 1.4rem; /* agrandi */
   pointer-events: none;
 }
 
 .input-field {
   width: 100%;
-  padding: 0.8rem 1rem 0.8rem 2.8rem;
+  padding: 0.9rem 1.2rem 0.9rem 3.2rem; /* augmenté */
   border: 1px solid #e1e8f0;
   border-radius: 0.75rem;
-  font-size: 1rem;
+  font-size: 1.1rem; /* était 1rem */
   transition: all 0.2s ease;
   background: #f9fcff;
 }
@@ -207,7 +209,6 @@
 .input-field:focus {
   outline: none;
   border-color: #1a4b7a;
-  box-shadow: 0 0 0 3px rgba(26,75,122,0.1);
   background: white;
 }
 
@@ -215,26 +216,27 @@
   color: #b0c0d0;
 }
 
-/* Form options (remember me & forgot) */
+/* Form options (remember me & forgot) - AGRANDI */
 .form-options {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
-  font-size: 0.9rem;
+  margin-bottom: 2.2rem;
+  font-size: 1rem; /* était 0.9rem */
 }
 
 .checkbox-label {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
   color: #4a5a6e;
   cursor: pointer;
+  font-size: 1rem;
 }
 
 .checkbox-label input[type="checkbox"] {
-  width: 1rem;
-  height: 1rem;
+  width: 1.1rem;
+  height: 1.1rem;
   accent-color: #1a4b7a;
 }
 
@@ -242,6 +244,7 @@
   color: #1a4b7a;
   text-decoration: none;
   font-weight: 500;
+  font-size: 1rem;
   transition: color 0.2s;
 }
 
@@ -250,15 +253,15 @@
   text-decoration: underline;
 }
 
-/* Login button */
+/* Login button - AGRANDI */
 .login-button {
   width: 100%;
-  padding: 0.9rem;
+  padding: 1rem; /* augmenté */
   background: #1a4b7a;
   color: white;
   border: none;
   border-radius: 0.75rem;
-  font-size: 1rem;
+  font-size: 1.1rem; /* était 1rem */
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s, transform 0.1s;
@@ -273,24 +276,24 @@
   transform: scale(0.98);
 }
 
-/* Error message */
+/* Error message - AGRANDI */
 .error-message {
-  margin-top: 1rem;
-  padding: 0.75rem;
+  margin-top: 1.2rem;
+  padding: 0.9rem;
   background: #fee2e2;
   border: 1px solid #fecaca;
   color: #991b1b;
   border-radius: 0.5rem;
-  font-size: 0.9rem;
+  font-size: 1rem; /* était 0.9rem */
   text-align: center;
 }
 
-/* Signup prompt */
+/* Signup prompt - AGRANDI */
 .signup-prompt {
-  margin-top: 2rem;
+  margin-top: 2.2rem;
   text-align: center;
   color: #5f6b7a;
-  font-size: 0.9rem;
+  font-size: 1rem; /* était 0.9rem */
 }
 
 .signup-prompt a {
@@ -303,19 +306,19 @@
   text-decoration: underline;
 }
 
-/* ===== Language Toggle Button ===== */
+/* ===== Language Toggle Button - AGRANDI ===== */
 .login-language-toggle {
   position: fixed;
   top: 20px;
   right: 20px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
+  gap: 10px;
+  padding: 10px 20px; /* augmenté */
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid #e2e8f0;
   border-radius: 40px;
-  font-size: 0.75rem;
+  font-size: 0.9rem; /* était 0.75rem */
   font-weight: 500;
   color: #1a4b7a;
   cursor: pointer;
@@ -348,7 +351,7 @@
 
   .login-form-container {
     border-radius: 0;
-    padding: 2rem 1rem;
+    padding: 2rem 1.5rem;
   }
 
   .login-card {
@@ -358,27 +361,57 @@
   .login-language-toggle {
     top: 10px;
     right: 10px;
-    padding: 6px 12px;
+    padding: 8px 16px;
   }
   
   .login-page.rtl .login-language-toggle {
     right: auto;
     left: 10px;
   }
-}
-
-@media (max-width: 480px) {
+  
   .brand-title {
-    font-size: 1.5rem;
+    font-size: 2.4rem;
     white-space: normal;
   }
   
   .brand-title-ar {
-    font-size: 1.3rem;
+    font-size: 2.2rem;
   }
   
   .form-title {
-    font-size: 1.5rem;
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .brand-title {
+    font-size: 1.8rem;
+    white-space: normal;
+  }
+  
+  .brand-title-ar {
+    font-size: 1.6rem;
+  }
+  
+  .form-title {
+    font-size: 1.8rem;
+  }
+  
+  .form-subtitle {
+    font-size: 1rem;
+  }
+  
+  .input-label {
+    font-size: 0.95rem;
+  }
+  
+  .input-field {
+    font-size: 1rem;
+    padding: 0.8rem 1rem 0.8rem 2.8rem;
+  }
+  
+  .login-button {
+    font-size: 1rem;
   }
 }
 
