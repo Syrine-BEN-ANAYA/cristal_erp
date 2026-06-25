@@ -12,7 +12,6 @@ interface FindAllOptions {
   entity?: string;
 }
 
-// ✅ Définir un type pour les logs avec timestamps
 interface AuditWithTimestamps extends Audit {
   createdAt: Date;
   updatedAt: Date;
@@ -24,7 +23,9 @@ export class AuditService {
     @InjectModel(Audit.name) private auditModel: Model<AuditDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
   ) {}
-
+/**
+ * Utilisé pour tracer les actions des utilisateurs
+ */
   async log(data: {
     userId: string;
     action: string;
@@ -89,7 +90,6 @@ export class AuditService {
     return this.auditModel.countDocuments();
   }
 
-  // ✅ CORRECTION FINALE: Utiliser as any pour contourner l'erreur TypeScript
   async getStorageStats(): Promise<{
     totalLogs: number;
     oldestLogDate: Date | null;
@@ -98,7 +98,6 @@ export class AuditService {
   }> {
     const totalLogs = await this.auditModel.countDocuments();
     
-    // ✅ Solution 1: Utiliser as any
     const oldestLog = await this.auditModel
       .findOne()
       .sort({ createdAt: 1 })

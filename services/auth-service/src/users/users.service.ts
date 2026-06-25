@@ -22,16 +22,12 @@ export class UsersService {
     private auditService: AuditService,
   ) {}
 
-  // ==========================================
-  // CREATE USER FROM EMPLOYEE (MAIN FLOW)
-  // ==========================================
+
   async createFromEmployee(employee: any, dto: CreateUserDto, requester: any) {
-    // Validation ID employee
     if (!employee._id?.match(/^[0-9a-fA-F]{24}$/)) {
       throw new BadRequestException('Invalid employee ID format');
     }
 
-    // Récupération employé via HR service
     const { data: fullEmployee } = await axios.get(
       `${process.env.HR_SERVICE_URL || 'http://localhost:3106'}/employees/${employee._id}`,
     );
@@ -54,7 +50,6 @@ export class UsersService {
       throw new BadRequestException('User already exists for this employee');
     }
 
-    // Vérification des droits du requester pour assigner le rôle
     const allowedRoles = this.getAllowedRolesForRequester(requester);
     if (!allowedRoles.includes(dto.role)) {
       throw new ForbiddenException(`You cannot assign role ${dto.role}`);
@@ -70,7 +65,6 @@ export class UsersService {
       employeeId: fullEmployee._id,
     }).save();
 
-    // Mise à jour du statut dans HR (best effort)
     try {
       await axios.put(
         `${process.env.HR_SERVICE_URL || 'http://localhost:3106'}/employees/${fullEmployee._id}`,
@@ -90,9 +84,6 @@ export class UsersService {
     return result;
   }
 
-  // ==========================================
-  // CREATE NORMAL USER
-  // ==========================================
   async create(dto: CreateUserDto, requester: any) {
     // Vérification des droits
     const allowedRoles = this.getAllowedRolesForRequester(requester);
@@ -137,9 +128,6 @@ export class UsersService {
     return result;
   }
 
-  // ==========================================
-  // FIND ALL USERS (filtrage selon rôle)
-  // ==========================================
   async findAll(requester: any) {
     if (requester.role === UserRole.SUPER_ADMIN) {
       return this.userModel.find().select('-password');
@@ -153,9 +141,7 @@ export class UsersService {
     throw new ForbiddenException('Non autorisé');
   }
 
-  // ==========================================
-  // FIND ONE USER
-  // ==========================================
+
   async findOne(id: string, requester: any) {
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
       throw new BadRequestException('Invalid user ID format');
@@ -169,9 +155,6 @@ export class UsersService {
     return user;
   }
 
-  // ==========================================
-  // UPDATE USER
-  // ==========================================
   async update(id: string, dto: UpdateUserDto, requester: any) {
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
       throw new BadRequestException('Invalid user ID format');
@@ -203,9 +186,7 @@ export class UsersService {
     return result;
   }
 
-  // ==========================================
-  // DELETE USER
-  // ==========================================
+
   async deleteUser(id: string, requester: any) {
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
       throw new BadRequestException('Invalid user ID format');
@@ -228,9 +209,7 @@ export class UsersService {
     return { message: 'Utilisateur supprimé avec succès' };
   }
 
-  // ==========================================
-  // CHANGE PASSWORD
-  // ==========================================
+
   async changePassword(id: string, dto: ChangePasswordDto, requester: any) {
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
       throw new BadRequestException('Invalid user ID format');
@@ -258,9 +237,6 @@ export class UsersService {
     return result;
   }
 
-  // ==========================================
-  // FORCE PASSWORD RESET
-  // ==========================================
   async forceChangePassword(userId: string) {
     if (!userId.match(/^[0-9a-fA-F]{24}$/)) {
       throw new BadRequestException('Invalid user ID format');

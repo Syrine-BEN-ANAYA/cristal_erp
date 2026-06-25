@@ -1,4 +1,3 @@
-// AdminPage.js - Version simplifiée avec Layout et Metrics uniquement
 import React, { useEffect, useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { getUsers } from '../api/authService';

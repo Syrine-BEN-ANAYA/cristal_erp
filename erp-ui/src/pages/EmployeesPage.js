@@ -6,7 +6,6 @@ import {
   FiUsers, 
   FiUserPlus, 
   FiEdit2, 
-  FiTrash2, 
   FiDownload,
   FiMail, 
   FiPhone, 
