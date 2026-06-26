@@ -1,0 +1,568 @@
+{
+  "name": "Cristal_ERP",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        }
+      },
+      "name": "Cron Daily",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        -704,
+        -304
+      ],
+      "id": "347588dc-6749-406b-9ee1-4037ad6945e6"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "checkLowStock",
+              "leftValue": "={{ $json.lowStockProducts && $json.lowStockProducts.length > 0 }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "equal"
+              },
+              "rightValue": true
+            },
+            {
+              "id": "3e1fd741-5912-479c-a699-69390e327d4d",
+              "leftValue": "={{ $json.lowStockCount }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "name": "Check Low Stock",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -336,
+        -304
+      ],
+      "id": "c9a4df65-5d38-4bd2-b7b7-8239e4d65a57"
+    },
+    {
+      "parameters": {
+        "fromEmail": "syrinebenanayacontact@gmail.com",
+        "toEmail": "syrinebenanayacontact@gmail.com",
+        "subject": "⚠️ Stock Alert ERP",
+        "html": "=={{\n`<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, viewport-fit=cover\">\n    <title>AL RUBAI · Stock Alert & Daily Report</title>\n    <link href=\"https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap\" rel=\"stylesheet\">\n    <link rel=\"stylesheet\" href=\"https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css\">\n    <style>\n        * { margin: 0; padding: 0; box-sizing: border-box; }\n\n        body {\n            background: linear-gradient(145deg, #eef2fa 0%, #e2e8f0 100%);\n            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;\n            padding: 2rem 1rem;\n            min-height: 100vh;\n        }\n\n        .report-container {\n            max-width: 1280px;\n            margin: 0 auto;\n            display: flex;\n            justify-content: center;\n        }\n\n        .glass-card {\n            background: rgba(255,255,255,0.98);\n            border-radius: 2rem;\n            box-shadow: 0 25px 45px -12px rgba(0,0,0,0.25), 0 4px 12px rgba(0,0,0,0.05);\n            overflow: hidden;\n            width: 100%;\n            border: 1px solid rgba(255,255,255,0.5);\n        }\n\n        /* ── HEADER ── */\n        .alert-header {\n            background: linear-gradient(135deg, #d92c2c 0%, #b91c1c 100%);\n            padding: 1.75rem 2rem;\n            position: relative;\n            overflow: hidden;\n        }\n\n        .alert-header::before {\n            content: \"⚠️\";\n            font-size: 12rem;\n            position: absolute;\n            right: -20px;\n            bottom: -40px;\n            opacity: 0.08;\n            pointer-events: none;\n        }\n\n        .header-content { position: relative; z-index: 2; }\n\n        .alert-header h1 {\n            font-size: 1.9rem;\n            font-weight: 800;\n            letter-spacing: -0.3px;\n            color: white;\n            margin: 0;\n            display: flex;\n            align-items: center;\n            gap: 12px;\n            flex-wrap: wrap;\n        }\n\n        .alert-header h1 i {\n            font-size: 2rem;\n            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));\n        }\n\n        .company-badge {\n            font-size: 0.9rem;\n            font-weight: 500;\n            background: rgba(255,255,255,0.2);\n            display: inline-block;\n            padding: 0.3rem 1rem;\n            border-radius: 60px;\n            margin-top: 12px;\n            color: #fff3e0;\n        }\n\n        .live-date {\n            font-size: 0.8rem;\n            margin-top: 12px;\n            opacity: 0.85;\n            display: flex;\n            align-items: center;\n            gap: 8px;\n            color: #ffe6e6;\n        }\n\n        /* ── BODY ── */\n        .dashboard-body { padding: 2rem; }\n\n        /* ── METRIC CARDS ── */\n        .metrics-grid {\n            display: flex;\n            flex-wrap: wrap;\n            gap: 1.5rem;\n            margin-bottom: 2.5rem;\n        }\n\n        .metric-card {\n            flex: 1;\n            min-width: 170px;\n            background: #ffffff;\n            border-radius: 1.5rem;\n            padding: 1.4rem 1.2rem;\n            box-shadow: 0 8px 20px -6px rgba(0,0,0,0.05);\n            border: 1px solid #edf2f7;\n            transition: transform 0.2s ease, box-shadow 0.2s;\n        }\n\n        .metric-card:hover {\n            transform: translateY(-4px);\n            box-shadow: 0 20px 28px -12px rgba(0,0,0,0.12);\n            border-color: #cbd5e1;\n        }\n\n        .metric-icon {\n            font-size: 2rem;\n            margin-bottom: 12px;\n            color: #334155;\n        }\n\n        .metric-label {\n            font-size: 0.85rem;\n            font-weight: 600;\n            text-transform: uppercase;\n            letter-spacing: 0.5px;\n            color: #4b5565;\n            margin-bottom: 8px;\n        }\n\n        .metric-value {\n            font-size: 2rem;\n            font-weight: 800;\n            color: #0f172a;\n            line-height: 1.2;\n        }\n\n        .metric-card.highlight-profit {\n            background: linear-gradient(145deg, #1e4a2f, #0f3b24);\n            border: none;\n            box-shadow: 0 12px 18px -8px rgba(30,74,47,0.4);\n        }\n\n        .metric-card.highlight-profit .metric-label,\n        .metric-card.highlight-profit .metric-value,\n        .metric-card.highlight-profit .metric-icon { color: white; }\n\n        .metric-card.highlight-profit .metric-icon { color: #d9f99d; }\n\n        .metric-card.highlight-alert {\n            background: linear-gradient(145deg, #7f1d1d, #b91c1c);\n            border: none;\n            box-shadow: 0 12px 18px -8px rgba(185,28,28,0.4);\n        }\n\n        .metric-card.highlight-alert .metric-label,\n        .metric-card.highlight-alert .metric-value,\n        .metric-card.highlight-alert .metric-icon { color: white; }\n\n        .metric-card.highlight-alert .metric-icon { color: #fca5a5; }\n\n        .sub-note {\n            font-size: 0.7rem;\n            margin-top: 8px;\n            opacity: 0.7;\n        }\n\n        /* ── SECTION HEADER ── */\n        .section-header {\n            display: flex;\n            justify-content: space-between;\n            align-items: baseline;\n            flex-wrap: wrap;\n            margin: 2rem 0 1.2rem 0;\n        }\n\n        .section-title {\n            font-size: 1.55rem;\n            font-weight: 700;\n            display: flex;\n            align-items: center;\n            gap: 10px;\n            color: #0a1c2f;\n        }\n\n        .badge-count {\n            background: #ff4d4f;\n            color: white;\n            font-size: 0.9rem;\n            font-weight: 700;\n            padding: 4px 12px;\n            border-radius: 60px;\n            box-shadow: 0 2px 6px rgba(185,28,28,0.3);\n            animation: gentlePulse 1.8s infinite alternate;\n        }\n\n        @keyframes gentlePulse {\n            0%   { opacity: 0.8; transform: scale(1); }\n            100% { opacity: 1;   transform: scale(1.05); }\n        }\n\n        /* ── TABLE ── */\n        .inventory-wrapper {\n            border-radius: 1.25rem;\n            overflow-x: auto;\n            background: white;\n            border: 1px solid #eef2f8;\n            box-shadow: 0 6px 14px rgba(0,0,0,0.02);\n        }\n\n        .stock-table {\n            width: 100%;\n            border-collapse: collapse;\n            font-size: 0.9rem;\n            min-width: 480px;\n        }\n\n        .stock-table th {\n            background: #0f2c44;\n            color: white;\n            font-weight: 600;\n            padding: 1rem 1.2rem;\n            font-size: 0.85rem;\n            letter-spacing: 0.3px;\n            text-align: left;\n        }\n\n        .stock-table td {\n            padding: 1rem 1.2rem;\n            border-bottom: 1px solid #ecf3fa;\n            vertical-align: middle;\n            color: #1e2a3e;\n            font-weight: 500;\n        }\n\n        .stock-table tr:last-child td { border-bottom: none; }\n        .stock-table tr:hover td { background-color: #fef9f0; transition: background 0.15s; }\n\n        .product-name {\n            font-weight: 700;\n            display: flex;\n            align-items: center;\n            gap: 10px;\n        }\n\n        .product-name i { color: #b45353; font-size: 1.1rem; }\n\n        .stock-critical {\n            color: #b91c1c;\n            font-weight: 800;\n            font-size: 1rem;\n            background: #fff0f0;\n            display: inline-block;\n            padding: 4px 12px;\n            border-radius: 40px;\n        }\n\n        .threshold-badge {\n            background: #fff7ed;\n            color: #9a3412;\n            font-weight: 700;\n            padding: 4px 12px;\n            border-radius: 40px;\n            font-size: 0.82rem;\n            display: inline-block;\n            border: 1px solid #fed7aa;\n        }\n\n        .status-low-badge {\n            background: #fee2e2;\n            color: #aa2e2e;\n            font-weight: 700;\n            padding: 6px 16px;\n            border-radius: 60px;\n            font-size: 0.75rem;\n            display: inline-flex;\n            align-items: center;\n            gap: 6px;\n            letter-spacing: 0.3px;\n            box-shadow: 0 1px 2px rgba(0,0,0,0.05);\n        }\n\n        /* ── ALERT FOOTER ── */\n        .alert-footer {\n            margin-top: 2rem;\n            background: #fff6e8;\n            border-left: 6px solid #ff4d4f;\n            border-radius: 1rem;\n            padding: 1rem 1.4rem;\n            display: flex;\n            align-items: center;\n            gap: 14px;\n            flex-wrap: wrap;\n        }\n\n        .alert-footer i { font-size: 1.6rem; color: #c2410c; }\n\n        .alert-footer p {\n            margin: 0;\n            font-weight: 500;\n            color: #7a2e0e;\n            flex: 1;\n        }\n\n        .divider {\n            height: 1px;\n            background: linear-gradient(90deg, transparent, #e2e8f0, transparent);\n            margin: 2rem 0;\n        }\n\n        .footer-note {\n            text-align: center;\n            font-size: 0.75rem;\n            color: #94a3b8;\n            padding-bottom: 1rem;\n        }\n\n        /* ── RESPONSIVE ── */\n        @media (max-width: 640px) {\n            .dashboard-body { padding: 1.2rem; }\n            .metric-value { font-size: 1.6rem; }\n            .section-title { font-size: 1.3rem; }\n            .alert-header h1 { font-size: 1.4rem; }\n        }\n    </style>\n</head>\n<body>\n<div class=\"report-container\">\n    <div class=\"glass-card\">\n\n        <!-- ═══ HEADER ═══ -->\n        <div class=\"alert-header\">\n            <div class=\"header-content\">\n                <h1>\n                    <i class=\"fas fa-exclamation-triangle\"></i>\n                    STOCK ALERT &amp; DAILY REPORT\n                </h1>\n                <div class=\"company-badge\">\n                    <i class=\"fas fa-building\"></i> AL RUBAI UNITED AL CRISTAL\n                </div>\n                <div class=\"live-date\">\n                    <i class=\"far fa-calendar-alt\"></i>\n                    ${new Date().toLocaleDateString('en-GB', { year:'numeric', month:'long', day:'numeric' })}\n                    &nbsp;&nbsp;\n                    <i class=\"far fa-clock\"></i>\n                    ${new Date().toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' })}\n                </div>\n            </div>\n        </div>\n\n        <!-- ═══ BODY ═══ -->\n        <div class=\"dashboard-body\">\n\n            <!-- KPI CARDS -->\n            <div class=\"metrics-grid\">\n                <div class=\"metric-card\">\n                    <div class=\"metric-icon\"><i class=\"fas fa-chart-line\"></i></div>\n                    <div class=\"metric-label\">Total Orders Profit</div>\n                    <div class=\"metric-value\">${$json.totalSales.toLocaleString('en-US', {minimumFractionDigits:2})} <span style=\"font-size:1.2rem;\">$</span></div>\n                    <div class=\"sub-note\"><i class=\"fas fa-arrow-up\"></i> Cumulative sales revenue</div>\n                </div>\n                <div class=\"metric-card\">\n                    <div class=\"metric-icon\"><i class=\"fas fa-shopping-cart\"></i></div>\n                    <div class=\"metric-label\">Total Purchases</div>\n                    <div class=\"metric-value\">${$json.totalPurchases.toLocaleString('en-US', {minimumFractionDigits:2})} <span style=\"font-size:1.2rem;\">$</span></div>\n                    <div class=\"sub-note\">No purchases recorded today</div>\n                </div>\n                <div class=\"metric-card highlight-profit\">\n                    <div class=\"metric-icon\"><i class=\"fas fa-coins\"></i></div>\n                    <div class=\"metric-label\">💰 Real Profit</div>\n                    <div class=\"metric-value\">${$json.profit.toLocaleString('en-US', {minimumFractionDigits:2})} <span style=\"font-size:1.2rem;\">$</span></div>\n                    <div class=\"sub-note\" style=\"color:white;\">Net after purchases · healthy margin</div>\n                </div>\n                <div class=\"metric-card highlight-alert\">\n                    <div class=\"metric-icon\"><i class=\"fas fa-boxes-stacked\"></i></div>\n                    <div class=\"metric-label\">⚠️ Low Stock Items</div>\n                    <div class=\"metric-value\">${$json.lowStockCount} <span style=\"font-size:1.2rem;\">items</span></div>\n                    <div class=\"sub-note\" style=\"color:white;\">Require immediate attention</div>\n                </div>\n            </div>\n\n            <div class=\"divider\"></div>\n\n            <!-- SECTION HEADER -->\n            <div class=\"section-header\">\n                <div class=\"section-title\">\n                    <i class=\"fas fa-box-open\" style=\"color:#e07c3c;\"></i>\n                    Critical Stock Items\n                    <span class=\"badge-count\">${$json.lowStockCount}</span>\n                </div>\n                <div style=\"font-size:0.8rem; background:#f1f5f9; padding:6px 14px; border-radius:40px; color:#334155;\">\n                    <i class=\"fas fa-truck-fast\"></i> Below minimum threshold\n                </div>\n            </div>\n\n            <!-- TABLE -->\n            <div class=\"inventory-wrapper\">\n                <table class=\"stock-table\">\n                    <thead>\n                        <tr>\n                            <th><i class=\"fas fa-cube\"></i>&nbsp; Product</th>\n                            <th><i class=\"fas fa-archive\"></i>&nbsp; Current Stock</th>\n                            <th><i class=\"fas fa-flag-checkered\"></i>&nbsp; Threshold</th>\n                            <th><i class=\"fas fa-bell\"></i>&nbsp; Status</th>\n                        </tr>\n                    </thead>\n                    <tbody>\n                        ${$json.lowStockProducts.map(p => `\n                        <tr>\n                            <td>\n                                <div class=\"product-name\">\n                                    <i class=\"fas fa-flask\"></i>\n                                    <strong>${p.name}</strong>\n                                </div>\n                            </td>\n                            <td>\n                                <span class=\"stock-critical\">\n                                    <i class=\"fas fa-exclamation-circle\"></i> ${p.stock} units\n                                </span>\n                            </td>\n                            <td>\n                                <span class=\"threshold-badge\">\n                                    ≤ ${p.threshold} units\n                                </span>\n                            </td>\n                            <td>\n                                <span class=\"status-low-badge\">\n                                    <i class=\"fas fa-bell\"></i> LOW STOCK\n                                </span>\n                            </td>\n                        </tr>\n                        `).join('')}\n                    </tbody>\n                </table>\n            </div>\n\n            <!-- ALERT FOOTER -->\n            <div class=\"alert-footer\">\n                <i class=\"fas fa-hourglass-half\"></i>\n                <p>\n                    <strong>⚠️ Immediate action required:</strong>\n                    ${$json.lowStockCount} product${$json.lowStockCount > 1 ? 's' : ''} \n                    (<strong>${$json.lowStockProducts.map(p => p.name).join(', ')}</strong>) \n                    ${$json.lowStockCount > 1 ? 'are' : 'is'} below the minimum stock threshold. \n                    Please place urgent purchase orders to avoid operational delays.\n                </p>\n            </div>\n\n            <!-- BOTTOM NOTE -->\n            <div class=\"divider\"></div>\n            <div class=\"footer-note\">\n                <i class=\"fas fa-robot\"></i>&nbsp;\n                This report was automatically generated by the ERP Stock Alert System &middot; AL RUBAI &middot;\n                ${new Date().getFullYear()}\n            </div>\n\n        </div>\n    </div>\n</div>\n</body>\n</html>`\n}}",
+        "options": {}
+      },
+      "name": "Send Alert Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        -128,
+        -496
+      ],
+      "id": "425ee73e-7229-456b-8cb6-126bd6a66152",
+      "credentials": {
+        "smtp": {
+          "id": "DGRiDm35a17sHR1r",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f683a020-91f0-4660-a59d-438f7fd979ff",
+              "leftValue": "={{ $json.orders.length }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        224,
+        -288
+      ],
+      "id": "580ed575-7639-4247-9c3d-829de4cb749a",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "orders",
+        "options": {
+          "includeBinary": false
+        }
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        432,
+        -304
+      ],
+      "id": "d61e19eb-8e79-43c9-9e7f-7e3cffad45bd",
+      "name": "Orders By ID",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:3102/orders/{{ $json.id }}/invoice",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OWJhYzZkOGJjOTQyZDFjNmQ4MzdhYjMiLCJyb2xlIjoiVVNFUiIsIm11c3RDaGFuZ2VQYXNzd29yZCI6ZmFsc2UsImlhdCI6MTc3NDE2OTE0OSwiZXhwIjoxNzc0MjU1NTQ5fQ.7b2LTziuUfWtfLhahHG2kdafZ5i_3QexZQYD0KtR_wA"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        576,
+        -304
+      ],
+      "id": "e453a336-13d6-4e46-a009-f2e6269fc91d",
+      "name": "Get invoices"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        736,
+        -288
+      ],
+      "id": "65054d94-dd4c-481f-a6d2-0a0c850b2085",
+      "name": "Merge",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:3102/report",
+        "options": {},
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OWJhYzZkOGJjOTQyZDFjNmQ4MzdhYjMiLCJyb2xlIjoiVVNFUiIsIm11c3RDaGFuZ2VQYXNzd29yZCI6ZmFsc2UsImlhdCI6MTc3NDE2OTE0OSwiZXhwIjoxNzc0MjU1NTQ5fQ.7b2LTziuUfWtfLhahHG2kdafZ5i_3QexZQYD0KtR_wA"
+            }
+          ]
+        }
+      },
+      "name": "Get ERP Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [
+        -512,
+        -304
+      ],
+      "id": "1ea1c5dd-f271-4bef-a258-ae161052a69b"
+    },
+    {
+      "parameters": {
+        "fromEmail": "syrinebenanayacontact@gmail.com",
+        "toEmail": "syrinebenanayacontact@gmail.com",
+        "subject": "Daily Report Email",
+        "html": "=<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, viewport-fit=cover\">\n    <title>AL RUBAI · Daily Report & Stock Alert</title>\n    <!-- Google Fonts + Font Awesome 6 -->\n    <link href=\"https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap\" rel=\"stylesheet\">\n    <link rel=\"stylesheet\" href=\"https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css\">\n    <style>\n        * {\n            margin: 0;\n            padding: 0;\n            box-sizing: border-box;\n        }\n\n        body {\n            background: linear-gradient(145deg, #eef2fa 0%, #e2e8f0 100%);\n            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;\n            padding: 2rem 1rem;\n            min-height: 100vh;\n        }\n\n        .report-container {\n            max-width: 1280px;\n            margin: 0 auto;\n            display: flex;\n            justify-content: center;\n        }\n\n        .glass-card {\n            background: rgba(255, 255, 255, 0.98);\n            border-radius: 2rem;\n            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.25), 0 4px 12px rgba(0, 0, 0, 0.05);\n            overflow: hidden;\n            width: 100%;\n            border: 1px solid rgba(255, 255, 255, 0.5);\n        }\n\n        /* Professional blue header */\n        .alert-header {\n            background: linear-gradient(135deg, #0b3b5f 0%, #1a4d7a 100%);\n            padding: 1.75rem 2rem;\n            position: relative;\n            overflow: hidden;\n        }\n\n        .alert-header::before {\n            content: \"📊\";\n            font-size: 12rem;\n            position: absolute;\n            right: -20px;\n            bottom: -40px;\n            opacity: 0.06;\n            pointer-events: none;\n        }\n\n        .header-content {\n            position: relative;\n            z-index: 2;\n        }\n\n        .alert-header h1 {\n            font-size: 1.9rem;\n            font-weight: 800;\n            color: white;\n            display: flex;\n            align-items: center;\n            gap: 12px;\n            flex-wrap: wrap;\n        }\n\n        .company-badge {\n            font-size: 0.9rem;\n            font-weight: 500;\n            background: rgba(255,255,255,0.2);\n            backdrop-filter: blur(4px);\n            display: inline-block;\n            padding: 0.3rem 1rem;\n            border-radius: 60px;\n            margin-top: 12px;\n            color: #f0f9ff;\n        }\n\n        .live-date {\n            font-size: 0.8rem;\n            margin-top: 12px;\n            opacity: 0.85;\n            display: flex;\n            align-items: center;\n            gap: 8px;\n            color: #e6f4ff;\n        }\n\n        .dashboard-body {\n            padding: 2rem;\n        }\n\n        /* metric cards */\n        .metrics-grid {\n            display: flex;\n            flex-wrap: wrap;\n            gap: 1.5rem;\n            margin-bottom: 2.5rem;\n        }\n\n        .metric-card {\n            flex: 1;\n            min-width: 170px;\n            background: #ffffff;\n            border-radius: 1.5rem;\n            padding: 1.4rem 1.2rem;\n            box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.05);\n            transition: transform 0.2s ease, box-shadow 0.2s;\n            border: 1px solid #edf2f7;\n        }\n\n        .metric-card:hover {\n            transform: translateY(-4px);\n            box-shadow: 0 20px 28px -12px rgba(0, 0, 0, 0.12);\n        }\n\n        .metric-icon {\n            font-size: 2rem;\n            margin-bottom: 12px;\n            color: #2c6e9e;\n        }\n\n        .metric-label {\n            font-size: 0.85rem;\n            font-weight: 600;\n            text-transform: uppercase;\n            letter-spacing: 0.5px;\n            color: #4b5565;\n            margin-bottom: 8px;\n        }\n\n        .metric-value {\n            font-size: 2rem;\n            font-weight: 800;\n            color: #0f172a;\n            line-height: 1.2;\n        }\n\n        .metric-card.highlight-profit {\n            background: linear-gradient(145deg, #1a4d7a, #0b3b5f);\n            border: none;\n        }\n\n        .metric-card.highlight-profit .metric-label,\n        .metric-card.highlight-profit .metric-value,\n        .metric-card.highlight-profit .metric-icon {\n            color: white;\n        }\n\n        /* low stock section (conditionally hidden) */\n        .lowstock-section {\n            transition: all 0.2s;\n        }\n\n        .section-header {\n            display: flex;\n            justify-content: space-between;\n            align-items: baseline;\n            flex-wrap: wrap;\n            margin: 2rem 0 1.2rem 0;\n        }\n\n        .section-title {\n            font-size: 1.55rem;\n            font-weight: 700;\n            display: flex;\n            align-items: center;\n            gap: 10px;\n            color: #0a1c2f;\n        }\n\n        .badge-count {\n            background: #e67e22;\n            color: white;\n            font-size: 0.9rem;\n            font-weight: 700;\n            padding: 4px 12px;\n            border-radius: 60px;\n        }\n\n        .inventory-wrapper {\n            border-radius: 1.25rem;\n            overflow-x: auto;\n            background: white;\n            border: 1px solid #eef2f8;\n            margin-bottom: 1rem;\n        }\n\n        .stock-table {\n            width: 100%;\n            border-collapse: collapse;\n            font-size: 0.9rem;\n            min-width: 480px;\n        }\n\n        .stock-table th {\n            background: #1a4d7a;\n            color: white;\n            font-weight: 600;\n            padding: 1rem 1.2rem;\n        }\n\n        .stock-table td {\n            padding: 1rem 1.2rem;\n            border-bottom: 1px solid #ecf3fa;\n            vertical-align: middle;\n        }\n\n        .stock-table tr:last-child td {\n            border-bottom: none;\n        }\n\n        .product-name {\n            font-weight: 700;\n            display: flex;\n            align-items: center;\n            gap: 10px;\n        }\n\n        .stock-critical {\n            color: #c0392b;\n            font-weight: 800;\n            background: #fee9e7;\n            display: inline-block;\n            padding: 4px 12px;\n            border-radius: 40px;\n        }\n\n        .status-low-badge {\n            background: #fee2e2;\n            color: #c0392b;\n            font-weight: 700;\n            padding: 6px 16px;\n            border-radius: 60px;\n            font-size: 0.75rem;\n            display: inline-flex;\n            align-items: center;\n            gap: 6px;\n            width: fit-content;\n        }\n\n        .btn-reorder {\n            background: #f0f7ff;\n            border: 1.5px solid #2c6e9e;\n            color: #1a4d7a;\n            padding: 6px 16px;\n            border-radius: 40px;\n            font-weight: 600;\n            font-size: 0.75rem;\n            cursor: pointer;\n            transition: all 0.2s;\n            display: inline-flex;\n            align-items: center;\n            gap: 6px;\n        }\n\n        .btn-reorder:hover {\n            background: #e1eff9;\n            border-color: #0b3b5f;\n        }\n\n        .alert-footer {\n            margin-top: 1rem;\n            background: #eef4fc;\n            border-left: 6px solid #e67e22;\n            border-radius: 1rem;\n            padding: 1rem 1.4rem;\n            display: flex;\n            align-items: center;\n            gap: 14px;\n            flex-wrap: wrap;\n        }\n\n        .urgent-link {\n            background: #e67e22;\n            color: white;\n            border: none;\n            padding: 8px 22px;\n            border-radius: 60px;\n            font-weight: 600;\n            cursor: pointer;\n            transition: background 0.2s;\n        }\n\n        .urgent-link:hover {\n            background: #d35400;\n        }\n\n        .no-alert-message {\n            background: #e8f0fe;\n            border-radius: 1rem;\n            padding: 1.2rem;\n            text-align: center;\n            color: #1a4d7a;\n            font-weight: 500;\n            margin-top: 1rem;\n        }\n\n        @media (max-width: 640px) {\n            .dashboard-body { padding: 1.2rem; }\n            .metric-value { font-size: 1.6rem; }\n            .section-title { font-size: 1.3rem; }\n        }\n    </style>\n</head>\n<body>\n<div class=\"report-container\">\n    <div class=\"glass-card\">\n        <div class=\"alert-header\">\n            <div class=\"header-content\">\n                <h1><i class=\"fas fa-chart-line\"></i> Daily Financial Report</h1>\n                <div class=\"company-badge\"><i class=\"fas fa-building\"></i> AL RUBAI UNITED AL CRISTAL</div>\n                <div class=\"live-date\">\n                    <i class=\"far fa-calendar-alt\"></i> <span id=\"liveDateTime\"></span>\n                    <i class=\"far fa-clock\"></i> <span id=\"liveTime\"></span>\n                </div>\n            </div>\n        </div>\n\n        <div class=\"dashboard-body\">\n            <!-- Financial KPIs (always shown) -->\n            <div class=\"metrics-grid\">\n                <div class=\"metric-card\">\n                    <div class=\"metric-icon\"><i class=\"fas fa-chart-line\"></i></div>\n                    <div class=\"metric-label\">TOTAL ORDERS PROFIT</div>\n                    <div class=\"metric-value\">2,258.60 $</div>\n                </div>\n                <div class=\"metric-card\">\n                    <div class=\"metric-icon\"><i class=\"fas fa-shopping-cart\"></i></div>\n                    <div class=\"metric-label\">TOTAL PURCHASES AMOUNT</div>\n                    <div class=\"metric-value\">0.00 $</div>\n                </div>\n                <div class=\"metric-card highlight-profit\">\n                    <div class=\"metric-icon\"><i class=\"fas fa-coins\"></i></div>\n                    <div class=\"metric-label\">💰 REAL PROFIT</div>\n                    <div class=\"metric-value\">2,258.60 $</div>\n                </div>\n            </div>\n\n            <!-- Dynamic Low Stock Section (visible only if there are products below threshold) -->\n            <div id=\"lowStockContainer\" class=\"lowstock-section\" style=\"display: none;\">\n                <div class=\"section-header\">\n                    <div class=\"section-title\">\n                        <i class=\"fas fa-box-open\" style=\"color:#e67e22;\"></i> \n                        Low Stock Alert\n                        <span id=\"lowStockCount\" class=\"badge-count\">0</span>\n                    </div>\n                    <div style=\"font-size:0.8rem; background:#f1f5f9; padding:6px 14px; border-radius:40px;\">\n                        <i class=\"fas fa-truck-fast\"></i> Threshold ≤ 15 units\n                    </div>\n                </div>\n                <div class=\"inventory-wrapper\">\n                    <table class=\"stock-table\" id=\"lowStockTable\">\n                        <thead>\n                            <tr><th>Product</th><th>Current Stock</th><th>Status</th><th>Action</th></tr>\n                        </thead>\n                        <tbody id=\"lowStockTableBody\"></tbody>\n                    </table>\n                </div>\n                <div id=\"alertFooter\" class=\"alert-footer\">\n                    <i class=\"fas fa-hourglass-half\"></i>\n                    <p id=\"alertMessage\"><strong>⚠️ Immediate action required:</strong> Please reorder the low‑stock items above.</p>\n                    <button id=\"bulkReorderBtn\" class=\"urgent-link\"><i class=\"fas fa-paper-plane\"></i> Order now</button>\n                </div>\n            </div>\n\n            <!-- Placeholder shown when no low stock exists -->\n            <div id=\"noAlertPlaceholder\" class=\"no-alert-message\" style=\"display: none;\">\n                <i class=\"fas fa-check-circle\" style=\"font-size: 1.5rem;\"></i> \n                ✅ All products are above the threshold. No stock alert today.\n            </div>\n        </div>\n    </div>\n</div>\n\n<script>\n    // ------------------------------\n    // PRODUCT DATA (simulate your inventory)\n    // Change this array to test \"no alert\" scenario\n    // ------------------------------\n    const products = [\n        { name: \"Oil test\", stock: 10, threshold: 15 }\n        // Add more products: { name: \"Hydraulic Fluid\", stock: 45, threshold: 15 }\n    ];\n\n    const THRESHOLD = 15;  // low-stock threshold\n\n    // Helper: filter low stock products\n    function getLowStockItems() {\n        return products.filter(p => p.stock <= THRESHOLD);\n    }\n\n    // Render low stock table and toggle visibility\n    function updateAlertSection() {\n        const lowItems = getLowStockItems();\n        const container = document.getElementById('lowStockContainer');\n        const placeholder = document.getElementById('noAlertPlaceholder');\n        const countSpan = document.getElementById('lowStockCount');\n        const tableBody = document.getElementById('lowStockTableBody');\n\n        if (lowItems.length === 0) {\n            // No alert: hide alert section, show placeholder\n            if (container) container.style.display = 'none';\n            if (placeholder) placeholder.style.display = 'block';\n            return;\n        }\n\n        // Show alert section, hide placeholder\n        if (container) container.style.display = 'block';\n        if (placeholder) placeholder.style.display = 'none';\n\n        // Update badge count\n        if (countSpan) countSpan.innerText = lowItems.length;\n\n        // Build table rows\n        if (tableBody) {\n            tableBody.innerHTML = '';\n            lowItems.forEach(item => {\n                const row = document.createElement('tr');\n                row.innerHTML = `\n                    <td class=\"product-name\"><i class=\"fas fa-cube\"></i> <strong>${escapeHtml(item.name)}</strong></td>\n                    <td><span class=\"stock-critical\"><i class=\"fas fa-exclamation-circle\"></i> ${item.stock} units</span></td>\n                    <td><span class=\"status-low-badge\"><i class=\"fas fa-bell\"></i> LOW STOCK</span></td>\n                    <td><button class=\"btn-reorder\" data-product=\"${escapeHtml(item.name)}\" data-stock=\"${item.stock}\"><i class=\"fas fa-sync-alt\"></i> Reorder now</button></td>\n                `;\n                tableBody.appendChild(row);\n            });\n\n            // Attach event listeners to new buttons\n            attachReorderEvents();\n        }\n\n        // Update footer message with product list\n        const alertMsg = document.getElementById('alertMessage');\n        if (alertMsg && lowItems.length) {\n            const productNames = lowItems.map(i => `\"${i.name}\"`).join(', ');\n            alertMsg.innerHTML = `<strong>⚠️ Immediate action required:</strong> ${productNames} ${lowItems.length === 1 ? 'is' : 'are'} critically low (≤ ${THRESHOLD} units). Please reorder now.`;\n        }\n    }\n\n    // Simple XSS protection\n    function escapeHtml(str) {\n        return str.replace(/[&<>]/g, function(m) {\n            if (m === '&') return '&amp;';\n            if (m === '<') return '&lt;';\n            if (m === '>') return '&gt;';\n            return m;\n        });\n    }\n\n    // Toast feedback for reorder actions\n    function showReorderFeedback(productName) {\n        const toast = document.createElement('div');\n        toast.innerText = `📦 Reorder request for ${productName} has been sent to procurement.`;\n        toast.style.position = 'fixed';\n        toast.style.bottom = '20px';\n        toast.style.left = '50%';\n        toast.style.transform = 'translateX(-50%)';\n        toast.style.backgroundColor = '#1a4d7a';\n        toast.style.color = 'white';\n        toast.style.padding = '12px 24px';\n        toast.style.borderRadius = '60px';\n        toast.style.fontWeight = '500';\n        toast.style.zIndex = '1000';\n        toast.style.boxShadow = '0 10px 20px rgba(0,0,0,0.2)';\n        toast.style.fontFamily = \"'Inter', sans-serif\";\n        document.body.appendChild(toast);\n        setTimeout(() => {\n            toast.style.opacity = '0';\n            toast.style.transition = 'opacity 0.3s';\n            setTimeout(() => toast.remove(), 400);\n        }, 2600);\n    }\n\n    function attachReorderEvents() {\n        const btns = document.querySelectorAll('.btn-reorder');\n        btns.forEach(btn => {\n            btn.removeEventListener('click', handleReorderClick);\n            btn.addEventListener('click', handleReorderClick);\n        });\n    }\n\n    function handleReorderClick(e) {\n        e.preventDefault();\n        const product = e.currentTarget.getAttribute('data-product') || 'product';\n        showReorderFeedback(product);\n        const originalHtml = e.currentTarget.innerHTML;\n        e.currentTarget.innerHTML = '<i class=\"fas fa-check\"></i> Requested';\n        e.currentTarget.disabled = true;\n        e.currentTarget.style.opacity = '0.6';\n        setTimeout(() => {\n            e.currentTarget.innerHTML = originalHtml;\n            e.currentTarget.disabled = false;\n            e.currentTarget.style.opacity = '1';\n        }, 2000);\n    }\n\n    // Bulk order button\n    const bulkBtn = document.getElementById('bulkReorderBtn');\n    if (bulkBtn) {\n        bulkBtn.addEventListener('click', () => {\n            const lowItems = getLowStockItems();\n            if (lowItems.length) {\n                const names = lowItems.map(i => i.name).join(', ');\n                showReorderFeedback(names);\n            } else {\n                showReorderFeedback('all low stock items');\n            }\n        });\n    }\n\n    // Update date/time\n    function updateDateTime() {\n        const now = new Date();\n        const dateStr = now.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });\n        const timeStr = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });\n        const dateSpan = document.getElementById('liveDateTime');\n        const timeSpan = document.getElementById('liveTime');\n        if (dateSpan) dateSpan.innerText = dateStr;\n        if (timeSpan) timeSpan.innerText = timeStr;\n    }\n    updateDateTime();\n    setInterval(updateDateTime, 1000);\n\n    // Initial render\n    updateAlertSection();\n</script>\n</body>\n</html>",
+        "options": {}
+      },
+      "name": "Daily Report Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        -288
+      ],
+      "id": "69208b39-1554-495d-ac2b-0242b4facdd4",
+      "credentials": {
+        "smtp": {
+          "id": "DGRiDm35a17sHR1r",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:3102/report",
+        "options": {},
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OWJhYzZkOGJjOTQyZDFjNmQ4MzdhYjMiLCJyb2xlIjoiVVNFUiIsIm11c3RDaGFuZ2VQYXNzd29yZCI6ZmFsc2UsImlhdCI6MTc3NDE2OTE0OSwiZXhwIjoxNzc0MjU1NTQ5fQ.7b2LTziuUfWtfLhahHG2kdafZ5i_3QexZQYD0KtR_wA"
+            }
+          ]
+        }
+      },
+      "name": "Get ERP Report1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [
+        64,
+        -288
+      ],
+      "id": "9226a54c-20d4-4ffe-8376-1262d050d273"
+    },
+    {
+      "parameters": {
+        "fromEmail": "syrinebenanayacontact@gmail.com",
+        "toEmail": "syrinebenanayacontact@gmail.com",
+        "subject": "invoices",
+        "html": "=<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n  <title>New Invoice Notification | AL RUBAI UNITED AL CRISTAL</title>\n  <style>\n    /* RESET & GLOBAL STYLES (email-safe) */\n    body, table, td, p, a, div, span {\n      margin: 0;\n      padding: 0;\n      border: 0;\n      font-family: 'Arial', 'Helvetica Neue', Helvetica, sans-serif;\n      font-size: 16px;\n      line-height: 1.5;\n      color: #2c3e4f;\n    }\n    body {\n      background-color: #eef2f5;\n      margin: 0;\n      padding: 20px 0;\n    }\n    /* main container responsive */\n    .email-container {\n      max-width: 600px;\n      width: 100%;\n      margin: 0 auto;\n      background-color: #ffffff;\n      border-radius: 20px;\n      overflow: hidden;\n      box-shadow: 0 8px 20px rgba(0,0,0,0.05);\n      border: 1px solid #e0e7ed;\n    }\n    /* header style */\n    .header {\n      background: linear-gradient(135deg, #003366 0%, #004c8c 100%);\n      padding: 28px 20px;\n      text-align: center;\n      border-bottom: 4px solid #ffb347;\n    }\n    .header h1 {\n      margin: 0;\n      font-size: 26px;\n      font-weight: 700;\n      letter-spacing: 1px;\n      color: #ffffff;\n      text-shadow: 0 1px 2px rgba(0,0,0,0.1);\n    }\n    .header p {\n      font-size: 14px;\n      color: rgba(255,255,255,0.85);\n      margin-top: 8px;\n      margin-bottom: 0;\n    }\n    /* content wrapper */\n    .content {\n      padding: 30px 28px 24px;\n      background: #ffffff;\n    }\n    /* greeting */\n    .greeting {\n      margin-bottom: 24px;\n    }\n    .greeting h2 {\n      font-size: 20px;\n      font-weight: 600;\n      color: #1e4668;\n      margin-bottom: 8px;\n    }\n    .greeting p {\n      color: #4a627a;\n      margin-bottom: 6px;\n    }\n    .badge {\n      display: inline-block;\n      background: #eef2fc;\n      color: #004c8c;\n      font-size: 13px;\n      font-weight: 600;\n      padding: 4px 12px;\n      border-radius: 30px;\n      margin-top: 8px;\n    }\n    /* attachment & note */\n    .attachment-note {\n      background: #fef8e7;\n      border-left: 4px solid #ffb347;\n      padding: 14px 18px;\n      border-radius: 12px;\n      margin: 24px 0 28px;\n      display: flex;\n      align-items: center;\n      gap: 12px;\n      flex-wrap: wrap;\n    }\n    .attachment-icon {\n      font-size: 28px;\n    }\n    .attachment-text {\n      flex: 1;\n    }\n    .attachment-text p {\n      margin: 0;\n      font-size: 14px;\n      color: #7a5c2c;\n      font-weight: 500;\n    }\n    .attachment-text strong {\n      color: #a5641a;\n    }\n    /* support note removed - no extra contact section */\n    /* additional spacing */\n    .simple-message {\n      margin-top: 20px;\n      text-align: center;\n      font-size: 13px;\n      color: #8ba0b5;\n    }\n    /* footer */\n    .footer {\n      background-color: #f8fafc;\n      padding: 20px 28px;\n      text-align: center;\n      border-top: 1px solid #e6edf4;\n      font-size: 12px;\n      color: #6c8eae;\n    }\n    .footer p {\n      margin: 6px 0;\n      font-size: 12px;\n    }\n    .footer a {\n      color: #004c8c;\n      text-decoration: none;\n    }\n    hr {\n      border: none;\n      border-top: 1px solid #e0e8f0;\n      margin: 12px 0;\n    }\n    @media only screen and (max-width: 550px) {\n      .content {\n        padding: 22px 18px;\n      }\n      .header h1 {\n        font-size: 22px;\n      }\n    }\n  </style>\n</head>\n<body style=\"background-color: #eef2f5; margin: 0; padding: 20px 0; font-family: Arial, Helvetica, sans-serif;\">\n  <!-- MAIN EMAIL CONTAINER (CENTERED, RESPONSIVE) -->\n  <div class=\"email-container\" style=\"max-width: 600px; width: 100%; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.05); border: 1px solid #e0e7ed;\">\n    \n    <!-- HEADER : Branding + tagline -->\n    <div class=\"header\" style=\"background: linear-gradient(135deg, #003366 0%, #004c8c 100%); padding: 28px 20px; text-align: center; border-bottom: 4px solid #ffb347;\">\n      <h1 style=\"margin: 0; font-size: 26px; font-weight: 700; letter-spacing: 1px; color: #ffffff;\">AL RUBAI UNITED AL CRISTAL</h1>\n      <p style=\"font-size: 14px; color: rgba(255,255,255,0.85); margin-top: 8px; margin-bottom: 0;\">Premium Trading & Logistics</p>\n    </div>\n    \n    <!-- MAIN CONTENT -->\n    <div class=\"content\" style=\"padding: 30px 28px 24px; background: #ffffff;\">\n      \n      <!-- Greeting with dynamic name -->\n      <div class=\"greeting\" style=\"margin-bottom: 24px;\">\n        <h2 style=\"font-size: 20px; font-weight: 600; color: #1e4668; margin-bottom: 8px;\">Hello</h2>\n        <p style=\"color: #4a627a; margin-bottom: 6px;\">You have received a <strong>new invoice-order</strong> from AL RUBAI UNITED AL CRISTAL.</p>\n        <p style=\"color: #4a627a;\">Please review the details in the attached PDF document.</p>\n      </div>\n      \n  \n      <!-- Simple closing note (no button, no support block) -->\n      <p style=\"font-size: 12px; color: #8ba0b5; text-align: center; margin-top: 20px; margin-bottom: 0;\">This is an automatically generated notification. Please do not reply directly to this email.</p>\n    </div>\n    \n    <!-- FOOTER with company info and legal -->\n    <div class=\"footer\" style=\"background-color: #f8fafc; padding: 20px 28px; text-align: center; border-top: 1px solid #e6edf4; font-size: 12px; color: #6c8eae;\">\n      <p style=\"margin: 6px 0; font-size: 12px;\">&copy; 2026 AL RUBAI UNITED AL CRISTAL – All Rights Reserved.</p>\n      <p style=\"margin: 6px 0; font-size: 12px;\">P.O.  Muscat, Sultanate of Oman | <a href=\"#\" style=\"color: #004c8c; text-decoration: none;\">Privacy Policy</a></p>\n      <hr style=\"border: none; border-top: 1px solid #e0e8f0; margin: 12px 0;\">\n      <p style=\"margin: 4px 0; font-size: 11px; color: #8fa3bc;\">If you believe this invoice was sent in error, please contact support immediately.</p>\n    </div>\n  </div>\n  <!-- GMAIL / OUTLOOK FALLBACK SPACING -->\n  <div style=\"height: 10px; font-size:0;\">&nbsp;</div>\n</body>\n</html>",
+        "options": {
+          "attachments": "data"
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        896,
+        -288
+      ],
+      "id": "597f21e9-4c38-4271-b88e-3c57dd12759d",
+      "name": "Send an Email",
+      "webhookId": "0c527d10-4b96-418c-8aa0-6a1174e83639",
+      "credentials": {
+        "smtp": {
+          "id": "DGRiDm35a17sHR1r",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        }
+      },
+      "name": "Cron Daily1",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        -32
+      ],
+      "id": "6e3f10b5-b2e6-4584-9b6c-2b9cbd7973d7"
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:3102/purchases",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OWJhYzZkOGJjOTQyZDFjNmQ4MzdhYjMiLCJyb2xlIjoiVVNFUiIsIm11c3RDaGFuZ2VQYXNzd29yZCI6ZmFsc2UsImlhdCI6MTc3NDE2OTE0OSwiZXhwIjoxNzc0MjU1NTQ5fQ.7b2LTziuUfWtfLhahHG2kdafZ5i_3QexZQYD0KtR_wA"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -528,
+        -32
+      ],
+      "id": "b6b3b31c-affd-421c-8e43-22ccac25e810",
+      "name": "get purchases"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f683a020-91f0-4660-a59d-438f7fd979ff",
+              "leftValue": "={{ $json._id }}",
+              "rightValue": "1",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -336,
+        -32
+      ],
+      "id": "a74be7f1-946e-4108-8111-031e4443891d",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:3102/purchases/{{ $json._id }}/invoice",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OWJhYzZkOGJjOTQyZDFjNmQ4MzdhYjMiLCJyb2xlIjoiVVNFUiIsIm11c3RDaGFuZ2VQYXNzd29yZCI6ZmFsc2UsImlhdCI6MTc3NDE2OTE0OSwiZXhwIjoxNzc0MjU1NTQ5fQ.7b2LTziuUfWtfLhahHG2kdafZ5i_3QexZQYD0KtR_wA"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -144,
+        -48
+      ],
+      "id": "e06a69b7-2e4f-4af0-944c-287fc4c65b25",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "fromEmail": "syrinebenanayacontact@gmail.com",
+        "toEmail": "syrinebenanayacontact@gmail.com",
+        "subject": "Purchase-Invoice",
+        "html": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n  <title>New Purchase Invoice | AL RUBAI UNITED AL CRISTAL</title>\n  <style>\n    /* RESET & GLOBAL STYLES (email-safe) */\n    body, table, td, p, a, div, span {\n      margin: 0;\n      padding: 0;\n      border: 0;\n      font-family: 'Arial', 'Helvetica Neue', Helvetica, sans-serif;\n      font-size: 16px;\n      line-height: 1.5;\n      color: #2c3e4f;\n    }\n    body {\n      background-color: #eef2f5;\n      margin: 0;\n      padding: 20px 0;\n    }\n    .email-container {\n      max-width: 600px;\n      width: 100%;\n      margin: 0 auto;\n      background-color: #ffffff;\n      border-radius: 20px;\n      overflow: hidden;\n      box-shadow: 0 8px 20px rgba(0,0,0,0.05);\n      border: 1px solid #e0e7ed;\n    }\n    .header {\n      background: linear-gradient(135deg, #003366 0%, #004c8c 100%);\n      padding: 28px 20px;\n      text-align: center;\n      border-bottom: 4px solid #ffb347;\n    }\n    .header h1 {\n      margin: 0;\n      font-size: 26px;\n      font-weight: 700;\n      letter-spacing: 1px;\n      color: #ffffff;\n      text-shadow: 0 1px 2px rgba(0,0,0,0.1);\n    }\n    .header p {\n      font-size: 14px;\n      color: rgba(255,255,255,0.85);\n      margin-top: 8px;\n      margin-bottom: 0;\n    }\n    .content {\n      padding: 30px 28px 24px;\n      background: #ffffff;\n    }\n    .greeting {\n      margin-bottom: 24px;\n    }\n    .greeting h2 {\n      font-size: 20px;\n      font-weight: 600;\n      color: #1e4668;\n      margin-bottom: 8px;\n    }\n    .greeting p {\n      color: #4a627a;\n      margin-bottom: 6px;\n    }\n    .badge {\n      display: inline-block;\n      background: #eef2fc;\n      color: #004c8c;\n      font-size: 13px;\n      font-weight: 600;\n      padding: 4px 12px;\n      border-radius: 30px;\n      margin-top: 8px;\n    }\n    .attachment-note {\n      background: #fef8e7;\n      border-left: 4px solid #ffb347;\n      padding: 14px 18px;\n      border-radius: 12px;\n      margin: 24px 0 28px;\n      display: flex;\n      align-items: center;\n      gap: 12px;\n      flex-wrap: wrap;\n    }\n    .attachment-icon {\n      font-size: 28px;\n    }\n    .attachment-text {\n      flex: 1;\n    }\n    .attachment-text p {\n      margin: 0;\n      font-size: 14px;\n      color: #7a5c2c;\n      font-weight: 500;\n    }\n    .attachment-text strong {\n      color: #a5641a;\n    }\n    .footer {\n      background-color: #f8fafc;\n      padding: 20px 28px;\n      text-align: center;\n      border-top: 1px solid #e6edf4;\n      font-size: 12px;\n      color: #6c8eae;\n    }\n    .footer p {\n      margin: 6px 0;\n      font-size: 12px;\n    }\n    .footer a {\n      color: #004c8c;\n      text-decoration: none;\n    }\n    hr {\n      border: none;\n      border-top: 1px solid #e0e8f0;\n      margin: 12px 0;\n    }\n    @media only screen and (max-width: 550px) {\n      .content {\n        padding: 22px 18px;\n      }\n      .header h1 {\n        font-size: 22px;\n      }\n    }\n  </style>\n</head>\n<body style=\"background-color: #eef2f5; margin: 0; padding: 20px 0; font-family: Arial, Helvetica, sans-serif;\">\n  <div class=\"email-container\">\n    \n    <!-- HEADER -->\n    <div class=\"header\">\n      <h1>AL RUBAI UNITED AL CRISTAL</h1>\n      <p>Procurement & Supply Chain</p>\n    </div>\n    \n    <!-- MAIN CONTENT -->\n    <div class=\"content\">\n      \n      <div class=\"greeting\">\n        <h2>Hello,</h2>\n        <p>A new <strong>purchase invoice</strong> has been received from one of our suppliers.</p>\n        <p>Please find the official invoice attached to this email for your records and payment processing.</p>\n        <div class=\"badge\">📄 Purchase Invoice</div>\n      </div>\n      \n      <!-- ATTACHMENT NOTE -->\n      <div class=\"attachment-note\">\n        <div class=\"attachment-icon\">📎</div>\n        <div class=\"attachment-text\">\n          <p><strong>Invoice document attached</strong> — The supplier invoice is included as a PDF file.</p>\n          <p style=\"margin-top: 4px; font-size: 13px;\">Please verify the details and coordinate with the finance department if needed.</p>\n        </div>\n      </div>\n      \n      <p style=\"font-size: 12px; color: #8ba0b5; text-align: center; margin-top: 20px;\">This is an automated notification. Please do not reply directly to this email.</p>\n    </div>\n    \n    <!-- FOOTER -->\n    <div class=\"footer\">\n      <p>&copy; 2026 AL RUBAI UNITED AL CRISTAL – All Rights Reserved.</p>\n      <p>P.O. Muscat, Sultanate of Oman | <a href=\"#\">Privacy Policy</a></p>\n      <hr>\n      <p style=\"font-size: 11px;\">If you believe this invoice was sent in error, please contact your procurement officer immediately.</p>\n    </div>\n  </div>\n  <div style=\"height: 10px; font-size:0;\">&nbsp;</div>\n</body>\n</html>",
+        "options": {
+          "attachments": "data"
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        64,
+        -48
+      ],
+      "id": "54a8d285-f146-4d70-b463-dd30bd1d319d",
+      "name": "Send an Email1",
+      "webhookId": "2b67e910-0b62-4e62-a2ff-e58ea265acd4",
+      "credentials": {
+        "smtp": {
+          "id": "DGRiDm35a17sHR1r",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Cron Daily": {
+      "main": [
+        [
+          {
+            "node": "Get ERP Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Low Stock": {
+      "main": [
+        [
+          {
+            "node": "Send Alert Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Daily Report Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Alert Email": {
+      "main": [
+        [
+          {
+            "node": "Get ERP Report1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Orders By ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Orders By ID": {
+      "main": [
+        [
+          {
+            "node": "Get invoices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get invoices": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Send an Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get ERP Report": {
+      "main": [
+        [
+          {
+            "node": "Check Low Stock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily Report Email": {
+      "main": [
+        [
+          {
+            "node": "Get ERP Report1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get ERP Report1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cron Daily1": {
+      "main": [
+        [
+          {
+            "node": "get purchases",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get purchases": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Send an Email1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "ca4ba673-c04f-4bb1-b974-5000777344ca",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "44136e11cbc083add1ba20b2494041b22db268b1be1b4a22980b0fd8b0ef334a"
+  },
+  "id": "pBLQoYYug7nwNxFa",
+  "tags": []
+}
