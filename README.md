@@ -1,21 +1,18 @@
-markdown
 <div align="center">
-
-# Cristal ERP
-
-**Modular ERP Platform Based on Microservices Architecture**
+Cristal ERP
+Modular ERP Platform Based on Microservices Architecture
 
 Sales, purchases, inventory, human resources, and payroll management — with integrated supervision (monitoring, code quality, automation).
 
-[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
-[![NestJS](https://img.shields.io/badge/Backend-NestJS-E0234E?logo=nestjs&logoColor=white)](https://nestjs.com/)
-[![React](https://img.shields.io/badge/Frontend-React-61DAFB?logo=react&logoColor=black)](https://react.dev/)
-[![MongoDB](https://img.shields.io/badge/Database-MongoDB-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
-[![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)](https://github.com/features/actions)
+https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white
+https://img.shields.io/badge/Backend-NestJS-E0234E?logo=nestjs&logoColor=white
+https://img.shields.io/badge/Frontend-React-61DAFB?logo=react&logoColor=black
+https://img.shields.io/badge/Database-MongoDB-47A248?logo=mongodb&logoColor=white
+https://img.shields.io/badge/CI%252FCD-GitHub%2520Actions-2088FF?logo=githubactions&logoColor=white
+
+Live Demo: https://erp-ui-kappa.vercel.app/
 
 </div>
-
----
 
 ## Table of Contents
 
