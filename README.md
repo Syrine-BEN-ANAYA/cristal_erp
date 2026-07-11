@@ -13,7 +13,6 @@ https://img.shields.io/badge/CI%252FCD-GitHub%2520Actions-2088FF?logo=githubacti
 Live Demo: https://erp-ui-kappa.vercel.app/
 
 </div>
-
 ## Table of Contents
 
 - [Overview](#overview)
