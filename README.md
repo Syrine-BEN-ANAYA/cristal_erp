@@ -123,9 +123,6 @@ Cristal_ERP/
 ├── docker-compose.yml # Full local orchestration
 └── sonar-project.properties # SonarQube configuration
 
-text
-
----
 
 ## Quick Start
 
@@ -145,75 +142,4 @@ cd cristal_erp
 # Start all services
 docker-compose up -d
 
-# Check container status
-docker-compose ps
-Service	Local URL
-Frontend (erp-ui)	http://localhost:3205
-API Gateway	http://localhost:3204
-Grafana	http://localhost:3000
-Prometheus	http://localhost:9090
-SonarQube	http://localhost:9000
-n8n	http://localhost:7007
-Launch Only the Frontend in Development Mode
-bash
-cd erp-ui
-npm install
-npm start
-The application is then available at http://localhost:3105 (see .env).
 
-Configuration (Environment Variables)
-The frontend consumes the following variable (see erp-ui/.env.example):
-
-Variable	Description	Default Value
-REACT_APP_API_GATEWAY_URL	Base URL of the API Gateway	http://localhost:3104
-REACT_APP_API_GATEWAY_URL_PURCHASES	Purchases module URL (optional)	${REACT_APP_API_GATEWAY_URL}/purchases
-PORT	Development server port	3105
-Each backend microservice expects at minimum MONGO_URI and PORT (see docker-compose.yml).
-
-Deployment
-Frontend on Vercel
-The erp-ui folder is ready for deployment on Vercel:
-
-Import the repository on Vercel and set erp-ui as the Root Directory.
-
-Framework detected automatically: Create React App.
-
-Set the environment variable REACT_APP_API_GATEWAY_URL pointing to the publicly accessible API Gateway (the backend must be deployed separately — Vercel hosts only the static frontend).
-
-Deploy — a vercel.json file is provided to handle client-side routing (React Router).
-
-Backend
-The microservices are containerized (Dockerfile per service) and can be deployed:
-
-via Docker Compose on a single server,
-
-via Kubernetes, using the k8s-complete.yaml manifest.
-
-Observability
-Prometheus collects metrics exposed by each service (/metrics) as well as MongoDB metrics via mongodb-exporter.
-
-Grafana provides preconfigured dashboards from monitoring/datasources.yml.
-
-SonarQube analyzes code quality and security on every build.
-
-CI/CD
-The pipeline defined in .github/workflows/ci-cd.yml automates:
-
-installation and testing of each service,
-
-quality analysis (SonarQube),
-
-building and publishing Docker images,
-
-(depending on configuration) deployment.
-
-Contributing
-Fork the repository
-
-Create a branch (git checkout -b feature/my-feature)
-
-Commit your changes (git commit -m "feat: my feature")
-
-Push the branch (git push origin feature/my-feature)
-
-Open a Pull Request
